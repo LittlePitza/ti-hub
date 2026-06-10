@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import TemaToggle from "./TemaToggle";
 
 const enlaces = [
   { href: "/", label: "Resumen" },
@@ -14,9 +15,12 @@ export default function Sidebar() {
   const ruta = usePathname();
   return (
     <aside className="sidebar">
-      <div className="brand">
-        <div className="brand-name">TI Hub</div>
-        <div className="brand-sub">depto. sistemas</div>
+      <div className="sidebar-cabecera">
+        <div className="brand">
+          <div className="brand-name">TI Hub</div>
+          <div className="brand-sub">depto. sistemas</div>
+        </div>
+        <TemaToggle />
       </div>
       <nav className="nav">
         {enlaces.map((e) => (
