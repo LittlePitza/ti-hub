@@ -1,6 +1,7 @@
 /* ============================================================
    TI Hub · Sistema de diseño
    Paleta: papel / tinta / línea / petróleo + semáforo de estados
+   Tema claro por defecto; [data-theme="dark"] activa modo noche.
    ============================================================ */
 :root {
   --papel: #fbfbfa;
@@ -9,6 +10,7 @@
   --tinta-suave: #6b6f76;
   --linea: #e7e7e4;
   --linea-fuerte: #d4d4d0;
+  --hover: #fdfdfc;
   --petroleo: #0e7490;
   --petroleo-tenue: #ecf6f8;
   --ok: #15803d;
@@ -19,6 +21,27 @@
   --critico-tenue: #fbeeee;
   --neutro-tenue: #f1f1ef;
   --radio: 6px;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --papel: #111215;
+  --superficie: #18191d;
+  --tinta: #e7e8ea;
+  --tinta-suave: #9b9fa8;
+  --linea: #26282d;
+  --linea-fuerte: #383b42;
+  --hover: #1c1e22;
+  --petroleo: #2fb6cf;
+  --petroleo-tenue: #11303a;
+  --ok: #3fb950;
+  --ok-tenue: #15281b;
+  --aviso: #d9a13c;
+  --aviso-tenue: #2d2412;
+  --critico: #e5604f;
+  --critico-tenue: #321b18;
+  --neutro-tenue: #222428;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,6 +71,14 @@ input, select, textarea { font: inherit; color: inherit; }
   position: sticky;
   top: 0;
   height: 100vh;
+  background: var(--papel);
+}
+
+.sidebar-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .brand { padding: 0 10px; }
@@ -65,6 +96,7 @@ input, select, textarea { font: inherit; color: inherit; }
   border-radius: var(--radio);
   color: var(--tinta-suave);
   font-size: 14px;
+  white-space: nowrap;
   transition: background 120ms ease, color 120ms ease;
 }
 .nav a:hover { background: var(--neutro-tenue); color: var(--tinta); }
@@ -73,6 +105,25 @@ input, select, textarea { font: inherit; color: inherit; }
   outline: 2px solid var(--petroleo);
   outline-offset: 1px;
 }
+
+/* ---------- Toggle de tema ---------- */
+.tema-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  background: transparent;
+  color: var(--tinta-suave);
+  transition: background 120ms ease, color 120ms ease;
+}
+.tema-toggle:hover { background: var(--neutro-tenue); color: var(--tinta); }
+.tema-toggle .icono-sol { display: none; }
+[data-theme="dark"] .tema-toggle .icono-sol { display: block; }
+[data-theme="dark"] .tema-toggle .icono-luna { display: none; }
 
 .contenido {
   flex: 1;
@@ -86,6 +137,7 @@ input, select, textarea { font: inherit; color: inherit; }
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 28px;
 }
@@ -110,7 +162,7 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: 14px;
   vertical-align: top;
 }
-.tabla tr:hover td { background: #fdfdfc; }
+.tabla tr:hover td { background: var(--hover); }
 
 .mono {
   font-family: var(--font-mono);
@@ -147,7 +199,7 @@ input, select, textarea { font: inherit; color: inherit; }
   border-radius: var(--radio);
   border: 1px solid var(--tinta);
   background: var(--tinta);
-  color: #fff;
+  color: var(--papel);
   font-size: 13.5px;
   font-weight: 500;
   transition: opacity 120ms ease;
@@ -188,16 +240,16 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .campo textarea { resize: vertical; min-height: 70px; }
 
-/* ---------- Dashboard ---------- */
+/* ---------- Dashboard: métricas ---------- */
 .metricas {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 1px;
   background: var(--linea);
   border: 1px solid var(--linea);
   border-radius: 8px;
   overflow: hidden;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 .metrica { background: var(--superficie); padding: 20px; }
 .metrica-valor {
@@ -209,6 +261,80 @@ input, select, textarea { font: inherit; color: inherit; }
 .metrica-valor.alerta { color: var(--critico); }
 .metrica-label { font-size: 12.5px; color: var(--tinta-suave); margin-top: 4px; }
 
+/* ---------- Dashboard: tarjetas de gráficas ---------- */
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.tarjeta {
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  background: var(--superficie);
+  padding: 20px;
+  min-width: 0;
+}
+.tarjeta-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--tinta-suave);
+  margin-bottom: 18px;
+}
+
+/* Gráfica de dona (SVG) */
+.dona { display: flex; align-items: center; gap: 24px; }
+.dona-svg { width: 132px; height: 132px; flex-shrink: 0; }
+.dona-total {
+  fill: var(--tinta);
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 500;
+}
+.dona-unidad {
+  fill: var(--tinta-suave);
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+}
+.dona-leyenda { list-style: none; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dona-leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--tinta-suave);
+}
+.dona-leyenda .punto { width: 8px; height: 8px; border-radius: 99px; flex-shrink: 0; }
+.dona-leyenda .mono { margin-left: auto; color: var(--tinta); }
+
+/* Gráfica de barras horizontales */
+.barras { display: flex; flex-direction: column; gap: 12px; }
+.barra-fila {
+  display: grid;
+  grid-template-columns: 96px 1fr 28px;
+  align-items: center;
+  gap: 12px;
+}
+.barra-label {
+  font-size: 13px;
+  color: var(--tinta-suave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.barra-pista { background: var(--neutro-tenue); border-radius: 99px; height: 8px; }
+.barra-relleno { height: 100%; border-radius: 99px; }
+.barra-valor { text-align: right; }
+
+.grafica-vacia {
+  color: var(--tinta-suave);
+  font-size: 13.5px;
+  padding: 24px 0;
+  text-align: center;
+}
+
 .seccion { margin-bottom: 40px; }
 .seccion-titulo {
   font-size: 13px;
@@ -218,6 +344,8 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--tinta-suave);
   margin-bottom: 14px;
 }
+
+.fecha-vencida { color: var(--critico); font-weight: 500; }
 
 /* ---------- Estados vacíos / aviso de configuración ---------- */
 .vacio {
@@ -238,18 +366,63 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .tarjetas { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 760px) {
   .shell { flex-direction: column; }
+
   .sidebar {
-    width: 100%; height: auto; position: static;
-    flex-direction: row; align-items: center;
-    padding: 14px 16px; gap: 16px;
-    border-right: none; border-bottom: 1px solid var(--linea);
-    overflow-x: auto;
+    width: 100%;
+    height: auto;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px 0;
+    border-right: none;
+    border-bottom: 1px solid var(--linea);
   }
-  .nav { flex-direction: row; }
+  .sidebar-cabecera { align-items: center; }
+  .brand { padding: 0; }
+
+  .nav {
+    flex-direction: row;
+    gap: 4px;
+    overflow-x: auto;
+    margin: 0 -16px;
+    padding: 0 16px 10px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { padding: 8px 12px; }
+
   .contenido { padding: 24px 16px 60px; }
-  .tabla { display: block; overflow-x: auto; }
+
+  .pagina-head { align-items: flex-start; flex-direction: column; }
+
+  .metricas { grid-template-columns: repeat(2, 1fr); }
+  .metrica { padding: 16px; }
+  .metrica:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .metrica-valor { font-size: 26px; }
+
+  .tabla {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tabla th, .tabla td { white-space: nowrap; }
+  .tabla td:nth-child(2) { white-space: normal; min-width: 180px; }
+
+  .formulario { padding: 18px 16px; }
+  .campos { grid-template-columns: 1fr; }
+
+  .dona { gap: 18px; }
+  .dona-svg { width: 110px; height: 110px; }
+  .barra-fila { grid-template-columns: 84px 1fr 26px; gap: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
