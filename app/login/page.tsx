@@ -19,8 +19,13 @@ export default async function Login({
     <div className="login-marco">
       <form className="login-caja" action={iniciarSesion}>
         <div className="brand" style={{ marginBottom: 6 }}>
-          <div className="brand-name">TI Hub</div>
-          <div className="brand-sub">depto. sistemas</div>
+          <span className="logo-claro">
+            <img className="brand-iso" src="/pimsa-isotipo.svg" alt="Plásticos PIMSA" style={{ height: 30 }} />
+          </span>
+          <div>
+            <div className="brand-name">TI Hub</div>
+            <div className="brand-sub">Plásticos PIMSA · sistemas</div>
+          </div>
         </div>
         <p className="login-desc">Acceso restringido. Inicia sesión con tu cuenta del departamento.</p>
 

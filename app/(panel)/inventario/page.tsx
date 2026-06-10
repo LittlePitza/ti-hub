@@ -57,6 +57,10 @@ export default async function Inventario() {
             <input id="eq-asignado" name="asignado_a" placeholder="Persona o área" />
           </div>
           <div className="campo">
+            <label htmlFor="eq-correo">Correo del usuario (portal)</label>
+            <input id="eq-correo" name="asignado_email" type="email" placeholder="empleado@plasticospimsa.com" />
+          </div>
+          <div className="campo">
             <label htmlFor="eq-ubicacion">Ubicación</label>
             <input id="eq-ubicacion" name="ubicacion" placeholder="Oficina · Piso 2" />
           </div>
@@ -102,7 +106,10 @@ export default async function Inventario() {
                   </div>
                 </td>
                 <td className="mono">{e.num_serie ?? "—"}</td>
-                <td className="suave">{e.asignado_a ?? "—"}</td>
+                <td className="suave">
+                  {e.asignado_a ?? "—"}
+                  {e.asignado_email && <div style={{ fontSize: 12 }}>{e.asignado_email}</div>}
+                </td>
                 <td className="suave">{e.ubicacion ?? "—"}</td>
                 <td className="mono">{fechaCorta(e.garantia_hasta)}</td>
                 <td><Insignia valor={e.estado} /></td>

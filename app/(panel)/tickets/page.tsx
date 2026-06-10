@@ -23,7 +23,10 @@ export default async function Tickets() {
   );
   if (!sb) return <>{head}<SinConexion /></>;
 
-  const { data } = await sb.from("tickets").select("*").order("created_at", { ascending: false });
+  const { data } = await sb
+    .from("tickets")
+    .select("*, equipos(nombre)")
+    .order("created_at", { ascending: false });
   const lista = data ?? [];
   const activos = lista
     .filter((t) => ["abierto", "en_proceso"].includes(t.estado))
@@ -36,6 +39,7 @@ export default async function Tickets() {
       <td>
         <div className="celda-principal">{t.titulo}</div>
         {t.descripcion && <div className="suave" style={{ fontSize: 12.5 }}>{t.descripcion}</div>}
+        {t.equipos?.nombre && <div className="suave mono" style={{ fontSize: 12 }}>equipo: {t.equipos.nombre}</div>}
       </td>
       <td className="suave">{t.solicitante}</td>
       <td className="suave">{t.categoria}</td>
