@@ -60,15 +60,24 @@ create index if not exists idx_tickets_estado on tickets(estado);
 create index if not exists idx_mantenimientos_fecha on mantenimientos(fecha_programada);
 
 -- ---------- SEGURIDAD (RLS) ----------
--- Herramienta interna: acceso abierto con la anon key.
--- Cuando agregues login (Supabase Auth), cambia estas políticas a "to authenticated".
+-- Solo usuarios autenticados (Supabase Auth) pueden leer y escribir.
+-- La anon key sin sesión NO tiene acceso a ninguna tabla.
+-- Los usuarios se crean a mano en: Supabase -> Authentication -> Users -> Add user.
 alter table equipos enable row level security;
 alter table mantenimientos enable row level security;
 alter table tickets enable row level security;
 
-create policy "acceso_total_equipos" on equipos for all using (true) with check (true);
-create policy "acceso_total_mantenimientos" on mantenimientos for all using (true) with check (true);
-create policy "acceso_total_tickets" on tickets for all using (true) with check (true);
+-- Si vienes del esquema anterior (acceso abierto), estas líneas retiran esas políticas.
+drop policy if exists "acceso_total_equipos" on equipos;
+drop policy if exists "acceso_total_mantenimientos" on mantenimientos;
+drop policy if exists "acceso_total_tickets" on tickets;
+
+create policy "equipos_autenticados" on equipos
+  for all to authenticated using (true) with check (true);
+create policy "mantenimientos_autenticados" on mantenimientos
+  for all to authenticated using (true) with check (true);
+create policy "tickets_autenticados" on tickets
+  for all to authenticated using (true) with check (true);
 
 -- ---------- DATOS DE EJEMPLO ----------
 insert into equipos (nombre, tipo, marca, modelo, num_serie, asignado_a, ubicacion, estado, fecha_compra, garantia_hasta) values

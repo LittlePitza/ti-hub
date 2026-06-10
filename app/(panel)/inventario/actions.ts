@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseAutenticado } from "@/lib/supabase";
 
 export async function crearEquipo(formData: FormData) {
-  const sb = getSupabase();
+  const sb = await getSupabaseAutenticado();
   if (!sb) return;
   const v = (k: string) => (formData.get(k) as string)?.trim() || null;
   await sb.from("equipos").insert({
@@ -25,7 +25,7 @@ export async function crearEquipo(formData: FormData) {
 }
 
 export async function cambiarEstadoEquipo(formData: FormData) {
-  const sb = getSupabase();
+  const sb = await getSupabaseAutenticado();
   if (!sb) return;
   await sb.from("equipos")
     .update({ estado: formData.get("estado") as string })
@@ -35,7 +35,7 @@ export async function cambiarEstadoEquipo(formData: FormData) {
 }
 
 export async function eliminarEquipo(formData: FormData) {
-  const sb = getSupabase();
+  const sb = await getSupabaseAutenticado();
   if (!sb) return;
   await sb.from("equipos").delete().eq("id", formData.get("id") as string);
   revalidatePath("/inventario");

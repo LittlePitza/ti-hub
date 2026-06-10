@@ -25,7 +25,7 @@ function contar<T>(lista: T[], llave: (x: T) => string): Record<string, number> 
 }
 
 export default async function Resumen() {
-  const sb = getSupabase();
+  const sb = await getSupabase();
   const head = (
     <div className="pagina-head">
       <div>

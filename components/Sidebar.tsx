@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import TemaToggle from "./TemaToggle";
+import { cerrarSesion } from "@/app/login/actions";
 
 const enlaces = [
   { href: "/", label: "Resumen" },
@@ -29,6 +30,9 @@ export default function Sidebar() {
           </Link>
         ))}
       </nav>
+      <form action={cerrarSesion} className="sidebar-pie">
+        <button type="submit" className="boton-salir">Cerrar sesión</button>
+      </form>
     </aside>
   );
 }
