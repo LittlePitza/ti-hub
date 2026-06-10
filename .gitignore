@@ -1,6 +1,23 @@
-node_modules
-.next
-.env.local
+# Dependencias
+node_modules/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Variables de entorno (la plantilla .env.example sí se versiona)
 .env
+.env.local
+.env*.local
+
+# Despliegue
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+
+# Editores y sistema operativo
+.idea/
+.vscode/
 .DS_Store
-.idea

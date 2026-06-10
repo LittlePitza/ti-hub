@@ -2,6 +2,10 @@
   "name": "ti-hub",
   "version": "1.0.0",
   "private": true,
+  "description": "Sitio interno del departamento de TI: inventario de equipos, mantenimientos y tickets",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
