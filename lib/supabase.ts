@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 // Cliente por petición ligado a las cookies de sesión (Supabase Auth).
 // Nunca usar un singleton: la sesión es distinta en cada petición.
@@ -34,4 +34,14 @@ export async function getSupabaseAutenticado(): Promise<SupabaseClient | null> {
   if (!sb) return null;
   const { data: { user } } = await sb.auth.getUser();
   return user ? sb : null;
+}
+
+// Cliente con service role key para el portal del empleado (sin Supabase Auth).
+// SOLO usarlo en código de servidor del portal, siempre filtrando por el correo
+// del empleado: la service role key salta el RLS y jamás debe llegar al cliente.
+export function getSupabasePortal(): SupabaseClient | null {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
 }

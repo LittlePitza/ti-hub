@@ -14,6 +14,7 @@ export async function crearEquipo(formData: FormData) {
     modelo: v("modelo"),
     num_serie: v("num_serie"),
     asignado_a: v("asignado_a"),
+    asignado_email: v("asignado_email")?.toLowerCase() ?? null,
     ubicacion: v("ubicacion"),
     estado: v("estado"),
     fecha_compra: v("fecha_compra"),

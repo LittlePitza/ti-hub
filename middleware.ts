@@ -1,9 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// Bloquea todo el sitio: sin sesión de Supabase Auth solo se puede ver /login.
+// Bloquea el panel de TI: sin sesión de Supabase Auth solo se puede ver /login.
+// El portal del empleado (/portal) queda fuera del candado: ahí la identidad es
+// la cookie de correo que maneja el propio portal, sin cuentas de Supabase.
 // También refresca el token de sesión en cada petición (cookies).
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/portal")) return NextResponse.next();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key =
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??

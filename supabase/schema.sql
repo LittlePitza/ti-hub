@@ -15,6 +15,7 @@ create table if not exists equipos (
   modelo text,
   num_serie text,
   asignado_a text,
+  asignado_email text, -- correo del empleado; vincula sus equipos en el portal
   ubicacion text,
   estado text not null default 'activo'
     check (estado in ('activo','en_reparacion','almacen','baja')),
@@ -45,6 +46,8 @@ create table if not exists tickets (
   titulo text not null,
   descripcion text,
   solicitante text not null,
+  solicitante_email text,                                    -- correo del empleado (portal)
+  equipo_id uuid references equipos(id) on delete set null,  -- equipo relacionado (portal)
   categoria text not null default 'hardware'
     check (categoria in ('hardware','software','red','accesos','correo','otro')),
   prioridad text not null default 'media'
@@ -58,11 +61,22 @@ create table if not exists tickets (
 
 create index if not exists idx_tickets_estado on tickets(estado);
 create index if not exists idx_mantenimientos_fecha on mantenimientos(fecha_programada);
+create index if not exists idx_tickets_solicitante_email on tickets(solicitante_email);
+create index if not exists idx_equipos_asignado_email on equipos(asignado_email);
+
+-- ---------- MIGRACIÓN (bases creadas antes del portal del empleado) ----------
+-- `create table if not exists` no agrega columnas a tablas existentes; estas líneas sí.
+alter table equipos add column if not exists asignado_email text;
+alter table tickets add column if not exists solicitante_email text;
+alter table tickets add column if not exists equipo_id uuid references equipos(id) on delete set null;
 
 -- ---------- SEGURIDAD (RLS) ----------
 -- Solo usuarios autenticados (Supabase Auth) pueden leer y escribir.
 -- La anon key sin sesión NO tiene acceso a ninguna tabla.
 -- Los usuarios se crean a mano en: Supabase -> Authentication -> Users -> Add user.
+-- El portal del empleado (app/portal) NO usa Supabase Auth: el servidor accede con la
+-- service role key (SUPABASE_SERVICE_ROLE_KEY, solo en el servidor) y filtra por el
+-- correo del empleado; por eso no se agregan políticas `to anon`.
 alter table equipos enable row level security;
 alter table mantenimientos enable row level security;
 alter table tickets enable row level security;

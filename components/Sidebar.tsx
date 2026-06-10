@@ -10,6 +10,7 @@ const enlaces = [
   { href: "/inventario", label: "Inventario" },
   { href: "/mantenimientos", label: "Mantenimientos" },
   { href: "/tickets", label: "Tickets" },
+  { href: "/portal", label: "Portal del empleado" },
 ];
 
 export default function Sidebar() {
@@ -18,8 +19,13 @@ export default function Sidebar() {
     <aside className="sidebar">
       <div className="sidebar-cabecera">
         <div className="brand">
-          <div className="brand-name">TI Hub</div>
-          <div className="brand-sub">depto. sistemas</div>
+          <span className="logo-claro">
+            <img className="brand-iso" src="/pimsa-isotipo.svg" alt="" />
+          </span>
+          <div>
+            <div className="brand-name">TI Hub</div>
+            <div className="brand-sub">Plásticos PIMSA</div>
+          </div>
         </div>
         <TemaToggle />
       </div>
