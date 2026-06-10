@@ -12,7 +12,7 @@ const PRIORIDADES = ["baja", "media", "alta", "critica"];
 const ORDEN_PRIORIDAD: Record<string, number> = { critica: 0, alta: 1, media: 2, baja: 3 };
 
 export default async function Tickets() {
-  const sb = getSupabase();
+  const sb = await getSupabase();
   const head = (
     <div className="pagina-head">
       <div>

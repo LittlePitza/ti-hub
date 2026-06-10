@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const ESTADOS = ["programado", "en_proceso", "completado", "cancelado"];
 
 export default async function Mantenimientos() {
-  const sb = getSupabase();
+  const sb = await getSupabase();
   const head = (
     <div className="pagina-head">
       <div>

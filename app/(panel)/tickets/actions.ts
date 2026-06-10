@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseAutenticado } from "@/lib/supabase";
 
 export async function crearTicket(formData: FormData) {
-  const sb = getSupabase();
+  const sb = await getSupabaseAutenticado();
   if (!sb) return;
   const v = (k: string) => (formData.get(k) as string)?.trim() || null;
   await sb.from("tickets").insert({
@@ -20,7 +20,7 @@ export async function crearTicket(formData: FormData) {
 }
 
 export async function cambiarEstadoTicket(formData: FormData) {
-  const sb = getSupabase();
+  const sb = await getSupabaseAutenticado();
   if (!sb) return;
   await sb.from("tickets")
     .update({ estado: formData.get("estado") as string, updated_at: new Date().toISOString() })
@@ -30,7 +30,7 @@ export async function cambiarEstadoTicket(formData: FormData) {
 }
 
 export async function eliminarTicket(formData: FormData) {
-  const sb = getSupabase();
+  const sb = await getSupabaseAutenticado();
   if (!sb) return;
   await sb.from("tickets").delete().eq("id", formData.get("id") as string);
   revalidatePath("/tickets");

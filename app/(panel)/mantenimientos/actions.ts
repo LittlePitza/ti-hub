@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseAutenticado } from "@/lib/supabase";
 
 export async function crearMantenimiento(formData: FormData) {
-  const sb = getSupabase();
+  const sb = await getSupabaseAutenticado();
   if (!sb) return;
   const v = (k: string) => (formData.get(k) as string)?.trim() || null;
   await sb.from("mantenimientos").insert({
@@ -20,7 +20,7 @@ export async function crearMantenimiento(formData: FormData) {
 }
 
 export async function cambiarEstadoMantenimiento(formData: FormData) {
-  const sb = getSupabase();
+  const sb = await getSupabaseAutenticado();
   if (!sb) return;
   await sb.from("mantenimientos")
     .update({ estado: formData.get("estado") as string })
@@ -30,7 +30,7 @@ export async function cambiarEstadoMantenimiento(formData: FormData) {
 }
 
 export async function eliminarMantenimiento(formData: FormData) {
-  const sb = getSupabase();
+  const sb = await getSupabaseAutenticado();
   if (!sb) return;
   await sb.from("mantenimientos").delete().eq("id", formData.get("id") as string);
   revalidatePath("/mantenimientos");

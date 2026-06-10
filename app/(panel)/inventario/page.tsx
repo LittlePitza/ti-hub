@@ -10,7 +10,7 @@ const TIPOS = ["laptop", "desktop", "monitor", "impresora", "red", "servidor", "
 const ESTADOS = ["activo", "en_reparacion", "almacen", "baja"];
 
 export default async function Inventario() {
-  const sb = getSupabase();
+  const sb = await getSupabase();
   const head = (
     <div className="pagina-head">
       <div>
