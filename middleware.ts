@@ -1,12 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-// Bloquea el panel de TI: sin sesión de Supabase Auth solo se puede ver /login.
-// El portal del empleado (/portal) queda fuera del candado: ahí la identidad es
-// la cookie de correo que maneja el propio portal, sin cuentas de Supabase.
-// También refresca el token de sesión en cada petición (cookies).
+// El portal del empleado vive en la raíz (/) y es público: su identidad es la
+// cookie de correo que maneja el propio portal, sin cuentas de Supabase.
+// El panel de TI vive en /ti y exige sesión de Supabase Auth; /login es su puerta.
+// También refresca el token de sesión en cada petición al panel (cookies).
 export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith("/portal")) return NextResponse.next();
+  const ruta = request.nextUrl.pathname;
+  const esPanel = ruta.startsWith("/ti");
+  const enLogin = ruta.startsWith("/login");
+  if (!esPanel && !enLogin) return NextResponse.next();
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key =
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
@@ -28,9 +32,8 @@ export async function middleware(request: NextRequest) {
 
   // getUser() valida el JWT contra Supabase; no confiar en getSession() aquí.
   const { data: { user } } = await supabase.auth.getUser();
-  const enLogin = request.nextUrl.pathname.startsWith("/login");
 
-  if (!user && !enLogin) {
+  if (!user && esPanel) {
     const destino = request.nextUrl.clone();
     destino.pathname = "/login";
     destino.search = "";
@@ -38,7 +41,7 @@ export async function middleware(request: NextRequest) {
   }
   if (user && enLogin) {
     const destino = request.nextUrl.clone();
-    destino.pathname = "/";
+    destino.pathname = "/ti";
     destino.search = "";
     return NextResponse.redirect(destino);
   }

@@ -12,8 +12,8 @@
 
 El **TI Hub** es la herramienta operativa del área de TI de PIMSA. Tiene dos caras:
 
-1. **Panel de TI** (`app/(panel)/`) — uso interno del equipo de sistemas: inventario, mantenimientos, tickets, directorio, proveedores.
-2. **Portal del empleado** (`app/portal/`, próxima fase) — interfaz simple para que cualquier trabajador levante tickets sin fricción.
+1. **Portal del empleado** (`app/(portal)/`, **página principal**: rutas `/` y `/nuevo`) — interfaz simple para que cualquier trabajador levante tickets sin fricción.
+2. **Panel de TI** (`app/ti/`, ruta discreta `/ti` con login) — uso interno del equipo de sistemas: inventario por categorías, empleados, mantenimientos, tickets, proveedores.
 
 Lo que NO vive en esta app (queda como documentación/administración en `PIMSA-Microsoft365/`): configuración de seguridad de M365 (MFA, roles), respaldos, red e infraestructura. La app es lo **operativo del día a día**.
 
@@ -48,7 +48,7 @@ Lo que NO vive en esta app (queda como documentación/administración en `PIMSA-
 
 **Objetivo:** que cualquier trabajador de PIMSA levante un ticket en una sola pantalla, sin jerga de TI.
 
-- [x] 🔴 Crear rutas `app/portal/` separadas del panel de TI (layout propio, sin sidebar, tipografía Signika).
+- [x] 🔴 Crear rutas del portal separadas del panel de TI (layout propio, sin sidebar, tipografía Signika). **Actualización:** el portal ahora es la página principal (`/`); el panel se movió a `/ti` con acceso discreto desde el pie del portal.
 - [x] 🔴 Pantalla **crear ticket** (`/portal/nuevo`): pasos numerados — categoría como tarjetas en lenguaje claro, selección del equipo del empleado, resumen + detalles.
 - [x] 🔴 Pantalla **mis tickets** (`/portal`): tarjetas con folio, estado amigable (Recibido / En atención / Resuelto) y barra de progreso de 3 pasos. Sin métricas ni jerga.
 - [x] 🟡 Branding PIMSA visible (logo oficial, azul `#294466` + verde `#7F9D41`, filo verde en cabecera).
@@ -71,13 +71,14 @@ correo de un compañero podría ver sus reportes (portal interno, fricción cero
 
 **Objetivo:** centralizar quién es quién, su contacto y qué equipo tiene. (Sustituye los CSV de directorio telefónico.)
 
-- [ ] 🟡 Nueva tabla `empleados`: nombre, correo, departamento, puesto, extensión, celular, estado.
+- [x] 🟡 Nueva tabla `empleados`: nombre, correo (único), departamento, puesto, extensión, estado. Página `/ti/empleados` con alta, baja y equipos asignados por correo.
 - [ ] 🟡 Pre-cargar los **36 empleados reales** (ya listados en `02-Administracion-M365/Usuarios-y-Licencias.csv`).
-- [ ] 🟡 Vincular `equipos.asignado_a` → FK a `empleados` (hoy es texto libre).
+- [x] 🟡 Vincular equipos a empleados: la asignación en inventario es un **select de empleados** que guarda `asignado_a` (nombre) + `asignado_email` (vínculo). El correo es la llave, no hay FK dura (los registros históricos con texto libre siguen siendo válidos).
+- [x] 🟡 **Inventario por categorías**: cómputo / celulares / líneas telefónicas / software en pestañas; celulares y líneas sin asignar se muestran "libres". (Pedido del usuario, adelantado de fase.)
 - [ ] 🟢 Vista **directorio telefónico** (búsqueda por nombre/depto/extensión).
 - [ ] 🟢 **Generador de firma de correo** por empleado (toma sus datos y produce el HTML de la firma estándar PIMSA).
 
-**Cambios de esquema:** tabla `empleados` + FK desde `equipos` y `tickets`.
+**Cambios de esquema (hechos):** tabla `empleados`; `equipos.categoria` + `equipos.telefono`; check de `tipo` ampliado (celular, tablet, linea, software).
 
 ---
 

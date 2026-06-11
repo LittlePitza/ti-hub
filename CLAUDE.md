@@ -1,6 +1,9 @@
 # CLAUDE.md — TI Hub · Plásticos PIMSA
 
-Sitio interno del departamento de TI de **Plásticos PIMSA** (Plásticos Industriales de Monterrey, S.A. de C.V.): inventario de equipos, mantenimientos y tickets, más un **portal del empleado** (`app/portal/`) para levantar reportes sin fricción.
+Sitio interno del departamento de TI de **Plásticos PIMSA** (Plásticos Industriales de Monterrey, S.A. de C.V.). Dos caras:
+
+- **Portal del empleado** — la página principal (`/` y `/nuevo`, código en `app/(portal)/`): cualquier trabajador levanta reportes sin fricción.
+- **Panel de TI** — ruta discreta `/ti` (código en `app/ti/`), protegida con login: inventario por categorías, empleados, mantenimientos y tickets. Único enlace público: el "TI" pequeño del pie del portal.
 
 ## Comandos
 
@@ -17,7 +20,9 @@ No hay tests ni linter configurados; `npm run build` es la verificación.
 - **Supabase**: PostgreSQL + Auth. Cliente por petición ligado a cookies en `lib/supabase.ts` (`@supabase/ssr`), **nunca singleton** (la sesión cambia por petición). Tres funciones: `getSupabase()` para lecturas en Server Components —devuelve `null` si faltan las env vars, lo que dispara el aviso de `SinConexion`—, `getSupabaseAutenticado()` para server actions del panel —devuelve `null` si no hay usuario— y `getSupabasePortal()` para el portal del empleado —usa `SUPABASE_SERVICE_ROLE_KEY` (solo servidor, **salta el RLS**): siempre filtrar por el correo del empleado—. La key pública se lee de `NEXT_PUBLIC_SUPABASE_ANON_KEY` (o, como fallback, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`). `supabase/schema.sql` es la **fuente de verdad** de la BD (tablas `equipos`, `mantenimientos`, `tickets`, RLS `to authenticated`, seed).
 - **Sin Tailwind ni librerías de UI.** Todo el estilo vive en `app/globals.css` con variables CSS (tema claro/oscuro vía `[data-theme="dark"]`). Las gráficas son SVG hechas a mano en `components/Graficas.tsx`.
 - **Mutaciones con Server Actions** (`actions.ts` junto a cada página); verifican sesión con `getSupabaseAutenticado` antes de escribir y terminan con `revalidatePath`.
-- **Seguridad en 3 capas** (panel de TI): `middleware.ts` redirige a `/login` sin sesión → server actions verifican usuario → RLS en Postgres. No hay registro público; los usuarios se dan de alta a mano en el dashboard de Supabase. Las rutas `/portal` quedan **exentas** del middleware: ahí la identidad es la cookie de correo (ver abajo).
+- **Seguridad en 3 capas** (panel de TI): `middleware.ts` exige sesión en `/ti/*` y redirige a `/login` → server actions verifican usuario → RLS en Postgres. No hay registro público; los usuarios de TI se dan de alta a mano en el dashboard de Supabase. El resto del sitio (portal en `/`) es público: ahí la identidad es la cookie de correo (ver abajo).
+- **Inventario en una sola tabla** `equipos` dividida por `categoria` (`computo` | `celular` | `linea` | `software`); las columnas genéricas cambian de significado por categoría (p. ej. `marca` = compañía telefónica en líneas) y las etiquetas viven en `lib/inventario.ts`. Una línea/celular sin `asignado_email` está **libre**.
+- **Tabla `empleados`** (correo único): fuente de asignación del inventario (select de empleado, no texto libre) y del saludo/nombre en el portal y los tickets.
 
 ## Convenciones del código
 
@@ -69,13 +74,13 @@ Los tokens de `globals.css` ya están remapeados: `--petroleo` → azul `#294466
 
 La planeación completa por fases (pimsificación, portal del empleado, directorio, proveedores, mejoras) y los cambios de esquema previstos viven en **`PLANEACION.md`** — esa es la fuente de verdad del roadmap. Resumen de la fase central abajo.
 
-## Portal del empleado (`app/portal/`) — construido
+## Portal del empleado (`app/(portal)/`, rutas `/` y `/nuevo`) — construido
 
 Cualquier empleado levanta un reporte **sin fricción**: escribe su correo una sola vez y listo.
 
-- **Identidad sin contraseña**: el correo vive en una cookie HttpOnly (`portal_correo`, scope `/portal`, 180 días). Helpers en `lib/portal.ts` (`getCorreoPortal`, categorías y estados en lenguaje del empleado).
+- **Identidad sin contraseña**: el correo vive en una cookie HttpOnly (`portal_correo`, scope `/`, 180 días). Helpers en `lib/portal.ts` (`getCorreoPortal`, categorías y estados en lenguaje del empleado).
 - **Datos**: el servidor consulta con `getSupabasePortal()` (service role key, solo servidor) filtrando **siempre** por `solicitante_email` / `asignado_email`. El RLS sigue cerrado para `anon`; no agregar políticas públicas.
-- **Vínculo correo → equipos**: `equipos.asignado_email` (se captura en el inventario del panel). El empleado ve "sus equipos" y al reportar elige con cuál se relaciona (`tickets.equipo_id`).
-- **Pantallas**: `/portal` (identificación o inicio con CTA + mis reportes con progreso de 3 pasos) y `/portal/nuevo` (pasos numerados: categoría en tarjetas → equipo → resumen/detalles). Prioridad fija en `media`; TI la ajusta desde el panel. Estados amigables: Recibido / En atención / Resuelto / Cerrado.
+- **Vínculo correo → equipos**: `equipos.asignado_email`, asignado desde el inventario eligiendo un empleado. El empleado ve "sus equipos" (laptop, celular, línea, licencias…) y al reportar elige con cuál se relaciona (`tickets.equipo_id`). Si su correo está en `empleados`, el saludo y el ticket llevan su nombre real.
+- **Pantallas**: `/` (identificación o inicio con CTA + mis reportes con progreso de 3 pasos) y `/nuevo` (pasos numerados: categoría en tarjetas → equipo → resumen/detalles). Prioridad fija en `media`; TI la ajusta desde el panel. Estados amigables: Recibido / En atención / Resuelto / Cerrado.
 - **Branding**: Signika, logo oficial, cabecera con filo verde, botones azul marino; clases `.portal-*`, `.opcion`, `.ticket-card` en `globals.css` (mobile-first).
 - Requiere `SUPABASE_SERVICE_ROLE_KEY` en el entorno (ver `.env.example`); sin ella el portal muestra aviso de configuración.

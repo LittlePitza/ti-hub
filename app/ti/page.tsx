@@ -15,6 +15,10 @@ const TIPOS_EQUIPO: Record<string, string> = {
   red: "Red",
   servidor: "Servidores",
   perifericos: "Periféricos",
+  celular: "Celulares",
+  tablet: "Tablets",
+  linea: "Líneas telefónicas",
+  software: "Software",
   otro: "Otro",
 };
 
@@ -145,7 +149,7 @@ export default async function Resumen() {
       <section className="seccion">
         <h2 className="seccion-titulo">Próximos mantenimientos</h2>
         {mantos.length === 0 ? (
-          <div className="vacio">Nada programado para las próximas dos semanas. <Link href="/mantenimientos" style={{ textDecoration: "underline" }}>Programar uno</Link></div>
+          <div className="vacio">Nada programado para las próximas dos semanas. <Link href="/ti/mantenimientos" style={{ textDecoration: "underline" }}>Programar uno</Link></div>
         ) : (
           <table className="tabla">
             <thead><tr><th>Fecha</th><th>Trabajo</th><th>Tipo</th><th>Responsable</th><th>Estado</th></tr></thead>

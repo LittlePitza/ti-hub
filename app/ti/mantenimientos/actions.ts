@@ -15,8 +15,8 @@ export async function crearMantenimiento(formData: FormData) {
     equipo_id: v("equipo_id"),
     notas: v("notas"),
   });
-  revalidatePath("/mantenimientos");
-  revalidatePath("/");
+  revalidatePath("/ti/mantenimientos");
+  revalidatePath("/ti");
 }
 
 export async function cambiarEstadoMantenimiento(formData: FormData) {
@@ -25,14 +25,14 @@ export async function cambiarEstadoMantenimiento(formData: FormData) {
   await sb.from("mantenimientos")
     .update({ estado: formData.get("estado") as string })
     .eq("id", formData.get("id") as string);
-  revalidatePath("/mantenimientos");
-  revalidatePath("/");
+  revalidatePath("/ti/mantenimientos");
+  revalidatePath("/ti");
 }
 
 export async function eliminarMantenimiento(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
   await sb.from("mantenimientos").delete().eq("id", formData.get("id") as string);
-  revalidatePath("/mantenimientos");
-  revalidatePath("/");
+  revalidatePath("/ti/mantenimientos");
+  revalidatePath("/ti");
 }

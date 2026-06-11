@@ -5,17 +5,42 @@
 
 create extension if not exists "pgcrypto";
 
+-- ---------- EMPLEADOS ----------
+-- Fuente de asignación: cada empleado se identifica por su correo (único);
+-- el inventario y el portal ligan equipos y tickets a ese correo.
+create table if not exists empleados (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  correo text not null unique,
+  departamento text,
+  puesto text,
+  extension text,
+  estado text not null default 'activo' check (estado in ('activo','baja')),
+  created_at timestamptz not null default now()
+);
+
 -- ---------- INVENTARIO ----------
+-- Una sola tabla para todo el inventario, dividida por `categoria`:
+--   computo  -> laptops, desktops, monitores, impresoras, red, servidores, periféricos
+--   celular  -> smartphones y tablets (num_serie = IMEI, telefono = línea que trae)
+--   linea    -> líneas telefónicas (telefono = número, marca = compañía, modelo = plan);
+--               una línea sin asignado_email está "libre"
+--   software -> licencias (marca = proveedor, modelo = versión/plan, num_serie = clave,
+--               garantia_hasta = renovación)
 create table if not exists equipos (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
+  categoria text not null default 'computo'
+    check (categoria in ('computo','celular','linea','software')),
   tipo text not null default 'laptop'
-    check (tipo in ('laptop','desktop','monitor','impresora','red','servidor','perifericos','otro')),
+    check (tipo in ('laptop','desktop','monitor','impresora','red','servidor','perifericos','otro',
+                    'celular','tablet','linea','software')),
   marca text,
   modelo text,
   num_serie text,
+  telefono text, -- número de la línea (categorías celular y linea)
   asignado_a text,
-  asignado_email text, -- correo del empleado; vincula sus equipos en el portal
+  asignado_email text, -- correo del empleado (empleados.correo); vincula sus equipos en el portal
   ubicacion text,
   estado text not null default 'activo'
     check (estado in ('activo','en_reparacion','almacen','baja')),
@@ -63,12 +88,20 @@ create index if not exists idx_tickets_estado on tickets(estado);
 create index if not exists idx_mantenimientos_fecha on mantenimientos(fecha_programada);
 create index if not exists idx_tickets_solicitante_email on tickets(solicitante_email);
 create index if not exists idx_equipos_asignado_email on equipos(asignado_email);
+create index if not exists idx_equipos_categoria on equipos(categoria);
 
--- ---------- MIGRACIÓN (bases creadas antes del portal del empleado) ----------
+-- ---------- MIGRACIÓN (bases creadas antes) ----------
 -- `create table if not exists` no agrega columnas a tablas existentes; estas líneas sí.
 alter table equipos add column if not exists asignado_email text;
 alter table tickets add column if not exists solicitante_email text;
 alter table tickets add column if not exists equipo_id uuid references equipos(id) on delete set null;
+alter table equipos add column if not exists categoria text not null default 'computo'
+  check (categoria in ('computo','celular','linea','software'));
+alter table equipos add column if not exists telefono text;
+alter table equipos drop constraint if exists equipos_tipo_check;
+alter table equipos add constraint equipos_tipo_check
+  check (tipo in ('laptop','desktop','monitor','impresora','red','servidor','perifericos','otro',
+                  'celular','tablet','linea','software'));
 
 -- ---------- SEGURIDAD (RLS) ----------
 -- Solo usuarios autenticados (Supabase Auth) pueden leer y escribir.
@@ -80,6 +113,7 @@ alter table tickets add column if not exists equipo_id uuid references equipos(i
 alter table equipos enable row level security;
 alter table mantenimientos enable row level security;
 alter table tickets enable row level security;
+alter table empleados enable row level security;
 
 -- Si vienes del esquema anterior (acceso abierto), estas líneas retiran esas políticas.
 drop policy if exists "acceso_total_equipos" on equipos;
@@ -92,13 +126,25 @@ create policy "mantenimientos_autenticados" on mantenimientos
   for all to authenticated using (true) with check (true);
 create policy "tickets_autenticados" on tickets
   for all to authenticated using (true) with check (true);
+drop policy if exists "empleados_autenticados" on empleados;
+create policy "empleados_autenticados" on empleados
+  for all to authenticated using (true) with check (true);
 
 -- ---------- DATOS DE EJEMPLO ----------
-insert into equipos (nombre, tipo, marca, modelo, num_serie, asignado_a, ubicacion, estado, fecha_compra, garantia_hasta) values
-  ('LAP-EDICION-01', 'laptop', 'Dell', 'Precision 5680', 'DLP5680-8842', 'Edición / Video', 'Oficina QRO · Piso 2', 'activo', '2024-03-15', '2027-03-15'),
-  ('PC-RENDER-01', 'desktop', 'HP', 'Z4 G5', 'HPZ4-22091', 'Sala de render', 'Oficina QRO · Piso 1', 'activo', '2023-08-01', '2026-08-01'),
-  ('IMP-PISO2', 'impresora', 'Brother', 'HL-L6400DW', 'BRO-77120', null, 'Oficina QRO · Piso 2', 'en_reparacion', '2022-01-20', '2024-01-20'),
-  ('SW-CORE-01', 'red', 'Ubiquiti', 'USW-Pro-24', 'UBQ-PRO24-031', null, 'Site · Rack principal', 'activo', '2023-11-10', '2025-11-10');
+-- Solo para instalaciones nuevas: NO re-ejecutar esta sección sobre una base con datos
+-- (los inserts se duplicarían).
+insert into empleados (nombre, correo, departamento, puesto, extension) values
+  ('María López', 'maria.lopez@plasticospimsa.com', 'Edición', 'Editora', '102'),
+  ('Carlos Ruiz', 'carlos.ruiz@plasticospimsa.com', 'Administración', 'Contador', '110');
+
+insert into equipos (nombre, categoria, tipo, marca, modelo, num_serie, telefono, asignado_a, asignado_email, ubicacion, estado, fecha_compra, garantia_hasta) values
+  ('LAP-EDICION-01', 'computo', 'laptop', 'Dell', 'Precision 5680', 'DLP5680-8842', null, 'María López', 'maria.lopez@plasticospimsa.com', 'Oficina · Piso 2', 'activo', '2024-03-15', '2027-03-15'),
+  ('PC-RENDER-01', 'computo', 'desktop', 'HP', 'Z4 G5', 'HPZ4-22091', null, 'Sala de render', null, 'Oficina · Piso 1', 'activo', '2023-08-01', '2026-08-01'),
+  ('IMP-PISO2', 'computo', 'impresora', 'Brother', 'HL-L6400DW', 'BRO-77120', null, null, null, 'Oficina · Piso 2', 'en_reparacion', '2022-01-20', '2024-01-20'),
+  ('SW-CORE-01', 'computo', 'red', 'Ubiquiti', 'USW-Pro-24', 'UBQ-PRO24-031', null, null, null, 'Site · Rack principal', 'activo', '2023-11-10', '2025-11-10'),
+  ('CEL-ADMON-01', 'celular', 'celular', 'Samsung', 'Galaxy A54', 'IMEI-358200001', '81-1234-5678', 'Carlos Ruiz', 'carlos.ruiz@plasticospimsa.com', null, 'activo', '2024-06-10', '2025-06-10'),
+  ('Línea 81-9876-5432', 'linea', 'linea', 'Telcel', 'Plan 5 GB', null, '81-9876-5432', null, null, null, 'activo', null, null),
+  ('Microsoft 365 Business', 'software', 'software', 'Microsoft', 'Business Standard', null, null, 'María López', 'maria.lopez@plasticospimsa.com', null, 'activo', '2024-01-01', '2026-01-01');
 
 insert into mantenimientos (titulo, tipo, fecha_programada, responsable, estado, notas) values
   ('Limpieza física y pasta térmica PC-RENDER-01', 'preventivo', current_date + 7, 'Lalo', 'programado', 'Incluye revisión de ventiladores'),

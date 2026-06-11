@@ -29,7 +29,7 @@ export default async function Portal({
     );
   }
 
-  const [equiposQ, ticketsQ] = await Promise.all([
+  const [equiposQ, ticketsQ, empleadoQ] = await Promise.all([
     sb.from("equipos")
       .select("id, nombre, marca, modelo")
       .eq("asignado_email", correo)
@@ -40,14 +40,16 @@ export default async function Portal({
       .eq("solicitante_email", correo)
       .order("created_at", { ascending: false })
       .limit(30),
+    sb.from("empleados").select("nombre").eq("correo", correo).maybeSingle(),
   ]);
   const equipos = equiposQ.data ?? [];
   const tickets = ticketsQ.data ?? [];
+  const nombre = empleadoQ.data?.nombre?.split(" ")[0] || nombreDeCorreo(correo);
 
   return (
     <>
       <div className="portal-saludo">
-        <h1>Hola, {nombreDeCorreo(correo)}</h1>
+        <h1>Hola, {nombre}</h1>
         <div className="portal-saludo-correo">
           <span>{correo}</span>
           <form action={salirPortal}>
@@ -66,7 +68,7 @@ export default async function Portal({
         </div>
       )}
 
-      <Link href="/portal/nuevo" className="cta-reporte">
+      <Link href="/nuevo" className="cta-reporte">
         <div>
           <div className="cta-reporte-titulo">¿Algo no funciona?</div>
           <div className="cta-reporte-sub">
