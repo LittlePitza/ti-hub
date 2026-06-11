@@ -15,8 +15,8 @@ export async function crearTicket(formData: FormData) {
     prioridad: v("prioridad"),
     asignado_a: v("asignado_a"),
   });
-  revalidatePath("/tickets");
-  revalidatePath("/");
+  revalidatePath("/ti/tickets");
+  revalidatePath("/ti");
 }
 
 export async function cambiarEstadoTicket(formData: FormData) {
@@ -25,14 +25,14 @@ export async function cambiarEstadoTicket(formData: FormData) {
   await sb.from("tickets")
     .update({ estado: formData.get("estado") as string, updated_at: new Date().toISOString() })
     .eq("id", formData.get("id") as string);
-  revalidatePath("/tickets");
-  revalidatePath("/");
+  revalidatePath("/ti/tickets");
+  revalidatePath("/ti");
 }
 
 export async function eliminarTicket(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
   await sb.from("tickets").delete().eq("id", formData.get("id") as string);
-  revalidatePath("/tickets");
-  revalidatePath("/");
+  revalidatePath("/ti/tickets");
+  revalidatePath("/ti");
 }

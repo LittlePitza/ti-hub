@@ -18,7 +18,7 @@ export default async function NuevoReporte({
 }) {
   const { error } = await searchParams;
   const correo = await getCorreoPortal();
-  if (!correo) redirect("/portal");
+  if (!correo) redirect("/");
 
   const sb = getSupabasePortal();
   const { data } = sb
@@ -34,7 +34,7 @@ export default async function NuevoReporte({
 
   return (
     <>
-      <Link href="/portal" className="portal-volver">← Regresar</Link>
+      <Link href="/" className="portal-volver">← Regresar</Link>
       <h1 className="portal-titulo-pagina">Reportar un problema</h1>
       <p className="portal-desc-pagina">
         Contesta estas preguntas y el equipo de TI se encarga del resto.

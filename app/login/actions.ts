@@ -13,7 +13,7 @@ export async function iniciarSesion(formData: FormData) {
 
   const { error } = await sb.auth.signInWithPassword({ email, password });
   if (error) redirect("/login?error=credenciales");
-  redirect("/");
+  redirect("/ti");
 }
 
 export async function cerrarSesion() {
