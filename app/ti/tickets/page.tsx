@@ -10,6 +10,7 @@ import {
   CATEGORIAS_TK,
   ORDEN_PRIORIDAD,
   evaluarRespuesta,
+  evaluarResolucion,
 } from "@/lib/tickets";
 import Insignia from "@/components/Insignia";
 import PildoraSla from "@/components/PildoraSla";
@@ -81,9 +82,18 @@ export default async function Tickets({
     (ORDEN_PRIORIDAD[a.prioridad] ?? 9) - (ORDEN_PRIORIDAD[b.prioridad] ?? 9);
 
   const filtrados = lista.filter(coincide);
+  const ahora = Date.now();
+  const fueraDeSlaTk = (t: any) =>
+    evaluarRespuesta(t, ahora).semaforo === "incumplido" ||
+    evaluarResolucion(t, ahora).semaforo === "incumplido";
   const activos = filtrados.filter((t) => ESTADOS_ACTIVOS.includes(t.estado)).sort(porPrioridad);
   const cerrados = filtrados.filter((t) => ESTADOS_RESUELTOS.includes(t.estado));
-  const ahora = Date.now();
+  const fueraSla = activos.filter(fueraDeSlaTk).length;
+  const sinAsignar = activos.filter((t) => !t.asignado_a).length;
+
+  // Iniciales para el avatar del responsable (texto libre).
+  const iniciales = (s: string) =>
+    s.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
 
   // Conserva los filtros activos al alternar de vista.
   const hrefVista = (v: string) => {
@@ -98,8 +108,13 @@ export default async function Tickets({
   // --- Tarjeta del tablero ---
   const tarjeta = (t: any) => {
     const r = evaluarRespuesta(t, ahora);
+    const fuera = fueraDeSlaTk(t);
     return (
-      <article className="tk-card" key={t.id} style={{ "--prio": PRIO_VAR[t.prioridad] ?? "var(--linea-fuerte)" } as CSSProperties}>
+      <article
+        className={`tk-card ${fuera ? "sla-fuera" : ""}`}
+        key={t.id}
+        style={{ "--prio": PRIO_VAR[t.prioridad] ?? "var(--linea-fuerte)" } as CSSProperties}
+      >
         <div className="tk-card-top">
           <Link href={`/ti/tickets/${t.id}`} className="tk-card-titulo">{t.titulo}</Link>
           <Insignia valor={t.prioridad} esPrioridad />
@@ -110,10 +125,24 @@ export default async function Tickets({
           <span>{t.solicitante}</span>
           {t.equipos?.nombre && (<><span>·</span><span className="mono">{t.equipos.nombre}</span></>)}
         </div>
-        <div className="tk-card-pie">
+        <div className="tk-tags">
+          <span className="tk-tag">{t.categoria}</span>
           <span title={r.pendiente ? `${duracion(r.ms)} sin atender` : duracion(r.ms)}>
             <PildoraSla semaforo={r.semaforo} />
           </span>
+        </div>
+        <div className="tk-card-pie">
+          {t.asignado_a ? (
+            <span className="tk-asignado" title={`Asignado a ${t.asignado_a}`}>
+              <span className="tk-avatar" aria-hidden>{iniciales(t.asignado_a)}</span>
+              <span className="tk-asignado-nombre">{t.asignado_a}</span>
+            </span>
+          ) : (
+            <span className="tk-asignado libre">
+              <span className="tk-avatar" aria-hidden>?</span>
+              <span className="tk-asignado-nombre">Sin asignar</span>
+            </span>
+          )}
           <form action={cambiarEstadoTicket} className="tk-mover">
             <input type="hidden" name="id" value={t.id} />
             <select name="estado" defaultValue={t.estado} aria-label={`Mover ${folio(t.num)} a otro estado`}>
@@ -288,6 +317,13 @@ export default async function Tickets({
         )
       ) : (
         // ---------- Vista de tablero (kanban por estado) ----------
+        <>
+        <div className="tablero-resumen">
+          <span><b>{activos.length}</b> activos</span>
+          {fueraSla > 0 && <span className="alerta">{fueraSla} fuera de SLA</span>}
+          {sinAsignar > 0 && <span className="aviso-txt">{sinAsignar} sin asignar</span>}
+          {hayFiltro && <Link href={hrefVista("tablero")} className="boton-texto">Limpiar filtros</Link>}
+        </div>
         <div className="tablero">
           {COLUMNAS.map((col) => {
             const enCol = filtrados
@@ -316,6 +352,7 @@ export default async function Tickets({
             );
           })}
         </div>
+        </>
       )}
     </>
   );
