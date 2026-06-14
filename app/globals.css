@@ -1384,14 +1384,86 @@ td .editar { position: relative; }
 .responder-hint strong { color: var(--tinta); font-weight: 600; }
 .responder-acciones { display: flex; gap: 8px; flex-shrink: 0; }
 .responder-acciones .boton { padding: 7px 15px; }
-.correo-aviso { color: var(--aviso); }
-.correo-nota {
+.correo-aviso { color: var(--aviso); font-size: 12px; }
+.correo-aviso a { color: var(--petroleo); text-decoration: underline; }
+
+/* Casilla "enviar por correo" en el composer y en el cambio de estado */
+.responder-info { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.responder-correo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--tinta);
+  cursor: pointer;
+}
+.responder-correo input { width: 15px; height: 15px; accent-color: var(--pimsa-verde, var(--ok)); flex-shrink: 0; }
+.bloque-form .responder-correo { margin: 2px 0; }
+
+/* ---------- Panel de configuración de correo (/ti/correo) ---------- */
+.banner-config {
+  border-radius: 10px;
+  padding: 11px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+.banner-config.ok { background: var(--ok-tenue); color: var(--ok); }
+.banner-config.aviso { background: var(--aviso-tenue); color: var(--aviso); }
+.banner-config.critico { background: var(--critico-tenue); color: var(--critico); }
+
+.estado-servicio {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 13px;
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+  background: var(--superficie);
+  padding: 14px 18px;
+  margin-bottom: 22px;
+}
+.estado-punto { width: 11px; height: 11px; border-radius: 99px; flex-shrink: 0; background: var(--linea-fuerte); }
+.estado-servicio.ok .estado-punto { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-tenue); }
+.estado-servicio.aviso .estado-punto { background: var(--aviso); box-shadow: 0 0 0 4px var(--aviso-tenue); }
+.estado-servicio.critico .estado-punto { background: var(--critico); box-shadow: 0 0 0 4px var(--critico-tenue); }
+.estado-titulo { font-weight: 600; font-size: 14px; }
+.estado-desc { font-size: 12.5px; color: var(--tinta-suave); margin-top: 2px; }
+
+.config-form, .config-prueba { max-width: 760px; }
+.config-seccion { padding: 20px 0; border-top: 1px solid var(--linea); }
+.config-seccion:first-of-type { border-top: none; padding-top: 4px; }
+.config-seccion h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.config-sub { font-size: 13px; font-weight: 600; color: var(--tinta-suave); margin: 18px 0 6px; }
+.config-ayuda { font-size: 12.5px; color: var(--tinta-suave); line-height: 1.55; margin-bottom: 14px; }
+.config-ayuda code {
+  background: var(--neutro-tenue);
+  border-radius: 5px;
+  padding: 1px 6px;
   font-size: 12px;
-  color: var(--ok);
+  margin: 0 1px;
+}
+.config-switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--tinta);
+  line-height: 1.5;
+  padding: 8px 0;
+  cursor: pointer;
+}
+.config-switch input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--pimsa-verde, var(--ok)); flex-shrink: 0; }
+.config-prueba { margin-top: 22px; }
+.config-prueba-fila { display: flex; gap: 10px; flex-wrap: wrap; }
+.config-prueba-fila input {
+  flex: 1;
+  min-width: 220px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio);
+  padding: 9px 11px;
+  font-size: 14px;
+  background: var(--superficie);
+  color: var(--tinta);
 }
 
 /* Etiqueta de cada evento de la bitácora + acento de las respuestas al cliente */

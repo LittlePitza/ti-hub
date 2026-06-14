@@ -28,6 +28,10 @@ const GRUPOS: { titulo: string; items: { href: string; label: string; icono: Rea
       { href: "/ti/empleados", label: "Empleados", icono: <IcoEmpleados /> },
     ],
   },
+  {
+    titulo: "Sistema",
+    items: [{ href: "/ti/correo", label: "Correo", icono: <IcoCorreo /> }],
+  },
 ];
 
 export default function Sidebar() {
@@ -142,6 +146,14 @@ function IcoEmpleados() {
       <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
       <path d="M16 5.5a3 3 0 0 1 0 5.6" />
       <path d="M17.5 20a5.5 5.5 0 0 0-2.3-4.5" />
+    </svg>
+  );
+}
+function IcoCorreo() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
     </svg>
   );
 }

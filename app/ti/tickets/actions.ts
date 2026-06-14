@@ -11,8 +11,8 @@ import {
   CATEGORIAS_TK,
   type EstadoTicket,
 } from "@/lib/tickets";
-import { ESTADO_PORTAL, correoValido } from "@/lib/portal";
-import { enviarCorreo, correoRespuesta, correoEstado } from "@/lib/correo";
+import { ESTADO_PORTAL, correoValido, nombreDeCorreo } from "@/lib/portal";
+import { getConfigCorreo, correoOperativo, enviarRespuesta, enviarEstado } from "@/lib/correo";
 
 function refrescar(id?: string) {
   revalidatePath("/ti/tickets");
@@ -43,11 +43,11 @@ async function registrarEvento(
 const limpiar = (formData: FormData, k: string) =>
   (formData.get(k) as string)?.trim() || null;
 
-// Nombre de pila del empleado (para el saludo del correo), si está en `empleados`.
-async function nombreEmpleado(sb: SupabaseClient, correo: string | null): Promise<string | null> {
-  if (!correo) return null;
+// Nombre de pila para el saludo del correo: el de `empleados` si existe, si no el
+// derivado del correo ("juan.perez@…" -> "Juan").
+async function nombreParaCorreo(sb: SupabaseClient, correo: string): Promise<string> {
   const { data } = await sb.from("empleados").select("nombre").eq("correo", correo).maybeSingle();
-  return data?.nombre?.split(" ")[0] ?? null;
+  return data?.nombre?.split(" ")[0] || nombreDeCorreo(correo);
 }
 
 export async function crearTicket(formData: FormData) {
@@ -165,12 +165,19 @@ export async function cambiarEstadoTicket(formData: FormData) {
     estado_nuevo: nuevo,
   });
 
-  // Aviso automático al solicitante del nuevo estado (en su lenguaje del portal).
-  if (correoValido(actual.solicitante_email ?? "")) {
-    const estadoTexto = ESTADO_PORTAL[nuevo]?.texto ?? nuevo;
-    const nombre = await nombreEmpleado(sb, actual.solicitante_email);
-    const { asunto, html, texto } = correoEstado({ num: actual.num, titulo: actual.titulo, estadoTexto, nombre });
-    await enviarCorreo({ para: actual.solicitante_email!, asunto, html, texto });
+  // Aviso al solicitante: solo si TI marcó la casilla (no automático, para no saturar).
+  if (formData.get("notificar") === "on" && correoValido(actual.solicitante_email ?? "")) {
+    const c = await getConfigCorreo(sb);
+    if (correoOperativo(c)) {
+      const email = actual.solicitante_email!;
+      await enviarEstado(c, {
+        para: email,
+        num: actual.num,
+        titulo: actual.titulo,
+        nombre: await nombreParaCorreo(sb, email),
+        estado: ESTADO_PORTAL[nuevo]?.texto ?? nuevo,
+      });
+    }
   }
   refrescar(id);
 }
@@ -254,11 +261,19 @@ export async function responderCliente(formData: FormData) {
     cuerpo,
   });
 
-  // La respuesta llega al solicitante por correo además de verse en el portal.
-  if (actual && correoValido(actual.solicitante_email ?? "")) {
-    const nombre = await nombreEmpleado(sb, actual.solicitante_email);
-    const { asunto, html, texto } = correoRespuesta({ num: actual.num, titulo: actual.titulo, mensaje: cuerpo, nombre });
-    await enviarCorreo({ para: actual.solicitante_email!, asunto, html, texto });
+  // La respuesta se ve siempre en el portal; por correo solo si TI marcó la casilla.
+  if (formData.get("notificar") === "on" && actual && correoValido(actual.solicitante_email ?? "")) {
+    const c = await getConfigCorreo(sb);
+    if (correoOperativo(c)) {
+      const email = actual.solicitante_email!;
+      await enviarRespuesta(c, {
+        para: email,
+        num: actual.num,
+        titulo: actual.titulo,
+        nombre: await nombreParaCorreo(sb, email),
+        mensaje: cuerpo,
+      });
+    }
   }
   refrescar(id);
   revalidatePath("/"); // el portal del empleado muestra las respuestas de TI

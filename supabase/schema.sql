@@ -109,6 +109,40 @@ create table if not exists ticket_eventos (
   created_at timestamptz not null default now()
 );
 
+-- ---------- CONFIGURACIÓN DE CORREO ----------
+-- Una sola fila (id = 1) con el SMTP y las plantillas de notificación al solicitante.
+-- Se administra desde el panel (/ti/correo), no por variables de entorno. La envía
+-- TI a voluntad (no automático). Solo la leen/escriben usuarios autenticados (RLS).
+create table if not exists config_correo (
+  id int primary key default 1 check (id = 1),
+  activo boolean not null default false,
+  smtp_host text not null default 'smtp.office365.com',
+  smtp_port int not null default 587,
+  smtp_user text,
+  smtp_pass text,
+  remitente text,
+  remitente_nombre text not null default 'Soporte TI · Plásticos PIMSA',
+  sitio_url text,
+  notif_respuesta_def boolean not null default true,  -- casilla precargada al responder
+  notif_estado_def boolean not null default false,    -- casilla precargada al cambiar estado
+  asunto_respuesta text not null default 'Respuesta a tu reporte {{folio}}',
+  cuerpo_respuesta text not null default 'Hola {{nombre}},
+
+El equipo de TI respondió a tu reporte {{folio}} · {{titulo}}:
+
+{{mensaje}}',
+  asunto_estado text not null default 'Tu reporte {{folio}} ahora está: {{estado}}',
+  cuerpo_estado text not null default 'Hola {{nombre}},
+
+El estado de tu reporte {{folio}} · {{titulo}} cambió a: {{estado}}.',
+  updated_at timestamptz not null default now()
+);
+insert into config_correo (id) values (1) on conflict (id) do nothing;
+alter table config_correo enable row level security;
+drop policy if exists "config_correo_autenticados" on config_correo;
+create policy "config_correo_autenticados" on config_correo
+  for all to authenticated using (true) with check (true);
+
 create index if not exists idx_tickets_estado on tickets(estado);
 create index if not exists idx_tickets_asignado_email on tickets(asignado_email);
 create index if not exists idx_ticket_eventos_ticket on ticket_eventos(ticket_id, created_at);
