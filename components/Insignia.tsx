@@ -11,6 +11,8 @@ const MAPA: Record<string, { tono: string; texto: string }> = {
   // tickets
   abierto:       { tono: "critico", texto: "abierto" },
   en_proceso:    { tono: "aviso",   texto: "en proceso" },
+  en_espera:     { tono: "info",    texto: "en espera" },
+  reabierto:     { tono: "critico", texto: "reabierto" },
   resuelto:      { tono: "ok",      texto: "resuelto" },
   cerrado:       { tono: "neutro",  texto: "cerrado" },
   // prioridades

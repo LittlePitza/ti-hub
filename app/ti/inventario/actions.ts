@@ -59,6 +59,37 @@ export async function cambiarEstadoEquipo(formData: FormData) {
   refrescar((formData.get("categoria") as string) ?? "computo");
 }
 
+// Edición completa del equipo (todos los campos de su categoría + asignación).
+export async function editarEquipo(formData: FormData) {
+  const sb = await getSupabaseAutenticado();
+  if (!sb) return;
+  const v = (k: string) => (formData.get(k) as string)?.trim() || null;
+  const id = formData.get("id") as string;
+  if (!id) return;
+
+  const cat = categoriaInv(v("categoria") ?? undefined);
+  const tipo = cat.tipos.includes(v("tipo") ?? "") ? v("tipo") : cat.tipos[0];
+  const telefono = v("telefono");
+  const nombre = v("nombre") ?? (telefono ? `Línea ${telefono}` : null);
+  if (!nombre) return;
+
+  await sb.from("equipos").update({
+    nombre,
+    tipo,
+    marca: v("marca"),
+    modelo: v("modelo"),
+    num_serie: v("num_serie"),
+    telefono,
+    ...(await datosAsignacion(sb, v("empleado")?.toLowerCase() ?? null)),
+    ubicacion: v("ubicacion"),
+    estado: v("estado") ?? "activo",
+    fecha_compra: v("fecha_compra"),
+    garantia_hasta: v("garantia_hasta"),
+    notas: v("notas"),
+  }).eq("id", id);
+  refrescar(cat.valor);
+}
+
 // Asignar a un empleado o liberar (correo vacío => libre).
 export async function asignarEquipo(formData: FormData) {
   const sb = await getSupabaseAutenticado();

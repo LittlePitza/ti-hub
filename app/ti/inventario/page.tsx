@@ -4,7 +4,7 @@ import { fechaCorta } from "@/lib/format";
 import { CATEGORIAS_INV, categoriaInv } from "@/lib/inventario";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
-import { crearEquipo, cambiarEstadoEquipo, asignarEquipo, eliminarEquipo } from "./actions";
+import { crearEquipo, cambiarEstadoEquipo, asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -201,13 +201,58 @@ export default async function Inventario({
                 <td><Insignia valor={e.estado} /></td>
                 <td style={{ whiteSpace: "nowrap" }}>
                   <div className="fila-acciones">
+                    <details className="plegable interno editar">
+                      <summary className="boton secundario mini">Editar</summary>
+                      <form action={editarEquipo} className="bloque-form panel-editar">
+                        <input type="hidden" name="id" value={e.id} />
+                        <input type="hidden" name="categoria" value={cat.valor} />
+                        <label className="mini-label">{c.nombre.label}</label>
+                        <input name="nombre" defaultValue={e.nombre ?? ""} required={cat.valor !== "linea"} />
+                        {cat.tipos.length > 1 && (
+                          <>
+                            <label className="mini-label">Tipo</label>
+                            <select name="tipo" defaultValue={e.tipo}>
+                              {cat.tipos.map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
+                            </select>
+                          </>
+                        )}
+                        {c.marca && (<><label className="mini-label">{c.marca.label}</label><input name="marca" defaultValue={e.marca ?? ""} /></>)}
+                        {c.modelo && (<><label className="mini-label">{c.modelo.label}</label><input name="modelo" defaultValue={e.modelo ?? ""} /></>)}
+                        {c.num_serie && (<><label className="mini-label">{c.num_serie.label}</label><input name="num_serie" defaultValue={e.num_serie ?? ""} /></>)}
+                        {c.telefono && (<><label className="mini-label">{c.telefono.label}</label><input name="telefono" defaultValue={e.telefono ?? ""} required={cat.valor === "linea"} /></>)}
+                        <label className="mini-label">Asignar a</label>
+                        {selectorEmpleado("empleado", e.asignado_email ?? "")}
+                        {c.ubicacion && (<><label className="mini-label">Ubicación</label><input name="ubicacion" defaultValue={e.ubicacion ?? ""} /></>)}
+                        <label className="mini-label">Estado</label>
+                        <select name="estado" defaultValue={e.estado}>
+                          {ESTADOS.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
+                        </select>
+                        {c.fechas && (
+                          <div className="dos-col">
+                            <div>
+                              <label className="mini-label">Compra</label>
+                              <input name="fecha_compra" type="date" defaultValue={e.fecha_compra ?? ""} />
+                            </div>
+                            <div>
+                              <label className="mini-label">{c.garantiaLabel}</label>
+                              <input name="garantia_hasta" type="date" defaultValue={e.garantia_hasta ?? ""} />
+                            </div>
+                          </div>
+                        )}
+                        <label className="mini-label">Notas</label>
+                        <textarea name="notas" defaultValue={e.notas ?? ""} rows={2} />
+                        <button className="boton mini" type="submit">Guardar</button>
+                      </form>
+                    </details>
                     <form action={asignarEquipo}>
                       <input type="hidden" name="id" value={e.id} />
+                      <input type="hidden" name="categoria" value={cat.valor} />
                       {selectorEmpleado("empleado", e.asignado_email ?? "")}
                       <button className="boton secundario mini" type="submit">Asignar</button>
                     </form>
                     <form action={cambiarEstadoEquipo}>
                       <input type="hidden" name="id" value={e.id} />
+                      <input type="hidden" name="categoria" value={cat.valor} />
                       <select name="estado" defaultValue={e.estado}>
                         {ESTADOS.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
                       </select>
@@ -215,6 +260,7 @@ export default async function Inventario({
                     </form>
                     <form action={eliminarEquipo}>
                       <input type="hidden" name="id" value={e.id} />
+                      <input type="hidden" name="categoria" value={cat.valor} />
                       <button className="boton secundario mini" type="submit" style={{ color: "var(--critico)" }}>Eliminar</button>
                     </form>
                   </div>

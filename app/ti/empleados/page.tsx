@@ -2,7 +2,7 @@ import { getSupabase } from "@/lib/supabase";
 import { CATEGORIAS_INV } from "@/lib/inventario";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
-import { crearEmpleado, cambiarEstadoEmpleado, eliminarEmpleado } from "./actions";
+import { crearEmpleado, cambiarEstadoEmpleado, editarEmpleado, eliminarEmpleado } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -106,6 +106,23 @@ export default async function Empleados() {
                   <td><Insignia valor={p.estado} /></td>
                   <td style={{ whiteSpace: "nowrap" }}>
                     <div className="fila-acciones">
+                      <details className="plegable interno editar">
+                        <summary className="boton secundario mini">Editar</summary>
+                        <form action={editarEmpleado} className="bloque-form panel-editar">
+                          <input type="hidden" name="id" value={p.id} />
+                          <label className="mini-label">Nombre</label>
+                          <input name="nombre" defaultValue={p.nombre} required />
+                          <label className="mini-label">Correo</label>
+                          <input name="correo" type="email" defaultValue={p.correo} required />
+                          <label className="mini-label">Departamento</label>
+                          <input name="departamento" defaultValue={p.departamento ?? ""} />
+                          <label className="mini-label">Puesto</label>
+                          <input name="puesto" defaultValue={p.puesto ?? ""} />
+                          <label className="mini-label">Extensión</label>
+                          <input name="extension" defaultValue={p.extension ?? ""} />
+                          <button className="boton mini" type="submit">Guardar</button>
+                        </form>
+                      </details>
                       <form action={cambiarEstadoEmpleado}>
                         <input type="hidden" name="id" value={p.id} />
                         <select name="estado" defaultValue={p.estado}>

@@ -38,6 +38,8 @@ export const CATEGORIAS_PORTAL: { valor: string; titulo: string; detalle: string
 export const ESTADO_PORTAL: Record<string, { texto: string; tono: string; paso: number }> = {
   abierto:    { texto: "Recibido",     tono: "info",   paso: 1 },
   en_proceso: { texto: "En atención",  tono: "aviso",  paso: 2 },
+  en_espera:  { texto: "En espera",    tono: "info",   paso: 2 },
+  reabierto:  { texto: "Reabierto",    tono: "aviso",  paso: 2 },
   resuelto:   { texto: "Resuelto",     tono: "ok",     paso: 3 },
   cerrado:    { texto: "Cerrado",      tono: "neutro", paso: 3 },
 };
