@@ -29,6 +29,11 @@ function contar<T>(lista: T[], llave: (x: T) => string): Record<string, number> 
   return mapa;
 }
 
+// Color de la barra "real vs SLA": verde si cumplimos, ámbar si flaqueamos,
+// rojo si vamos mal. El umbral 80% es el mismo que usa el resto del panel.
+const colorPct = (pct: number | null) =>
+  pct === null ? "var(--linea-fuerte)" : pct >= 80 ? "var(--ok)" : pct >= 50 ? "var(--aviso)" : "var(--critico)";
+
 export default async function Resumen() {
   const sb = await getSupabase();
   const head = (
@@ -76,6 +81,14 @@ export default async function Resumen() {
 
   const resueltosTk = tickets.filter((t) => t.resuelto_at);
   const tiemposResolucion = resueltosTk.map((t) => evaluarResolucion(t, ahora).ms);
+
+  // Velocidad + calidad de atención, para el hero del resumen.
+  const atendidos = conRespuesta.length;
+  const resueltos = resueltosTk.length;
+  const resolucionEnSla = resueltosTk.filter((t) => evaluarResolucion(t, ahora).semaforo === "cumplido").length;
+  const pctResolucionSla = resueltos ? Math.round((resolucionEnSla / resueltos) * 100) : null;
+  const promResolucion = tiemposResolucion.length ? duracion(promedio(tiemposResolucion)) : null;
+  const promRespuesta = tiemposRespuesta.length ? duracion(promedio(tiemposRespuesta)) : null;
 
   const fueraDeSla = ticketsActivos.filter((t) => {
     const r = evaluarRespuesta(t, ahora);
@@ -130,57 +143,87 @@ export default async function Resumen() {
     <>
       {head}
 
-      {/* Pulso del departamento: las cifras que deciden el día */}
-      <div className="metricas">
-        <div className="metrica">
-          <div className={`metrica-valor ${ticketsActivos.length > 0 ? "alerta" : ""}`}>{ticketsActivos.length}</div>
-          <div className="metrica-label">Tickets sin resolver</div>
+      {/* Hero: ¿cómo va la mesa de ayuda? Velocidad emparejada con calidad de SLA */}
+      <section className="resumen-hero">
+        <div className="resumen-hero-cab">
+          <h2>Rendimiento de la mesa</h2>
+          <Link href="/ti/tickets" className="hero-activos">
+            <span className="hero-activos-num">{ticketsActivos.length}</span> activos ahora
+          </Link>
         </div>
-        <div className="metrica">
-          <div className={`metrica-valor ${fueraDeSla > 0 ? "alerta" : ""}`}>{fueraDeSla}</div>
-          <div className="metrica-label">Fuera de SLA</div>
+        <div className="resumen-hero-cuerpo">
+          <div className="tiempo-metrica">
+            <div className="tiempo-label">Tiempo de resolución</div>
+            <div className="tiempo-valor">
+              {promResolucion ?? "—"}
+              {promResolucion && <span className="tiempo-unid">promedio</span>}
+            </div>
+            <div className="tiempo-track">
+              <div
+                className="tiempo-track-fill"
+                style={{ width: `${pctResolucionSla ?? 0}%`, background: colorPct(pctResolucionSla) }}
+              />
+            </div>
+            <div className="tiempo-pie">
+              <span>{pctResolucionSla === null ? "Aún sin tickets resueltos" : <><b>{pctResolucionSla}%</b> dentro de SLA</>}</span>
+              <span>{resueltos} {resueltos === 1 ? "resuelto" : "resueltos"}</span>
+            </div>
+          </div>
+          <div className="tiempo-metrica">
+            <div className="tiempo-label">Primera respuesta</div>
+            <div className="tiempo-valor">
+              {promRespuesta ?? "—"}
+              {promRespuesta && <span className="tiempo-unid">promedio</span>}
+            </div>
+            <div className="tiempo-track">
+              <div
+                className="tiempo-track-fill"
+                style={{ width: `${pctRespuestaSla ?? 0}%`, background: colorPct(pctRespuestaSla) }}
+              />
+            </div>
+            <div className="tiempo-pie">
+              <span>{pctRespuestaSla === null ? "Aún sin atender" : <><b>{pctRespuestaSla}%</b> dentro de SLA</>}</span>
+              <span>{atendidos} {atendidos === 1 ? "atendido" : "atendidos"}</span>
+            </div>
+          </div>
         </div>
-        <div className="metrica">
-          <div className={`metrica-valor ${porVencer > 0 ? "alerta" : ""}`}>{porVencer}</div>
-          <div className="metrica-label">Por vencer SLA</div>
+        <div className="resumen-hero-alertas">
+          {fueraDeSla > 0 && (
+            <Link href="/ti/tickets" className="chip-alerta critico">{fueraDeSla} fuera de SLA</Link>
+          )}
+          {porVencer > 0 && (
+            <Link href="/ti/tickets" className="chip-alerta aviso">{porVencer} por vencer</Link>
+          )}
+          {fueraDeSla === 0 && porVencer === 0 && <span className="chip-ok">Todo dentro de SLA</span>}
         </div>
-        <div className="metrica">
-          <div className={`metrica-valor ${enReparacion > 0 ? "alerta" : ""}`}>{enReparacion}</div>
-          <div className="metrica-label">Equipos en reparación</div>
+      </section>
+
+      {/* Contexto operativo: activos físicos y trabajo programado */}
+      <section className="banda-operativa">
+        <h2 className="banda-titulo">Inventario y mantenimiento</h2>
+        <div className="metricas">
+          <div className="metrica">
+            <div className="metrica-valor">{equipos.length}</div>
+            <div className="metrica-label">Equipos en inventario</div>
+          </div>
+          <div className="metrica">
+            <div className={`metrica-valor ${enReparacion > 0 ? "alerta" : ""}`}>{enReparacion}</div>
+            <div className="metrica-label">En reparación</div>
+          </div>
+          <div className="metrica">
+            <div className={`metrica-valor ${vencidos.length > 0 ? "alerta" : ""}`}>{vencidos.length}</div>
+            <div className="metrica-label">Mantenimientos vencidos</div>
+          </div>
+          <div className="metrica">
+            <div className="metrica-valor">{proximos.length}</div>
+            <div className="metrica-label">Próximos 14 días</div>
+          </div>
         </div>
-        <div className="metrica">
-          <div className={`metrica-valor ${vencidos.length > 0 ? "alerta" : ""}`}>{vencidos.length}</div>
-          <div className="metrica-label">Mantenimientos vencidos</div>
-        </div>
-      </div>
+      </section>
 
       <div className="dash-cols">
-        {/* Columna principal: SLA + gráficas */}
+        {/* Columna principal: gráficas de distribución */}
         <div className="dash-main">
-          <section>
-            <h2 className="banda-titulo">Atención de tickets · SLA</h2>
-            <div className="metricas compacta">
-              <div className="metrica">
-                <div className="metrica-valor">{tiemposRespuesta.length ? duracion(promedio(tiemposRespuesta)) : "—"}</div>
-                <div className="metrica-label">1ª respuesta promedio</div>
-              </div>
-              <div className="metrica">
-                <div className="metrica-valor">{tiemposResolucion.length ? duracion(promedio(tiemposResolucion)) : "—"}</div>
-                <div className="metrica-label">Resolución promedio</div>
-              </div>
-              <div className="metrica">
-                <div className={`metrica-valor ${pctRespuestaSla !== null && pctRespuestaSla < 80 ? "alerta" : ""}`}>
-                  {pctRespuestaSla === null ? "—" : `${pctRespuestaSla}%`}
-                </div>
-                <div className="metrica-label">Respuesta dentro de SLA</div>
-              </div>
-              <div className="metrica">
-                <div className="metrica-valor">{equipos.length}</div>
-                <div className="metrica-label">Equipos en inventario</div>
-              </div>
-            </div>
-          </section>
-
           <section>
             <h2 className="banda-titulo">Distribución</h2>
             <div className="tarjetas">
