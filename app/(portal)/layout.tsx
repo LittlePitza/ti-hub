@@ -41,7 +41,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       </header>
       <main className="portal-main">{children}</main>
       <footer className="portal-pie">
-        Departamento de TI · Plásticos Industriales de Monterrey, S.A. de C.V.
+        Departamento de TI · Plásticos PIMSA
         {" · "}
         <a href="/ti" className="pie-ti">TI</a>
       </footer>

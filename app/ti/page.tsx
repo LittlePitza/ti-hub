@@ -130,146 +130,165 @@ export default async function Resumen() {
     <>
       {head}
 
+      {/* Pulso del departamento: las cifras que deciden el día */}
       <div className="metricas">
-        <div className="metrica">
-          <div className="metrica-valor">{equipos.length}</div>
-          <div className="metrica-label">Equipos en inventario</div>
-        </div>
-        <div className="metrica">
-          <div className={`metrica-valor ${enReparacion > 0 ? "alerta" : ""}`}>{enReparacion}</div>
-          <div className="metrica-label">En reparación</div>
-        </div>
         <div className="metrica">
           <div className={`metrica-valor ${ticketsActivos.length > 0 ? "alerta" : ""}`}>{ticketsActivos.length}</div>
           <div className="metrica-label">Tickets sin resolver</div>
         </div>
         <div className="metrica">
+          <div className={`metrica-valor ${fueraDeSla > 0 ? "alerta" : ""}`}>{fueraDeSla}</div>
+          <div className="metrica-label">Fuera de SLA</div>
+        </div>
+        <div className="metrica">
+          <div className={`metrica-valor ${porVencer > 0 ? "alerta" : ""}`}>{porVencer}</div>
+          <div className="metrica-label">Por vencer SLA</div>
+        </div>
+        <div className="metrica">
+          <div className={`metrica-valor ${enReparacion > 0 ? "alerta" : ""}`}>{enReparacion}</div>
+          <div className="metrica-label">Equipos en reparación</div>
+        </div>
+        <div className="metrica">
           <div className={`metrica-valor ${vencidos.length > 0 ? "alerta" : ""}`}>{vencidos.length}</div>
           <div className="metrica-label">Mantenimientos vencidos</div>
         </div>
-        <div className="metrica">
-          <div className="metrica-valor">{proximos.length}</div>
-          <div className="metrica-label">Mantenimientos en 14 días</div>
-        </div>
       </div>
 
-      <section className="seccion">
-        <h2 className="seccion-titulo">Atención de tickets · SLA</h2>
-        <div className="metricas">
-          <div className="metrica">
-            <div className="metrica-valor">{tiemposRespuesta.length ? duracion(promedio(tiemposRespuesta)) : "—"}</div>
-            <div className="metrica-label">1ª respuesta promedio</div>
-          </div>
-          <div className="metrica">
-            <div className="metrica-valor">{tiemposResolucion.length ? duracion(promedio(tiemposResolucion)) : "—"}</div>
-            <div className="metrica-label">Resolución promedio</div>
-          </div>
-          <div className="metrica">
-            <div className={`metrica-valor ${pctRespuestaSla !== null && pctRespuestaSla < 80 ? "alerta" : ""}`}>
-              {pctRespuestaSla === null ? "—" : `${pctRespuestaSla}%`}
+      <div className="dash-cols">
+        {/* Columna principal: SLA + gráficas */}
+        <div className="dash-main">
+          <section>
+            <h2 className="banda-titulo">Atención de tickets · SLA</h2>
+            <div className="metricas compacta">
+              <div className="metrica">
+                <div className="metrica-valor">{tiemposRespuesta.length ? duracion(promedio(tiemposRespuesta)) : "—"}</div>
+                <div className="metrica-label">1ª respuesta promedio</div>
+              </div>
+              <div className="metrica">
+                <div className="metrica-valor">{tiemposResolucion.length ? duracion(promedio(tiemposResolucion)) : "—"}</div>
+                <div className="metrica-label">Resolución promedio</div>
+              </div>
+              <div className="metrica">
+                <div className={`metrica-valor ${pctRespuestaSla !== null && pctRespuestaSla < 80 ? "alerta" : ""}`}>
+                  {pctRespuestaSla === null ? "—" : `${pctRespuestaSla}%`}
+                </div>
+                <div className="metrica-label">Respuesta dentro de SLA</div>
+              </div>
+              <div className="metrica">
+                <div className="metrica-valor">{equipos.length}</div>
+                <div className="metrica-label">Equipos en inventario</div>
+              </div>
             </div>
-            <div className="metrica-label">Respuesta dentro de SLA</div>
-          </div>
-          <div className="metrica">
-            <div className={`metrica-valor ${fueraDeSla > 0 ? "alerta" : ""}`}>{fueraDeSla}</div>
-            <div className="metrica-label">Activos fuera de SLA</div>
-          </div>
-          <div className="metrica">
-            <div className={`metrica-valor ${porVencer > 0 ? "alerta" : ""}`}>{porVencer}</div>
-            <div className="metrica-label">Activos por vencer</div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      <div className="tarjetas">
-        <div className="tarjeta">
-          <h3 className="tarjeta-titulo">Tickets por estado</h3>
-          <Dona datos={ticketsPorEstado} unidad="tickets" />
+          <section>
+            <h2 className="banda-titulo">Distribución</h2>
+            <div className="tarjetas">
+              <div className="tarjeta">
+                <h3 className="tarjeta-titulo">Tickets por estado</h3>
+                <Dona datos={ticketsPorEstado} unidad="tickets" />
+              </div>
+              <div className="tarjeta">
+                <h3 className="tarjeta-titulo">Tickets activos por prioridad</h3>
+                <Barras datos={ticketsPorPrioridad} />
+              </div>
+              <div className="tarjeta">
+                <h3 className="tarjeta-titulo">Equipos por estado</h3>
+                <Dona datos={equiposPorEstado} unidad="equipos" />
+              </div>
+              <div className="tarjeta">
+                <h3 className="tarjeta-titulo">Equipos por tipo</h3>
+                <Barras datos={equiposPorTipo} />
+              </div>
+            </div>
+          </section>
         </div>
-        <div className="tarjeta">
-          <h3 className="tarjeta-titulo">Tickets activos por prioridad</h3>
-          <Barras datos={ticketsPorPrioridad} />
-        </div>
-        <div className="tarjeta">
-          <h3 className="tarjeta-titulo">Equipos por estado</h3>
-          <Dona datos={equiposPorEstado} unidad="equipos" />
-        </div>
-        <div className="tarjeta">
-          <h3 className="tarjeta-titulo">Equipos por tipo</h3>
-          <Barras datos={equiposPorTipo} />
-        </div>
+
+        {/* Columna de actividad */}
+        <aside className="dash-aside">
+          <div className="panel">
+            <div className="panel-cab">
+              <span className="panel-cab-titulo">Últimos tickets</span>
+              <Link href="/ti/tickets">Ver todos</Link>
+            </div>
+            <div className="panel-cuerpo">
+              {ultimosTickets.length === 0 ? (
+                <div className="panel-vacio">Sin tickets registrados todavía.</div>
+              ) : (
+                ultimosTickets.map((t) => (
+                  <div className="fila-compacta" key={t.id}>
+                    <div className="fila-compacta-main">
+                      <Link href={`/ti/tickets/${t.id}`} className="fila-compacta-titulo">{t.titulo}</Link>
+                      <div className="fila-compacta-sub">
+                        <span className="mono">{folio(t.num)}</span><span>·</span><span>{t.solicitante}</span>
+                      </div>
+                    </div>
+                    <div className="fila-compacta-fin"><Insignia valor={t.estado} /></div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-cab">
+              <span className="panel-cab-titulo">Próximos mantenimientos</span>
+              <Link href="/ti/mantenimientos">Programar</Link>
+            </div>
+            <div className="panel-cuerpo">
+              {mantos.length === 0 ? (
+                <div className="panel-vacio">Nada en las próximas dos semanas.</div>
+              ) : (
+                mantos.map((m) => {
+                  const vencido = m.fecha_programada < hoy;
+                  return (
+                    <div className="fila-compacta" key={m.id}>
+                      <div className="fila-compacta-main">
+                        <div className="fila-compacta-titulo">{m.titulo}</div>
+                        <div className="fila-compacta-sub">
+                          <span>{m.tipo}</span><span>·</span><span>{m.responsable ?? "Sin responsable"}</span>
+                        </div>
+                      </div>
+                      <div className="fila-compacta-fin">
+                        <div className={`fila-compacta-fecha ${vencido ? "fecha-vencida" : ""}`}>
+                          {fechaCorta(m.fecha_programada)}
+                        </div>
+                        {vencido && <div className="fecha-vencida" style={{ fontSize: 11 }}>vencido</div>}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {garantias.length > 0 && (
+            <div className="panel">
+              <div className="panel-cab">
+                <span className="panel-cab-titulo">Garantías · 90 días</span>
+                <Link href="/ti/inventario">Inventario</Link>
+              </div>
+              <div className="panel-cuerpo">
+                {garantias.map((e) => {
+                  const dias = Math.ceil((new Date(e.garantia_hasta! + "T12:00:00").getTime() - Date.now()) / 86400000);
+                  return (
+                    <div className="fila-compacta" key={e.nombre}>
+                      <div className="fila-compacta-main">
+                        <div className="fila-compacta-titulo">{e.nombre}</div>
+                        <div className="fila-compacta-sub">{TIPOS_EQUIPO[e.tipo] ?? e.tipo}</div>
+                      </div>
+                      <div className="fila-compacta-fin">
+                        <div className="fila-compacta-fecha">{fechaCorta(e.garantia_hasta)}</div>
+                        <div className={dias <= 30 ? "fecha-vencida" : "suave"} style={{ fontSize: 11 }}>{dias} días</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </aside>
       </div>
-
-      <section className="seccion">
-        <h2 className="seccion-titulo">Próximos mantenimientos</h2>
-        {mantos.length === 0 ? (
-          <div className="vacio">Nada programado para las próximas dos semanas. <Link href="/ti/mantenimientos" style={{ textDecoration: "underline" }}>Programar uno</Link></div>
-        ) : (
-          <table className="tabla">
-            <thead><tr><th>Fecha</th><th>Trabajo</th><th>Tipo</th><th>Responsable</th><th>Estado</th></tr></thead>
-            <tbody>
-              {mantos.map((m) => {
-                const vencido = m.fecha_programada < hoy;
-                return (
-                  <tr key={m.id}>
-                    <td className={`mono ${vencido ? "fecha-vencida" : ""}`}>
-                      {fechaCorta(m.fecha_programada)}{vencido && " · vencido"}
-                    </td>
-                    <td className="celda-principal">{m.titulo}</td>
-                    <td className="suave">{m.tipo}</td>
-                    <td className="suave">{m.responsable ?? "—"}</td>
-                    <td><Insignia valor={m.estado} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </section>
-
-      {garantias.length > 0 && (
-        <section className="seccion">
-          <h2 className="seccion-titulo">Garantías por vencer · próximos 90 días</h2>
-          <table className="tabla">
-            <thead><tr><th>Equipo</th><th>Tipo</th><th>Vence</th><th>Días restantes</th></tr></thead>
-            <tbody>
-              {garantias.map((e) => {
-                const dias = Math.ceil((new Date(e.garantia_hasta! + "T12:00:00").getTime() - Date.now()) / 86400000);
-                return (
-                  <tr key={e.nombre}>
-                    <td className="celda-principal">{e.nombre}</td>
-                    <td className="suave">{TIPOS_EQUIPO[e.tipo] ?? e.tipo}</td>
-                    <td className="mono">{fechaCorta(e.garantia_hasta)}</td>
-                    <td className={`mono ${dias <= 30 ? "fecha-vencida" : "suave"}`}>{dias} días</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
-      )}
-
-      <section className="seccion">
-        <h2 className="seccion-titulo">Últimos tickets</h2>
-        {ultimosTickets.length === 0 ? (
-          <div className="vacio">Sin tickets registrados todavía.</div>
-        ) : (
-          <table className="tabla">
-            <thead><tr><th>Folio</th><th>Asunto</th><th>Solicitante</th><th>Prioridad</th><th>Estado</th></tr></thead>
-            <tbody>
-              {ultimosTickets.map((t) => (
-                <tr key={t.id}>
-                  <td className="mono"><Link href={`/ti/tickets/${t.id}`} className="enlace-folio">{folio(t.num)}</Link></td>
-                  <td className="celda-principal">{t.titulo}</td>
-                  <td className="suave">{t.solicitante}</td>
-                  <td><Insignia valor={t.prioridad} esPrioridad /></td>
-                  <td><Insignia valor={t.estado} /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
     </>
   );
 }

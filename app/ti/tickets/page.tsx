@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folio, duracion } from "@/lib/format";
@@ -13,22 +14,39 @@ import {
 import Insignia from "@/components/Insignia";
 import PildoraSla from "@/components/PildoraSla";
 import SinConexion from "@/components/SinConexion";
-import { crearTicket, cambiarEstadoTicket, eliminarTicket } from "./actions";
+import { crearTicket, cambiarEstadoTicket } from "./actions";
 
 export const dynamic = "force-dynamic";
+
+// Carril de prioridad de cada tarjeta (borde izquierdo) y acento de cada
+// columna del tablero: el color comunica urgencia y estado de un vistazo.
+const PRIO_VAR: Record<string, string> = {
+  critica: "var(--critico)",
+  alta: "var(--aviso)",
+  media: "var(--petroleo)",
+  baja: "var(--linea-fuerte)",
+};
+
+const COLUMNAS: { titulo: string; estados: string[]; acento: string; limite?: number }[] = [
+  { titulo: "Por atender", estados: ["abierto", "reabierto"], acento: "var(--critico)" },
+  { titulo: "En proceso", estados: ["en_proceso"], acento: "var(--aviso)" },
+  { titulo: "En espera", estados: ["en_espera"], acento: "var(--petroleo)" },
+  { titulo: "Resueltos", estados: ["resuelto", "cerrado"], acento: "var(--ok)", limite: 12 },
+];
 
 export default async function Tickets({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; estado?: string; prioridad?: string }>;
+  searchParams: Promise<{ q?: string; estado?: string; prioridad?: string; vista?: string }>;
 }) {
-  const { q = "", estado = "", prioridad = "" } = await searchParams;
+  const { q = "", estado = "", prioridad = "", vista = "tablero" } = await searchParams;
+  const esLista = vista === "lista";
   const sb = await getSupabase();
   const head = (
     <div className="pagina-head">
       <div>
         <h1 className="pagina-titulo">Tickets</h1>
-        <p className="pagina-desc">Solicitudes y reportes de los usuarios · tiempos de respuesta y SLA</p>
+        <p className="pagina-desc">Bandeja de soporte · prioriza, mueve y vigila los tiempos de respuesta</p>
       </div>
     </div>
   );
@@ -67,13 +85,54 @@ export default async function Tickets({
   const cerrados = filtrados.filter((t) => ESTADOS_RESUELTOS.includes(t.estado));
   const ahora = Date.now();
 
+  // Conserva los filtros activos al alternar de vista.
+  const hrefVista = (v: string) => {
+    const p = new URLSearchParams();
+    if (q) p.set("q", q);
+    if (estado) p.set("estado", estado);
+    if (prioridad) p.set("prioridad", prioridad);
+    p.set("vista", v);
+    return `/ti/tickets?${p.toString()}`;
+  };
+
+  // --- Tarjeta del tablero ---
+  const tarjeta = (t: any) => {
+    const r = evaluarRespuesta(t, ahora);
+    return (
+      <article className="tk-card" key={t.id} style={{ "--prio": PRIO_VAR[t.prioridad] ?? "var(--linea-fuerte)" } as CSSProperties}>
+        <div className="tk-card-top">
+          <Link href={`/ti/tickets/${t.id}`} className="tk-card-titulo">{t.titulo}</Link>
+          <Insignia valor={t.prioridad} esPrioridad />
+        </div>
+        <div className="tk-card-meta">
+          <Link href={`/ti/tickets/${t.id}`} className="enlace-folio">{folio(t.num)}</Link>
+          <span>·</span>
+          <span>{t.solicitante}</span>
+          {t.equipos?.nombre && (<><span>·</span><span className="mono">{t.equipos.nombre}</span></>)}
+        </div>
+        <div className="tk-card-pie">
+          <span title={r.pendiente ? `${duracion(r.ms)} sin atender` : duracion(r.ms)}>
+            <PildoraSla semaforo={r.semaforo} />
+          </span>
+          <form action={cambiarEstadoTicket} className="tk-mover">
+            <input type="hidden" name="id" value={t.id} />
+            <select name="estado" defaultValue={t.estado} aria-label={`Mover ${folio(t.num)} a otro estado`}>
+              {ESTADOS_TICKET.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
+            </select>
+            <button className="boton secundario mini" type="submit">Mover</button>
+          </form>
+        </div>
+      </article>
+    );
+  };
+
+  // --- Fila de la vista de lista ---
   const encabezado = (
     <tr>
       <th>Folio</th><th>Asunto</th><th>Solicitante</th><th>Prioridad</th>
       <th>Respuesta</th><th>Creado</th><th>Estado</th><th></th>
     </tr>
   );
-
   const fila = (t: any) => {
     const r = evaluarRespuesta(t, ahora);
     return (
@@ -155,67 +214,126 @@ export default async function Tickets({
         </form>
       </details>
 
-      <form className="filtros" method="get">
-        <input
-          type="search"
-          name="q"
-          defaultValue={q}
-          placeholder="Buscar por folio, asunto, solicitante…"
-          aria-label="Buscar tickets"
-        />
-        <select name="estado" defaultValue={estado} aria-label="Filtrar por estado">
-          <option value="">Todos los estados</option>
-          <option value="activos">Solo activos</option>
-          <option value="cerrados">Resueltos y cerrados</option>
-          {ESTADOS_TICKET.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
-        </select>
-        <select name="prioridad" defaultValue={prioridad} aria-label="Filtrar por prioridad">
-          <option value="">Toda prioridad</option>
-          {PRIORIDADES.map((p) => <option key={p} value={p}>{p}</option>)}
-        </select>
-        <button className="boton secundario" type="submit">Filtrar</button>
-        {hayFiltro && <Link href="/ti/tickets" className="boton-texto">Limpiar</Link>}
-      </form>
+      <div className="toolbar">
+        <form className="filtros" method="get">
+          <input type="hidden" name="vista" value={vista} />
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="Buscar por folio, asunto, solicitante…"
+            aria-label="Buscar tickets"
+          />
+          <select name="estado" defaultValue={estado} aria-label="Filtrar por estado">
+            <option value="">Todos los estados</option>
+            <option value="activos">Solo activos</option>
+            <option value="cerrados">Resueltos y cerrados</option>
+            {ESTADOS_TICKET.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
+          </select>
+          <select name="prioridad" defaultValue={prioridad} aria-label="Filtrar por prioridad">
+            <option value="">Toda prioridad</option>
+            {PRIORIDADES.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <button className="boton secundario" type="submit">Filtrar</button>
+          {hayFiltro && <Link href={hrefVista(vista)} className="boton-texto">Limpiar</Link>}
+        </form>
 
-      {hayFiltro ? (
-        <section className="seccion">
-          <h2 className="seccion-titulo">
-            Resultados <span className="suave">· {filtrados.length}</span>
-          </h2>
-          {filtrados.length === 0 ? (
-            <div className="vacio"><strong>Sin coincidencias</strong>Ajusta los filtros o limpia la búsqueda.</div>
-          ) : (
-            <table className="tabla">
-              <thead>{encabezado}</thead>
-              <tbody>{[...activos, ...cerrados].map(fila)}</tbody>
-            </table>
-          )}
-        </section>
-      ) : (
-        <>
+        <div className="vista-toggle" role="tablist" aria-label="Vista de tickets">
+          <Link href={hrefVista("tablero")} className={!esLista ? "activo" : ""} aria-selected={!esLista}>
+            <IconoTablero /> Tablero
+          </Link>
+          <Link href={hrefVista("lista")} className={esLista ? "activo" : ""} aria-selected={esLista}>
+            <IconoLista /> Lista
+          </Link>
+        </div>
+      </div>
+
+      {esLista ? (
+        // ---------- Vista de lista ----------
+        hayFiltro ? (
           <section className="seccion">
-            <h2 className="seccion-titulo">Activos · por prioridad <span className="suave">· {activos.length}</span></h2>
-            {activos.length === 0 ? (
-              <div className="vacio"><strong>Bandeja limpia</strong>No hay tickets activos.</div>
+            <h2 className="banda-titulo">Resultados <span className="conteo">{filtrados.length}</span></h2>
+            {filtrados.length === 0 ? (
+              <div className="vacio"><strong>Sin coincidencias</strong>Ajusta los filtros o limpia la búsqueda.</div>
             ) : (
               <table className="tabla">
                 <thead>{encabezado}</thead>
-                <tbody>{activos.map(fila)}</tbody>
+                <tbody>{[...activos, ...cerrados].map(fila)}</tbody>
               </table>
             )}
           </section>
-
-          {cerrados.length > 0 && (
+        ) : (
+          <>
             <section className="seccion">
-              <h2 className="seccion-titulo">Resueltos y cerrados <span className="suave">· {cerrados.length}</span></h2>
-              <table className="tabla">
-                <thead>{encabezado}</thead>
-                <tbody>{cerrados.map(fila)}</tbody>
-              </table>
+              <h2 className="banda-titulo">Activos · por prioridad <span className="conteo">{activos.length}</span></h2>
+              {activos.length === 0 ? (
+                <div className="vacio"><strong>Bandeja limpia</strong>No hay tickets activos.</div>
+              ) : (
+                <table className="tabla">
+                  <thead>{encabezado}</thead>
+                  <tbody>{activos.map(fila)}</tbody>
+                </table>
+              )}
             </section>
-          )}
-        </>
+            {cerrados.length > 0 && (
+              <section className="seccion">
+                <h2 className="banda-titulo">Resueltos y cerrados <span className="conteo">{cerrados.length}</span></h2>
+                <table className="tabla">
+                  <thead>{encabezado}</thead>
+                  <tbody>{cerrados.map(fila)}</tbody>
+                </table>
+              </section>
+            )}
+          </>
+        )
+      ) : (
+        // ---------- Vista de tablero (kanban por estado) ----------
+        <div className="tablero">
+          {COLUMNAS.map((col) => {
+            const enCol = filtrados
+              .filter((t) => col.estados.includes(t.estado))
+              .sort(porPrioridad);
+            const visibles = col.limite ? enCol.slice(0, col.limite) : enCol;
+            return (
+              <div className="tablero-col" key={col.titulo} style={{ "--col-acento": col.acento } as CSSProperties}>
+                <div className="tablero-col-cab">
+                  <span className="tablero-col-titulo">{col.titulo}</span>
+                  <span className="tablero-col-num">{enCol.length}</span>
+                </div>
+                {visibles.length === 0 ? (
+                  <div className="tablero-col-vacio">Sin tickets</div>
+                ) : (
+                  <div className="tablero-col-lista">
+                    {visibles.map(tarjeta)}
+                    {col.limite && enCol.length > col.limite && (
+                      <Link href={hrefVista("lista")} className="boton-texto" style={{ textAlign: "center" }}>
+                        Ver {enCol.length - col.limite} más en lista →
+                      </Link>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </>
+  );
+}
+
+function IconoTablero() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="4" width="5" height="16" rx="1.2" />
+      <rect x="10" y="4" width="5" height="11" rx="1.2" />
+      <rect x="17" y="4" width="4" height="14" rx="1.2" />
+    </svg>
+  );
+}
+function IconoLista() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
+    </svg>
   );
 }
