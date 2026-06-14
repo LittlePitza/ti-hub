@@ -1579,7 +1579,24 @@ td .editar { position: relative; }
   flex-direction: column;
   gap: 10px;
   padding: 12px;
+  max-height: 74vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
+
+/* Resumen del tablero: lo accionable de un vistazo */
+.tablero-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  color: var(--tinta-suave);
+}
+.tablero-resumen b { color: var(--tinta); font-weight: 600; }
+.tablero-resumen .alerta { color: var(--critico); font-weight: 600; }
+.tablero-resumen .aviso-txt { color: var(--aviso); font-weight: 600; }
 .tablero-col-vacio {
   padding: 18px 12px;
   text-align: center;
@@ -1600,9 +1617,15 @@ td .editar { position: relative; }
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 .tk-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.07); }
+/* Ticket fuera de SLA: el resto del borde se tiñe (el carril izquierdo sigue
+   marcando prioridad), para que la columna delate de un vistazo lo urgente. */
+.tk-card.sla-fuera {
+  border-color: var(--critico);
+  background: var(--critico-tenue);
+}
 .tk-card-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
 }
@@ -1616,6 +1639,20 @@ td .editar { position: relative; }
   font-size: 11.5px;
   color: var(--tinta-suave);
 }
+
+/* Etiquetas de la tarjeta: categoría + semáforo SLA */
+.tk-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.tk-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinta-suave);
+  background: var(--neutro-tenue);
+  border-radius: 5px;
+  padding: 2px 7px;
+}
+
 .tk-card-pie {
   display: flex;
   align-items: center;
@@ -1624,7 +1661,37 @@ td .editar { position: relative; }
   border-top: 1px solid var(--linea);
   padding-top: 9px;
 }
-.tk-mover { display: inline-flex; align-items: center; gap: 5px; }
+.sla-fuera .tk-card-pie { border-top-color: rgba(185, 28, 28, 0.22); }
+
+/* Responsable de la tarjeta (avatar de iniciales) */
+.tk-asignado {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--tinta);
+}
+.tk-asignado-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-avatar {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--petroleo-tenue);
+  color: var(--petroleo);
+}
+.tk-asignado.libre { color: var(--tinta-suave); }
+.tk-asignado.libre .tk-avatar {
+  background: transparent;
+  border: 1px dashed var(--linea-fuerte);
+  color: var(--tinta-suave);
+}
+.tk-mover { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
 .tk-mover select {
   border: 1px solid var(--linea-fuerte);
   border-radius: 6px;
