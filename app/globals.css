@@ -1692,6 +1692,25 @@ td .editar { position: relative; }
   color: var(--tinta-suave);
 }
 .tk-mover { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
+
+/* ---------- Arrastrar y soltar tarjetas entre columnas ---------- */
+.tk-card[draggable="true"] { cursor: grab; }
+.tk-card.arrastrando { opacity: 0.4; cursor: grabbing; }
+.tablero.arrastrando-activo { user-select: none; }
+.tablero-col.soltar { box-shadow: inset 0 0 0 2px var(--pimsa-verde); }
+.tablero-col.soltar .tablero-col-cab { background: var(--ok-tenue); }
+.tablero-col.soltar .tablero-col-lista::after {
+  content: "Soltar aquí";
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ok);
+  border: 1.5px dashed var(--pimsa-verde);
+  border-radius: 8px;
+  padding: 10px;
+}
+.tablero[aria-busy="true"] { opacity: 0.75; transition: opacity 120ms ease; }
 .tk-mover select {
   border: 1px solid var(--linea-fuerte);
   border-radius: 6px;
