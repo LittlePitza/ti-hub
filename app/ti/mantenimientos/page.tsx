@@ -2,7 +2,7 @@ import { getSupabase } from "@/lib/supabase";
 import { fechaCorta } from "@/lib/format";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
-import { crearMantenimiento, cambiarEstadoMantenimiento, eliminarMantenimiento } from "./actions";
+import { crearMantenimiento, cambiarEstadoMantenimiento, editarMantenimiento, eliminarMantenimiento } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -46,17 +46,50 @@ export default async function Mantenimientos() {
         <td className="suave">{m.responsable ?? "—"}</td>
         <td><Insignia valor={m.estado} /></td>
         <td style={{ whiteSpace: "nowrap" }}>
-          <form action={cambiarEstadoMantenimiento} style={{ display: "inline-flex", gap: 6 }}>
-            <input type="hidden" name="id" value={m.id} />
-            <select name="estado" defaultValue={m.estado} style={{ border: "1px solid var(--linea-fuerte)", borderRadius: 5, padding: "3px 6px", fontSize: 12.5 }}>
-              {ESTADOS.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
-            </select>
-            <button className="boton secundario mini" type="submit">Actualizar</button>
-          </form>{" "}
-          <form action={eliminarMantenimiento} style={{ display: "inline" }}>
-            <input type="hidden" name="id" value={m.id} />
-            <button className="boton secundario mini" type="submit" style={{ color: "var(--critico)" }}>Eliminar</button>
-          </form>
+          <div className="fila-acciones">
+            <details className="plegable interno editar">
+              <summary className="boton secundario mini">Editar</summary>
+              <form action={editarMantenimiento} className="bloque-form panel-editar">
+                <input type="hidden" name="id" value={m.id} />
+                <label className="mini-label">Trabajo</label>
+                <input name="titulo" defaultValue={m.titulo} required />
+                <div className="dos-col">
+                  <div>
+                    <label className="mini-label">Fecha</label>
+                    <input name="fecha_programada" type="date" defaultValue={m.fecha_programada} required />
+                  </div>
+                  <div>
+                    <label className="mini-label">Tipo</label>
+                    <select name="tipo" defaultValue={m.tipo}>
+                      <option value="preventivo">preventivo</option>
+                      <option value="correctivo">correctivo</option>
+                    </select>
+                  </div>
+                </div>
+                <label className="mini-label">Equipo</label>
+                <select name="equipo_id" defaultValue={m.equipo_id ?? ""}>
+                  <option value="">— Sin equipo específico —</option>
+                  {(equipos ?? []).map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
+                </select>
+                <label className="mini-label">Responsable</label>
+                <input name="responsable" defaultValue={m.responsable ?? ""} />
+                <label className="mini-label">Notas</label>
+                <textarea name="notas" defaultValue={m.notas ?? ""} rows={2} />
+                <button className="boton mini" type="submit">Guardar</button>
+              </form>
+            </details>
+            <form action={cambiarEstadoMantenimiento}>
+              <input type="hidden" name="id" value={m.id} />
+              <select name="estado" defaultValue={m.estado}>
+                {ESTADOS.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
+              </select>
+              <button className="boton secundario mini" type="submit">Actualizar</button>
+            </form>
+            <form action={eliminarMantenimiento}>
+              <input type="hidden" name="id" value={m.id} />
+              <button className="boton secundario mini" type="submit" style={{ color: "var(--critico)" }}>Eliminar</button>
+            </form>
+          </div>
         </td>
       </tr>
     );

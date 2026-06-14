@@ -52,12 +52,14 @@ Lo que NO vive en esta app (queda como documentación/administración en `PIMSA-
 - [x] 🔴 Pantalla **crear ticket** (`/portal/nuevo`): pasos numerados — categoría como tarjetas en lenguaje claro, selección del equipo del empleado, resumen + detalles.
 - [x] 🔴 Pantalla **mis tickets** (`/portal`): tarjetas con folio, estado amigable (Recibido / En atención / Resuelto) y barra de progreso de 3 pasos. Sin métricas ni jerga.
 - [x] 🟡 Branding PIMSA visible (logo oficial, azul `#294466` + verde `#7F9D41`, filo verde en cabecera).
-- [ ] 🟡 Definir SLA básico (tiempos de respuesta por prioridad) y mostrarlo.
+- [x] 🟡 Definir SLA básico (tiempos de respuesta por prioridad) y mostrarlo. **Hecho:** objetivos por prioridad (respuesta/resolución) en `lib/tickets.ts`, semáforo (en tiempo / por vencer / incumplido / pausado), columna SLA en la lista, métricas SLA en el detalle del ticket y resumen agregado en el dashboard. `en_espera` pausa el reloj.
 - [ ] 🟢 Notificar a TI cuando entra un ticket nuevo (correo o Teams vía webhook/Power Automate).
 
 **Cambios de esquema (hechos):**
 - `tickets.solicitante_email` + `tickets.equipo_id` (FK a `equipos`) — el ticket queda ligado a su autor y al equipo reportado.
 - `equipos.asignado_email` — vincula los equipos al correo del empleado; se captura desde el inventario del panel.
+- `tickets.estado` ampliado a 6 estados tipo tablero: `abierto`, `en_proceso`, `en_espera`, `resuelto`, `cerrado`, `reabierto`.
+- `tickets.asignado_email`, `tickets.primera_respuesta_at`, `tickets.resuelto_at` — sostienen la asignación y el cálculo de SLA (primera respuesta y resolución).
 
 **Decisión resuelta — autenticación del portal:** *solo correo, sin contraseña ni magic link*.
 El empleado escribe su correo una vez; queda en una cookie HttpOnly (`portal_correo`, scope `/portal`, 180 días).
@@ -100,7 +102,7 @@ correo de un compañero podría ver sus reportes (portal interno, fricción cero
 - [ ] 🟢 **Exportar a CSV** inventario y tickets.
 - [ ] 🟢 **Mantenimientos recurrentes** (cada N meses, autogenera el siguiente).
 - [ ] 🟢 **Base de conocimiento / procedimientos**: checklists alta/baja de empleado (de `08-Procesos-y-Politicas`) accesibles desde la app.
-- [ ] 🟢 Histórico/bitácora de cambios por ticket (comentarios).
+- [x] 🟢 Histórico/bitácora de cambios por ticket (comentarios). **Hecho:** tabla `ticket_eventos` (comentario / estado / asignación / sistema), línea de tiempo en el detalle del ticket y registro automático en cada cambio de estado o asignación. Son notas internas: solo visibles en el panel de TI, nunca en el portal del empleado.
 
 ---
 
@@ -109,10 +111,10 @@ correo de un compañero podría ver sus reportes (portal interno, fricción cero
 | Fase | Cambio en `schema.sql` |
 |---|---|
 | 1 | Reemplazar seed por datos PIMSA |
-| 2 | ✅ `tickets.solicitante_email`, `tickets.equipo_id`, `equipos.asignado_email` (portal vía service role, sin políticas `anon`) |
+| 2 | ✅ `tickets.solicitante_email`, `tickets.equipo_id`, `equipos.asignado_email` (portal vía service role, sin políticas `anon`); ✅ estados ampliados + `asignado_email`, `primera_respuesta_at`, `resuelto_at` (SLA) |
 | 3 | Tabla `empleados`; FK `equipos.asignado_a` y `tickets` → `empleados` |
 | 4 | Tabla `proveedores` (y/o `contratos`) |
-| 5 | Bucket de Storage para adjuntos; tabla `comentarios_ticket` |
+| 5 | Bucket de Storage para adjuntos; ✅ tabla `ticket_eventos` (bitácora/comentarios) |
 
 ## Decisiones abiertas (para resolver con el usuario)
 
@@ -129,4 +131,4 @@ correo de un compañero podría ver sus reportes (portal interno, fricción cero
 La 1 es rápida y de alto impacto visual (se ve PIMSA). La 2 es el objetivo central (portal del empleado). La 3 habilita a la 4. La 5 es pulido.
 
 ---
-_Última actualización: 2026-06-10_
+_Última actualización: 2026-06-13_

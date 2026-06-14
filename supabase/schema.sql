@@ -65,6 +65,11 @@ create table if not exists mantenimientos (
 );
 
 -- ---------- TICKETS ----------
+-- Ciclo de vida tipo mesa de ayuda (Jira-like):
+--   abierto -> en_proceso <-> en_espera -> resuelto -> cerrado ; reabierto regresa al flujo.
+-- Tiempos de atención: `primera_respuesta_at` (primer contacto de TI) y `resuelto_at`
+--   (paso a resuelto/cerrado) permiten medir respuesta y resolución contra el SLA por
+--   prioridad definido en `lib/tickets.ts`.
 create table if not exists tickets (
   id uuid primary key default gen_random_uuid(),
   num serial,
@@ -78,13 +83,34 @@ create table if not exists tickets (
   prioridad text not null default 'media'
     check (prioridad in ('baja','media','alta','critica')),
   estado text not null default 'abierto'
-    check (estado in ('abierto','en_proceso','resuelto','cerrado')),
+    check (estado in ('abierto','en_proceso','en_espera','resuelto','cerrado','reabierto')),
   asignado_a text,
+  asignado_email text,                -- correo del técnico de TI responsable (opcional)
+  primera_respuesta_at timestamptz,   -- primer contacto de TI; base del tiempo de respuesta
+  resuelto_at timestamptz,            -- paso a resuelto/cerrado; base del tiempo de resolución
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
+-- ---------- BITÁCORA DE TICKETS ----------
+-- Historial por ticket: comentarios de TI, cambios de estado, reasignaciones y eventos
+-- del sistema (creación, edición). Solo lo ve el panel de TI (RLS `to authenticated`);
+-- el portal del empleado no lee esta tabla, por eso sirve para notas internas.
+create table if not exists ticket_eventos (
+  id uuid primary key default gen_random_uuid(),
+  ticket_id uuid not null references tickets(id) on delete cascade,
+  tipo text not null default 'comentario'
+    check (tipo in ('comentario','estado','asignacion','sistema')),
+  autor text,                -- correo o nombre de quien generó el evento
+  cuerpo text,               -- texto del comentario o detalle del cambio
+  estado_anterior text,
+  estado_nuevo text,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_tickets_estado on tickets(estado);
+create index if not exists idx_tickets_asignado_email on tickets(asignado_email);
+create index if not exists idx_ticket_eventos_ticket on ticket_eventos(ticket_id, created_at);
 create index if not exists idx_mantenimientos_fecha on mantenimientos(fecha_programada);
 create index if not exists idx_tickets_solicitante_email on tickets(solicitante_email);
 create index if not exists idx_equipos_asignado_email on equipos(asignado_email);
@@ -102,6 +128,13 @@ alter table equipos drop constraint if exists equipos_tipo_check;
 alter table equipos add constraint equipos_tipo_check
   check (tipo in ('laptop','desktop','monitor','impresora','red','servidor','perifericos','otro',
                   'celular','tablet','linea','software'));
+-- Tickets: tiempos de atención, técnico asignado y estados ampliados.
+alter table tickets add column if not exists asignado_email text;
+alter table tickets add column if not exists primera_respuesta_at timestamptz;
+alter table tickets add column if not exists resuelto_at timestamptz;
+alter table tickets drop constraint if exists tickets_estado_check;
+alter table tickets add constraint tickets_estado_check
+  check (estado in ('abierto','en_proceso','en_espera','resuelto','cerrado','reabierto'));
 
 -- ---------- SEGURIDAD (RLS) ----------
 -- Solo usuarios autenticados (Supabase Auth) pueden leer y escribir.
@@ -114,6 +147,7 @@ alter table equipos enable row level security;
 alter table mantenimientos enable row level security;
 alter table tickets enable row level security;
 alter table empleados enable row level security;
+alter table ticket_eventos enable row level security;
 
 -- Si vienes del esquema anterior (acceso abierto), estas líneas retiran esas políticas.
 drop policy if exists "acceso_total_equipos" on equipos;
@@ -128,6 +162,9 @@ create policy "tickets_autenticados" on tickets
   for all to authenticated using (true) with check (true);
 drop policy if exists "empleados_autenticados" on empleados;
 create policy "empleados_autenticados" on empleados
+  for all to authenticated using (true) with check (true);
+drop policy if exists "ticket_eventos_autenticados" on ticket_eventos;
+create policy "ticket_eventos_autenticados" on ticket_eventos
   for all to authenticated using (true) with check (true);
 
 -- ---------- DATOS DE EJEMPLO ----------
@@ -155,3 +192,10 @@ insert into tickets (titulo, descripcion, solicitante, categoria, prioridad, est
   ('Premiere se cierra al exportar', 'Al exportar H.264 en 4K el programa se cierra sin error.', 'María (Edición)', 'software', 'alta', 'abierto', 'Lalo'),
   ('No imprime desde piso 2', 'La impresora marca atasco pero no hay papel atorado.', 'Carlos (Admon)', 'hardware', 'media', 'en_proceso', 'Lalo'),
   ('Acceso a carpeta de obras finalizadas', 'Necesito permiso de lectura en Finalizadas/2025.', 'Ana (Proyectos)', 'accesos', 'baja', 'resuelto', 'TI');
+
+-- Tiempos de atención de ejemplo para que el tablero muestre métricas de SLA desde el
+-- inicio. Idempotente (solo rellena valores nulos): no duplica al re-ejecutarse.
+update tickets set primera_respuesta_at = created_at + interval '35 minutes'
+  where estado in ('en_proceso','en_espera','resuelto','cerrado','reabierto') and primera_respuesta_at is null;
+update tickets set resuelto_at = created_at + interval '3 hours'
+  where estado in ('resuelto','cerrado') and resuelto_at is null;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, folio } from "@/lib/format";
+import { fechaCorta, folio, duracion } from "@/lib/format";
+import { ESTADOS_ACTIVOS, evaluarRespuesta, evaluarResolucion } from "@/lib/tickets";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
 import { Dona, Barras, type DatoGrafica } from "@/components/Graficas";
@@ -58,9 +59,34 @@ export default async function Resumen() {
 
   // Métricas
   const enReparacion = equipos.filter((e) => e.estado === "en_reparacion").length;
-  const ticketsActivos = tickets.filter((t) => ["abierto", "en_proceso"].includes(t.estado));
+  const ticketsActivos = tickets.filter((t) => ESTADOS_ACTIVOS.includes(t.estado));
   const vencidos = mantos.filter((m) => m.fecha_programada < hoy);
   const proximos = mantos.filter((m) => m.fecha_programada >= hoy);
+
+  // Métricas de atención (SLA)
+  const ahora = Date.now();
+  const promedio = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+
+  const conRespuesta = tickets.filter((t) => t.primera_respuesta_at);
+  const tiemposRespuesta = conRespuesta.map((t) => evaluarRespuesta(t, ahora).ms);
+  const respuestaEnSla = conRespuesta.filter((t) => evaluarRespuesta(t, ahora).semaforo === "cumplido").length;
+  const pctRespuestaSla = conRespuesta.length
+    ? Math.round((respuestaEnSla / conRespuesta.length) * 100)
+    : null;
+
+  const resueltosTk = tickets.filter((t) => t.resuelto_at);
+  const tiemposResolucion = resueltosTk.map((t) => evaluarResolucion(t, ahora).ms);
+
+  const fueraDeSla = ticketsActivos.filter((t) => {
+    const r = evaluarRespuesta(t, ahora);
+    const s = evaluarResolucion(t, ahora);
+    return r.semaforo === "incumplido" || s.semaforo === "incumplido";
+  }).length;
+  const porVencer = ticketsActivos.filter((t) => {
+    const r = evaluarRespuesta(t, ahora);
+    const s = evaluarResolucion(t, ahora);
+    return r.semaforo === "por_vencer" || s.semaforo === "por_vencer";
+  }).length;
 
   // Garantías por vencer en los próximos 90 días
   const garantias = equipos
@@ -126,6 +152,34 @@ export default async function Resumen() {
           <div className="metrica-label">Mantenimientos en 14 días</div>
         </div>
       </div>
+
+      <section className="seccion">
+        <h2 className="seccion-titulo">Atención de tickets · SLA</h2>
+        <div className="metricas">
+          <div className="metrica">
+            <div className="metrica-valor">{tiemposRespuesta.length ? duracion(promedio(tiemposRespuesta)) : "—"}</div>
+            <div className="metrica-label">1ª respuesta promedio</div>
+          </div>
+          <div className="metrica">
+            <div className="metrica-valor">{tiemposResolucion.length ? duracion(promedio(tiemposResolucion)) : "—"}</div>
+            <div className="metrica-label">Resolución promedio</div>
+          </div>
+          <div className="metrica">
+            <div className={`metrica-valor ${pctRespuestaSla !== null && pctRespuestaSla < 80 ? "alerta" : ""}`}>
+              {pctRespuestaSla === null ? "—" : `${pctRespuestaSla}%`}
+            </div>
+            <div className="metrica-label">Respuesta dentro de SLA</div>
+          </div>
+          <div className="metrica">
+            <div className={`metrica-valor ${fueraDeSla > 0 ? "alerta" : ""}`}>{fueraDeSla}</div>
+            <div className="metrica-label">Activos fuera de SLA</div>
+          </div>
+          <div className="metrica">
+            <div className={`metrica-valor ${porVencer > 0 ? "alerta" : ""}`}>{porVencer}</div>
+            <div className="metrica-label">Activos por vencer</div>
+          </div>
+        </div>
+      </section>
 
       <div className="tarjetas">
         <div className="tarjeta">
@@ -205,7 +259,7 @@ export default async function Resumen() {
             <tbody>
               {ultimosTickets.map((t) => (
                 <tr key={t.id}>
-                  <td className="mono">{folio(t.num)}</td>
+                  <td className="mono"><Link href={`/ti/tickets/${t.id}`} className="enlace-folio">{folio(t.num)}</Link></td>
                   <td className="celda-principal">{t.titulo}</td>
                   <td className="suave">{t.solicitante}</td>
                   <td><Insignia valor={t.prioridad} esPrioridad /></td>

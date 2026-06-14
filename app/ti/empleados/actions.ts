@@ -34,6 +34,38 @@ export async function cambiarEstadoEmpleado(formData: FormData) {
   refrescar();
 }
 
+// Edición completa del empleado. Si cambia el correo, se actualizan también los
+// equipos vinculados (asignado_email) para no romper el enlace con el portal.
+export async function editarEmpleado(formData: FormData) {
+  const sb = await getSupabaseAutenticado();
+  if (!sb) return;
+  const v = (k: string) => (formData.get(k) as string)?.trim() || null;
+  const id = formData.get("id") as string;
+  const nombre = v("nombre");
+  const correoNuevo = v("correo")?.toLowerCase();
+  if (!id || !nombre || !correoNuevo) return;
+
+  const { data: previo } = await sb.from("empleados").select("correo").eq("id", id).maybeSingle();
+
+  await sb.from("empleados").update({
+    nombre,
+    correo: correoNuevo,
+    departamento: v("departamento"),
+    puesto: v("puesto"),
+    extension: v("extension"),
+  }).eq("id", id);
+
+  if (previo?.correo && previo.correo !== correoNuevo) {
+    await sb.from("equipos")
+      .update({ asignado_a: nombre, asignado_email: correoNuevo })
+      .eq("asignado_email", previo.correo);
+  } else if (previo?.correo) {
+    // Mantener el nombre desnormalizado del inventario al día.
+    await sb.from("equipos").update({ asignado_a: nombre }).eq("asignado_email", correoNuevo);
+  }
+  refrescar();
+}
+
 export async function eliminarEmpleado(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
