@@ -1827,6 +1827,60 @@ td .editar { position: relative; }
 }
 .tk-mover .boton.mini { padding: 4px 8px; }
 
+/* ---------- Columna de resueltos: registro condensado ----------
+   El trabajo terminado se recoge en filas de una línea con check, atenuadas y
+   las más recientes arriba: deja de competir con el trabajo activo y escala
+   sin inflar el tablero cuando se acumulan muchos. */
+.tablero-col.es-hecho { background: transparent; }
+.tablero-col.es-hecho .tablero-col-titulo { color: var(--tinta-suave); }
+.lista-hecho { gap: 1px; padding: 7px; }
+.tk-done {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  text-decoration: none;
+  cursor: grab;
+  transition: background 120ms ease;
+}
+.tk-done:hover { background: var(--superficie); box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.tk-done.arrastrando { opacity: 0.4; cursor: grabbing; }
+.tk-done-check {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--ok-tenue);
+  color: var(--ok);
+}
+.tk-done-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--tinta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tk-done:hover .tk-done-titulo { color: var(--petroleo); }
+.tk-done-fin { flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px; }
+.tk-done-tiempo { font-family: var(--font-mono); font-size: 10.5px; color: var(--tinta-suave); }
+.tk-done-tag {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinta-suave);
+  border: 1px solid var(--linea);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+.tablero-col-mas { display: block; text-align: center; padding: 8px 0 4px; }
+
 @media (max-width: 1080px) {
   .dash-cols { grid-template-columns: 1fr; }
   .tablero { grid-template-columns: repeat(2, minmax(0, 1fr)); }

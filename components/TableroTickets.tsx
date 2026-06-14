@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, type CSSProperties, type DragEvent } from "react";
+import { useState, useTransition, type CSSProperties, type DragEvent, type MouseEvent } from "react";
 import Link from "next/link";
 import { folio, duracion } from "@/lib/format";
 import {
@@ -37,15 +37,26 @@ const PRIO_VAR: Record<string, string> = {
   baja: "var(--linea-fuerte)",
 };
 
-const COLUMNAS: { titulo: string; estados: string[]; destino: string; acento: string; limite?: number }[] = [
+const COLUMNAS: {
+  titulo: string;
+  estados: string[];
+  destino: string;
+  acento: string;
+  limite?: number;
+  hecho?: boolean;
+}[] = [
   { titulo: "Por atender", estados: ["abierto", "reabierto"], destino: "abierto", acento: "var(--critico)" },
   { titulo: "En proceso", estados: ["en_proceso"], destino: "en_proceso", acento: "var(--aviso)" },
   { titulo: "En espera", estados: ["en_espera"], destino: "en_espera", acento: "var(--petroleo)" },
-  { titulo: "Resueltos", estados: ["resuelto", "cerrado"], destino: "resuelto", acento: "var(--ok)", limite: 12 },
+  { titulo: "Resueltos", estados: ["resuelto", "cerrado"], destino: "resuelto", acento: "var(--ok)", limite: 10, hecho: true },
 ];
 
 const iniciales = (s: string) =>
   s.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+
+// Resueltos: los más recientes arriba; el trabajo terminado se lee como bitácora.
+const porResueltoReciente = (a: Tk, b: Tk) =>
+  (b.resuelto_at ?? b.created_at).localeCompare(a.resuelto_at ?? a.created_at);
 
 export default function TableroTickets({
   tickets,
@@ -65,6 +76,10 @@ export default function TableroTickets({
   const [moves, setMoves] = useState<Record<string, string>>({});
   const [arrastrando, setArrastrando] = useState<string | null>(null);
   const [sobre, setSobre] = useState<string | null>(null);
+  // Un <select>/<input> dentro de un elemento draggable se vuelve inerte (Firefox
+  // ni abre el select). Al tocar un control desactivamos el arrastre de la tarjeta
+  // por ese gesto y lo restauramos al soltar el cursor.
+  const [noArrastrar, setNoArrastrar] = useState(false);
   const [pendiente, startTransition] = useTransition();
 
   const efectivo = tickets.map((t) => ({ ...t, estado: moves[t.id] ?? t.estado }));
@@ -98,6 +113,27 @@ export default function TableroTickets({
     });
   }
 
+  // Props de arrastre compartidas por tarjetas activas y filas resueltas.
+  const dragProps = (id: string) => ({
+    draggable: !noArrastrar,
+    onMouseDown: (e: MouseEvent) =>
+      setNoArrastrar(
+        Boolean((e.target as HTMLElement).closest("a, button, select, input, textarea, label")),
+      ),
+    onMouseUp: () => setNoArrastrar(false),
+    onDragStart: (e: DragEvent) => {
+      e.dataTransfer.setData("text/plain", id);
+      e.dataTransfer.effectAllowed = "move";
+      setArrastrando(id);
+    },
+    onDragEnd: () => {
+      setArrastrando(null);
+      setSobre(null);
+      setNoArrastrar(false);
+    },
+  });
+
+  // Tarjeta completa para el trabajo activo.
   const tarjeta = (t: Tk) => {
     const r = evaluarRespuesta(t, ahora);
     const fuera = fueraDeSla(t);
@@ -106,13 +142,7 @@ export default function TableroTickets({
         key={t.id}
         className={`tk-card ${fuera ? "sla-fuera" : ""} ${arrastrando === t.id ? "arrastrando" : ""}`}
         style={{ "--prio": PRIO_VAR[t.prioridad] ?? "var(--linea-fuerte)" } as CSSProperties}
-        draggable
-        onDragStart={(e) => {
-          e.dataTransfer.setData("text/plain", t.id);
-          e.dataTransfer.effectAllowed = "move";
-          setArrastrando(t.id);
-        }}
-        onDragEnd={() => { setArrastrando(null); setSobre(null); }}
+        {...dragProps(t.id)}
       >
         <div className="tk-card-top">
           <Link href={`/ti/tickets/${t.id}`} className="tk-card-titulo" draggable={false}>{t.titulo}</Link>
@@ -148,6 +178,28 @@ export default function TableroTickets({
     );
   };
 
+  // Fila condensada para el trabajo terminado: el "done" se recoge, no compite.
+  const filaHecha = (t: Tk) => {
+    const reso = evaluarResolucion(t, ahora);
+    const cerrado = t.estado === "cerrado";
+    return (
+      <article
+        key={t.id}
+        className={`tk-done ${arrastrando === t.id ? "arrastrando" : ""}`}
+        {...dragProps(t.id)}
+      >
+        <span className="tk-done-check" aria-hidden>✓</span>
+        <Link href={`/ti/tickets/${t.id}`} className="tk-done-titulo" draggable={false}>{t.titulo}</Link>
+        <span className="tk-done-fin">
+          {reso.semaforo !== "na" && !reso.pendiente && (
+            <span className="tk-done-tiempo" title={`Resuelto en ${duracion(reso.ms)}`}>{duracion(reso.ms)}</span>
+          )}
+          {cerrado && <span className="tk-done-tag">cerrado</span>}
+        </span>
+      </article>
+    );
+  };
+
   return (
     <>
       <div className="tablero-resumen">
@@ -160,12 +212,14 @@ export default function TableroTickets({
 
       <div className={`tablero ${arrastrando ? "arrastrando-activo" : ""}`} aria-busy={pendiente}>
         {COLUMNAS.map((col) => {
-          const enCol = efectivo.filter((t) => col.estados.includes(t.estado)).sort(porPrioridad);
+          const enCol = col.hecho
+            ? efectivo.filter((t) => col.estados.includes(t.estado)).sort(porResueltoReciente)
+            : efectivo.filter((t) => col.estados.includes(t.estado)).sort(porPrioridad);
           const visibles = col.limite ? enCol.slice(0, col.limite) : enCol;
           return (
             <div
               key={col.titulo}
-              className={`tablero-col ${sobre === col.titulo ? "soltar" : ""}`}
+              className={`tablero-col ${col.hecho ? "es-hecho" : ""} ${sobre === col.titulo ? "soltar" : ""}`}
               style={{ "--col-acento": col.acento } as CSSProperties}
               onDragOver={(e) => {
                 if (!arrastrando) return;
@@ -184,12 +238,12 @@ export default function TableroTickets({
                 <span className="tablero-col-num">{enCol.length}</span>
               </div>
               {visibles.length === 0 ? (
-                <div className="tablero-col-vacio">Sin tickets</div>
+                <div className="tablero-col-vacio">{col.hecho ? "Nada resuelto aún" : "Sin tickets"}</div>
               ) : (
-                <div className="tablero-col-lista">
-                  {visibles.map(tarjeta)}
+                <div className={`tablero-col-lista ${col.hecho ? "lista-hecho" : ""}`}>
+                  {visibles.map(col.hecho ? filaHecha : tarjeta)}
                   {col.limite && enCol.length > col.limite && (
-                    <Link href={hrefLista} className="boton-texto" style={{ textAlign: "center" }}>
+                    <Link href={hrefLista} className="boton-texto tablero-col-mas">
                       Ver {enCol.length - col.limite} más en lista →
                     </Link>
                   )}
