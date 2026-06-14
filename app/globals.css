@@ -1136,3 +1136,20 @@ td .editar { position: relative; }
   .detalle-grid { grid-template-columns: 1fr; }
   .panel-editar { width: 260px; }
 }
+
+/* `.tabla` gana scroll horizontal en este punto (ver arriba) y se vuelve
+   contenedor de recorte: un popover absoluto dentro quedaría invisible.
+   Aquí se ancla a la ventana como una hoja centrada. */
+@media (max-width: 760px) {
+  .panel-editar {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    top: 50%;
+    width: auto;
+    max-width: none;
+    max-height: 80vh;
+    overflow-y: auto;
+    transform: translateY(-50%);
+  }
+}
