@@ -11,6 +11,25 @@ next-env.d.ts
 .env.local
 .env*.local
 
+# Secretos y credenciales (nunca versionar)
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.json
+service-account*.json
+
+# Scripts y respaldos locales / temporales (no se versionan)
+run-schema.mjs
+*.local.mjs
+*.local.js
+*.dump
+*.sql.bak
+
+# Logs
+*.log
+npm-debug.log*
+
 # Despliegue
 .vercel
 
