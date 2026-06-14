@@ -15,6 +15,7 @@ import {
 import Insignia from "@/components/Insignia";
 import PildoraSla from "@/components/PildoraSla";
 import SinConexion from "@/components/SinConexion";
+import MoverEstado from "@/components/MoverEstado";
 import { crearTicket, cambiarEstadoTicket } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -143,13 +144,7 @@ export default async function Tickets({
               <span className="tk-asignado-nombre">Sin asignar</span>
             </span>
           )}
-          <form action={cambiarEstadoTicket} className="tk-mover">
-            <input type="hidden" name="id" value={t.id} />
-            <select name="estado" defaultValue={t.estado} aria-label={`Mover ${folio(t.num)} a otro estado`}>
-              {ESTADOS_TICKET.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
-            </select>
-            <button className="boton secundario mini" type="submit">Mover</button>
-          </form>
+          <MoverEstado id={t.id} estado={t.estado} etiqueta={folio(t.num)} />
         </div>
       </article>
     );
