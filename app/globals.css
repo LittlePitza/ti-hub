@@ -1384,6 +1384,15 @@ td .editar { position: relative; }
 .responder-hint strong { color: var(--tinta); font-weight: 600; }
 .responder-acciones { display: flex; gap: 8px; flex-shrink: 0; }
 .responder-acciones .boton { padding: 7px 15px; }
+.correo-aviso { color: var(--aviso); }
+.correo-nota {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ok);
+}
 
 /* Etiqueta de cada evento de la bitácora + acento de las respuestas al cliente */
 .bitacora-tag {

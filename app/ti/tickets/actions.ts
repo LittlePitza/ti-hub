@@ -11,6 +11,8 @@ import {
   CATEGORIAS_TK,
   type EstadoTicket,
 } from "@/lib/tickets";
+import { ESTADO_PORTAL, correoValido } from "@/lib/portal";
+import { enviarCorreo, correoRespuesta, correoEstado } from "@/lib/correo";
 
 function refrescar(id?: string) {
   revalidatePath("/ti/tickets");
@@ -40,6 +42,13 @@ async function registrarEvento(
 
 const limpiar = (formData: FormData, k: string) =>
   (formData.get(k) as string)?.trim() || null;
+
+// Nombre de pila del empleado (para el saludo del correo), si está en `empleados`.
+async function nombreEmpleado(sb: SupabaseClient, correo: string | null): Promise<string | null> {
+  if (!correo) return null;
+  const { data } = await sb.from("empleados").select("nombre").eq("correo", correo).maybeSingle();
+  return data?.nombre?.split(" ")[0] ?? null;
+}
 
 export async function crearTicket(formData: FormData) {
   const sb = await getSupabaseAutenticado();
@@ -124,7 +133,7 @@ export async function cambiarEstadoTicket(formData: FormData) {
 
   const { data: actual } = await sb
     .from("tickets")
-    .select("estado, primera_respuesta_at, resuelto_at")
+    .select("estado, primera_respuesta_at, resuelto_at, num, titulo, solicitante_email")
     .eq("id", id)
     .single();
   if (!actual || actual.estado === nuevo) {
@@ -155,6 +164,14 @@ export async function cambiarEstadoTicket(formData: FormData) {
     estado_anterior: actual.estado,
     estado_nuevo: nuevo,
   });
+
+  // Aviso automático al solicitante del nuevo estado (en su lenguaje del portal).
+  if (correoValido(actual.solicitante_email ?? "")) {
+    const estadoTexto = ESTADO_PORTAL[nuevo]?.texto ?? nuevo;
+    const nombre = await nombreEmpleado(sb, actual.solicitante_email);
+    const { asunto, html, texto } = correoEstado({ num: actual.num, titulo: actual.titulo, estadoTexto, nombre });
+    await enviarCorreo({ para: actual.solicitante_email!, asunto, html, texto });
+  }
   refrescar(id);
 }
 
@@ -220,7 +237,7 @@ export async function responderCliente(formData: FormData) {
 
   const { data: actual } = await sb
     .from("tickets")
-    .select("primera_respuesta_at")
+    .select("num, titulo, solicitante_email, primera_respuesta_at")
     .eq("id", id)
     .single();
   if (actual && !actual.primera_respuesta_at) {
@@ -236,6 +253,13 @@ export async function responderCliente(formData: FormData) {
     autor: await autorActual(sb),
     cuerpo,
   });
+
+  // La respuesta llega al solicitante por correo además de verse en el portal.
+  if (actual && correoValido(actual.solicitante_email ?? "")) {
+    const nombre = await nombreEmpleado(sb, actual.solicitante_email);
+    const { asunto, html, texto } = correoRespuesta({ num: actual.num, titulo: actual.titulo, mensaje: cuerpo, nombre });
+    await enviarCorreo({ para: actual.solicitante_email!, asunto, html, texto });
+  }
   refrescar(id);
   revalidatePath("/"); // el portal del empleado muestra las respuestas de TI
 }

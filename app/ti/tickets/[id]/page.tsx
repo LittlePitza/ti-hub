@@ -12,6 +12,8 @@ import {
   evaluarResolucion,
   type Prioridad,
 } from "@/lib/tickets";
+import { correoValido } from "@/lib/portal";
+import { correoConfigurado } from "@/lib/correo";
 import Insignia from "@/components/Insignia";
 import PildoraSla from "@/components/PildoraSla";
 import SinConexion from "@/components/SinConexion";
@@ -38,6 +40,15 @@ const META_EVENTO: Record<string, { icono: string; etiqueta: string }> = {
 
 const iniciales = (s: string) =>
   s.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+
+function IconoSobre() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ verticalAlign: "-2px" }}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
+}
 
 export default async function DetalleTicket({
   params,
@@ -77,6 +88,12 @@ export default async function DetalleTicket({
   const tiempoAbierto = finRef - new Date(t.created_at).getTime();
   const meta = metaEstado(t.estado);
   const respondidos = eventos.filter((e: any) => e.tipo === "respuesta").length;
+
+  // Notificación por correo: automática si el solicitante tiene correo y el SMTP
+  // está configurado en el entorno. Si no, lo decimos para que no haya falsa idea.
+  const emailDestino = correoValido(t.solicitante_email ?? "") ? (t.solicitante_email as string) : null;
+  const smtpListo = correoConfigurado();
+  const notifica = Boolean(emailDestino && smtpListo);
 
   return (
     <>
@@ -171,7 +188,10 @@ export default async function DetalleTicket({
               />
               <div className="responder-pie">
                 <span className="responder-hint">
-                  La <strong>nota interna</strong> solo la ve TI. La <strong>respuesta</strong> aparece en el portal del solicitante.
+                  La <strong>nota interna</strong> solo la ve TI. La <strong>respuesta</strong> aparece en el portal
+                  {notifica ? <> y se envía por correo a <strong>{emailDestino}</strong></> : null}.
+                  {emailDestino && !smtpListo && <span className="correo-aviso"> Correo no configurado: no se enviará.</span>}
+                  {!emailDestino && <span className="correo-aviso"> El solicitante no tiene correo: no se puede notificar.</span>}
                 </span>
                 <div className="responder-acciones">
                   <button className="boton secundario" type="submit" formAction={agregarComentario}>Nota interna</button>
@@ -222,6 +242,11 @@ export default async function DetalleTicket({
               </select>
               <textarea name="nota" placeholder="Nota del cambio (opcional)" rows={2} />
               <button className="boton" type="submit">Guardar estado</button>
+              {notifica && (
+                <p className="correo-nota">
+                  <IconoSobre /> Se avisa al solicitante por correo al guardar.
+                </p>
+              )}
             </form>
           </section>
 
