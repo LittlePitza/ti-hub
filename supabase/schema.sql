@@ -115,6 +115,8 @@ create index if not exists idx_mantenimientos_fecha on mantenimientos(fecha_prog
 create index if not exists idx_tickets_solicitante_email on tickets(solicitante_email);
 create index if not exists idx_equipos_asignado_email on equipos(asignado_email);
 create index if not exists idx_equipos_categoria on equipos(categoria);
+create index if not exists idx_tickets_equipo on tickets(equipo_id);
+create index if not exists idx_mantenimientos_equipo on mantenimientos(equipo_id);
 
 -- ---------- MIGRACIÓN (bases creadas antes) ----------
 -- `create table if not exists` no agrega columnas a tablas existentes; estas líneas sí.
