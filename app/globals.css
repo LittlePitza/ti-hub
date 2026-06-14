@@ -1521,12 +1521,10 @@ td .editar { position: relative; }
   letter-spacing: 0.08em;
   color: var(--tinta-suave);
 }
-.hero-activos { display: inline-flex; align-items: baseline; gap: 6px; font-size: 13px; color: var(--tinta-suave); }
-.hero-activos-num { font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--tinta); }
-.hero-activos:hover .hero-activos-num { color: var(--petroleo); }
+.resumen-hero-sub { font-size: 12.5px; color: var(--tinta-suave); }
 
-.resumen-hero-cuerpo { display: grid; grid-template-columns: 1fr 1fr; }
-.tiempo-metrica { padding: 20px 22px; }
+.resumen-hero-cuerpo { display: grid; grid-template-columns: 1fr 1fr 0.9fr; }
+.tiempo-metrica { display: flex; flex-direction: column; padding: 20px 24px; }
 .tiempo-metrica + .tiempo-metrica { border-left: 1px solid var(--linea); }
 .tiempo-label {
   font-size: 11px;
@@ -1535,23 +1533,31 @@ td .editar { position: relative; }
   letter-spacing: 0.06em;
   color: var(--tinta-suave);
 }
+/* Tiempo: cifra grande + unidad chica pegada, sin espacios mono que la separen. */
 .tiempo-valor {
   display: flex;
   align-items: baseline;
-  gap: 9px;
-  font-family: var(--font-mono);
-  font-size: 32px;
-  font-weight: 500;
-  letter-spacing: -0.03em;
-  margin-top: 7px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
 }
-.tiempo-unid { font-size: 13px; font-weight: 400; letter-spacing: 0; color: var(--tinta-suave); }
+.tiempo-parte { display: inline-flex; align-items: baseline; gap: 2px; }
+.tiempo-cifra {
+  font-family: var(--font-mono);
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--tinta);
+}
+.tiempo-cifra.apagado { color: var(--tinta-suave); }
+.tiempo-u { font-size: 15px; font-weight: 500; color: var(--tinta-suave); }
 .tiempo-track {
   height: 8px;
   border-radius: 99px;
   background: var(--neutro-tenue);
   overflow: hidden;
-  margin-top: 14px;
+  margin-top: 18px;
 }
 .tiempo-track-fill { height: 100%; border-radius: 99px; transition: width 400ms ease; }
 .tiempo-pie {
@@ -1561,44 +1567,38 @@ td .editar { position: relative; }
   gap: 10px;
   font-size: 12.5px;
   color: var(--tinta-suave);
-  margin-top: 8px;
+  margin-top: 10px;
 }
 .tiempo-pie b { color: var(--tinta); font-weight: 600; }
+.tiempo-metrica.destacada { background: linear-gradient(180deg, var(--pimsa-verde-claro-tenue, rgba(176,205,117,0.07)), transparent 70%); }
 
-.resumen-hero-alertas {
+/* Tercera columna: carga viva de la bandeja (alertas plegadas aquí dentro). */
+.carga-metrica { text-decoration: none; color: inherit; transition: background 140ms ease; }
+.carga-metrica:hover { background: var(--neutro-tenue); }
+.carga-lista { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.carga-lista li {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding: 13px 22px;
-  border-top: 1px solid var(--linea);
-}
-.chip-alerta, .chip-ok {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
+  justify-content: space-between;
+  gap: 10px;
   font-size: 13px;
-  font-weight: 500;
-  padding: 5px 12px;
-  border-radius: 99px;
+  color: var(--tinta-suave);
 }
-.chip-alerta::before, .chip-ok::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 99px;
-  background: currentColor;
-}
-.chip-alerta.critico { background: var(--critico-tenue); color: var(--critico); }
-.chip-alerta.aviso { background: var(--aviso-tenue); color: var(--aviso); }
-.chip-ok { background: var(--ok-tenue); color: var(--ok); }
+.carga-lista li b { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--tinta); }
+.carga-lista li.mal b { color: var(--critico); }
+.carga-lista li.ojo b { color: var(--aviso); }
 
 .banda-operativa { margin-bottom: 4px; }
 
-@media (max-width: 620px) {
+@media (max-width: 860px) {
+  .resumen-hero-cuerpo { grid-template-columns: 1fr 1fr; }
+  .carga-metrica { grid-column: 1 / -1; border-left: none; border-top: 1px solid var(--linea); }
+}
+@media (max-width: 560px) {
   .resumen-hero-cuerpo { grid-template-columns: 1fr; }
   .tiempo-metrica + .tiempo-metrica { border-left: none; border-top: 1px solid var(--linea); }
-  .tiempo-valor { font-size: 28px; }
+  .tiempo-cifra { font-size: 36px; }
+  .tiempo-metrica > .tiempo-track { margin-top: 14px; }
 }
 
 /* ---------- Toolbar de tickets (filtros + alternador de vista) ---------- */

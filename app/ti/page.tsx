@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, folio, duracion } from "@/lib/format";
+import { fechaCorta, folio, duracionPartes } from "@/lib/format";
 import { ESTADOS_ACTIVOS, evaluarRespuesta, evaluarResolucion } from "@/lib/tickets";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
@@ -33,6 +33,22 @@ function contar<T>(lista: T[], llave: (x: T) => string): Record<string, number> 
 // rojo si vamos mal. El umbral 80% es el mismo que usa el resto del panel.
 const colorPct = (pct: number | null) =>
   pct === null ? "var(--linea-fuerte)" : pct >= 80 ? "var(--ok)" : pct >= 50 ? "var(--aviso)" : "var(--critico)";
+
+// Pinta una duración con la cifra grande y la unidad chica pegada ("3d 5h"),
+// en vez de un string mono con espacios que la dejan descoyuntada.
+function Duracion({ ms }: { ms: number | null }) {
+  if (ms === null) return <span className="tiempo-cifra apagado">—</span>;
+  return (
+    <>
+      {duracionPartes(ms).map((p, i) => (
+        <span className="tiempo-parte" key={i}>
+          <span className="tiempo-cifra">{p.valor}</span>
+          <span className="tiempo-u">{p.unidad}</span>
+        </span>
+      ))}
+    </>
+  );
+}
 
 export default async function Resumen() {
   const sb = await getSupabase();
@@ -87,8 +103,9 @@ export default async function Resumen() {
   const resueltos = resueltosTk.length;
   const resolucionEnSla = resueltosTk.filter((t) => evaluarResolucion(t, ahora).semaforo === "cumplido").length;
   const pctResolucionSla = resueltos ? Math.round((resolucionEnSla / resueltos) * 100) : null;
-  const promResolucion = tiemposResolucion.length ? duracion(promedio(tiemposResolucion)) : null;
-  const promRespuesta = tiemposRespuesta.length ? duracion(promedio(tiemposRespuesta)) : null;
+  const msResolucion = tiemposResolucion.length ? promedio(tiemposResolucion) : null;
+  const msRespuesta = tiemposRespuesta.length ? promedio(tiemposRespuesta) : null;
+  const sinAsignar = ticketsActivos.filter((t) => !t.asignado_a).length;
 
   const fueraDeSla = ticketsActivos.filter((t) => {
     const r = evaluarRespuesta(t, ahora);
@@ -143,21 +160,17 @@ export default async function Resumen() {
     <>
       {head}
 
-      {/* Hero: ¿cómo va la mesa de ayuda? Velocidad emparejada con calidad de SLA */}
+      {/* Hero: ¿cómo va la mesa de ayuda? Velocidad (tiempo promedio) emparejada
+          con calidad (% dentro de SLA), más la carga viva de la bandeja. */}
       <section className="resumen-hero">
         <div className="resumen-hero-cab">
           <h2>Rendimiento de la mesa</h2>
-          <Link href="/ti/tickets" className="hero-activos">
-            <span className="hero-activos-num">{ticketsActivos.length}</span> activos ahora
-          </Link>
+          <span className="resumen-hero-sub">Promedios de atención · SLA en vivo</span>
         </div>
         <div className="resumen-hero-cuerpo">
-          <div className="tiempo-metrica">
-            <div className="tiempo-label">Tiempo de resolución</div>
-            <div className="tiempo-valor">
-              {promResolucion ?? "—"}
-              {promResolucion && <span className="tiempo-unid">promedio</span>}
-            </div>
+          <div className="tiempo-metrica destacada">
+            <div className="tiempo-label">Resolución promedio</div>
+            <div className="tiempo-valor"><Duracion ms={msResolucion} /></div>
             <div className="tiempo-track">
               <div
                 className="tiempo-track-fill"
@@ -171,10 +184,7 @@ export default async function Resumen() {
           </div>
           <div className="tiempo-metrica">
             <div className="tiempo-label">Primera respuesta</div>
-            <div className="tiempo-valor">
-              {promRespuesta ?? "—"}
-              {promRespuesta && <span className="tiempo-unid">promedio</span>}
-            </div>
+            <div className="tiempo-valor"><Duracion ms={msRespuesta} /></div>
             <div className="tiempo-track">
               <div
                 className="tiempo-track-fill"
@@ -186,15 +196,20 @@ export default async function Resumen() {
               <span>{atendidos} {atendidos === 1 ? "atendido" : "atendidos"}</span>
             </div>
           </div>
-        </div>
-        <div className="resumen-hero-alertas">
-          {fueraDeSla > 0 && (
-            <Link href="/ti/tickets" className="chip-alerta critico">{fueraDeSla} fuera de SLA</Link>
-          )}
-          {porVencer > 0 && (
-            <Link href="/ti/tickets" className="chip-alerta aviso">{porVencer} por vencer</Link>
-          )}
-          {fueraDeSla === 0 && porVencer === 0 && <span className="chip-ok">Todo dentro de SLA</span>}
+          <Link href="/ti/tickets" className="tiempo-metrica carga-metrica">
+            <div className="tiempo-label">Carga de la mesa</div>
+            <div className="tiempo-valor">
+              <span className="tiempo-parte">
+                <span className="tiempo-cifra">{ticketsActivos.length}</span>
+                <span className="tiempo-u">activos</span>
+              </span>
+            </div>
+            <ul className="carga-lista">
+              <li className={fueraDeSla > 0 ? "mal" : ""}><span>Fuera de SLA</span><b>{fueraDeSla}</b></li>
+              <li className={porVencer > 0 ? "ojo" : ""}><span>Por vencer</span><b>{porVencer}</b></li>
+              <li className={sinAsignar > 0 ? "ojo" : ""}><span>Sin asignar</span><b>{sinAsignar}</b></li>
+            </ul>
+          </Link>
         </div>
       </section>
 
