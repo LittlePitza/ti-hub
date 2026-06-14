@@ -28,7 +28,7 @@ async function registrarEvento(
   sb: SupabaseClient,
   evento: {
     ticket_id: string;
-    tipo: "comentario" | "estado" | "asignacion" | "sistema";
+    tipo: "comentario" | "estado" | "asignacion" | "sistema" | "respuesta";
     autor: string;
     cuerpo?: string | null;
     estado_anterior?: string | null;
@@ -205,6 +205,39 @@ export async function agregarComentario(formData: FormData) {
     cuerpo,
   });
   refrescar(id);
+}
+
+// Respuesta visible para el solicitante: se guarda como evento `respuesta` y el
+// portal del empleado la muestra (filtrada por su correo). Cuenta como primer
+// contacto de TI si aún no se había registrado. Es lo que distingue una nota
+// interna (solo TI) de un mensaje al cliente.
+export async function responderCliente(formData: FormData) {
+  const sb = await getSupabaseAutenticado();
+  if (!sb) return;
+  const id = formData.get("id") as string;
+  const cuerpo = limpiar(formData, "cuerpo");
+  if (!id || !cuerpo) return;
+
+  const { data: actual } = await sb
+    .from("tickets")
+    .select("primera_respuesta_at")
+    .eq("id", id)
+    .single();
+  if (actual && !actual.primera_respuesta_at) {
+    await sb
+      .from("tickets")
+      .update({ primera_respuesta_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq("id", id);
+  }
+
+  await registrarEvento(sb, {
+    ticket_id: id,
+    tipo: "respuesta",
+    autor: await autorActual(sb),
+    cuerpo,
+  });
+  refrescar(id);
+  revalidatePath("/"); // el portal del empleado muestra las respuestas de TI
 }
 
 export async function eliminarTicket(formData: FormData) {

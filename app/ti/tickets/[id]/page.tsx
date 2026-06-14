@@ -20,17 +20,24 @@ import {
   cambiarEstadoTicket,
   asignarTicket,
   agregarComentario,
+  responderCliente,
   eliminarTicket,
 } from "../actions";
 
 export const dynamic = "force-dynamic";
 
-const ICONO_EVENTO: Record<string, string> = {
-  comentario: "💬",
-  estado: "⇄",
-  asignacion: "👤",
-  sistema: "•",
+// Cada evento de la bitácora trae icono, etiqueta y tono. `respuesta` es el único
+// visible para el solicitante; el resto es interno.
+const META_EVENTO: Record<string, { icono: string; etiqueta: string }> = {
+  respuesta: { icono: "↩", etiqueta: "Respuesta al solicitante" },
+  comentario: { icono: "💬", etiqueta: "Nota interna" },
+  estado: { icono: "⇄", etiqueta: "Cambio de estado" },
+  asignacion: { icono: "👤", etiqueta: "Asignación" },
+  sistema: { icono: "•", etiqueta: "Sistema" },
 };
+
+const iniciales = (s: string) =>
+  s.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
 
 export default async function DetalleTicket({
   params,
@@ -69,46 +76,73 @@ export default async function DetalleTicket({
   const finRef = t.resuelto_at ? new Date(t.resuelto_at).getTime() : ahora;
   const tiempoAbierto = finRef - new Date(t.created_at).getTime();
   const meta = metaEstado(t.estado);
+  const respondidos = eventos.filter((e: any) => e.tipo === "respuesta").length;
 
   return (
     <>
-      <div className="pagina-head detalle-head">
-        <div>
-          <Link href="/ti/tickets" className="boton-texto">← Tickets</Link>
-          <h1 className="pagina-titulo" style={{ marginTop: 6 }}>
-            <span className="mono">{folio(t.num)}</span> · {t.titulo}
-          </h1>
+      {/* Tarjeta de encabezado: toda la información del ticket de un vistazo */}
+      <section className="ticket-encabezado detalle-head">
+        <Link href="/ti/tickets" className="boton-texto">← Tickets</Link>
+        <div className="ticket-enc-top">
+          <div className="ticket-enc-id">
+            <span className="ticket-enc-folio mono">{folio(t.num)}</span>
+            <h1 className="ticket-enc-titulo">{t.titulo}</h1>
+          </div>
           <div className="detalle-badges">
             <Insignia valor={t.estado} />
             <Insignia valor={t.prioridad} esPrioridad />
             <span className="insignia neutro">{t.categoria}</span>
           </div>
         </div>
-      </div>
 
-      {/* Métricas de atención / SLA */}
-      <div className="metricas-sla">
-        <div className="metrica-sla">
-          <div className="metrica-sla-label">Primera respuesta</div>
-          <div className="metrica-sla-valor">{resp.pendiente && resp.semaforo !== "pausado" ? duracion(resp.ms) : resp.pendiente ? "—" : duracion(resp.ms)}</div>
-          <PildoraSla semaforo={resp.semaforo} />
-          <div className="suave" style={{ fontSize: 11.5 }}>Objetivo: {objetivo.respuesta} h</div>
-        </div>
-        <div className="metrica-sla">
-          <div className="metrica-sla-label">Resolución</div>
-          <div className="metrica-sla-valor">{reso.pendiente ? "—" : reso.semaforo === "na" ? "—" : duracion(reso.ms)}</div>
-          <PildoraSla semaforo={reso.semaforo} />
-          <div className="suave" style={{ fontSize: 11.5 }}>Objetivo: {objetivo.resolucion} h</div>
-        </div>
-        <div className="metrica-sla">
-          <div className="metrica-sla-label">{t.resuelto_at ? "Tiempo total" : "Tiempo abierto"}</div>
-          <div className="metrica-sla-valor">{duracion(tiempoAbierto)}</div>
-          <div className="suave" style={{ fontSize: 11.5 }}>Creado {fechaHora(t.created_at)}</div>
-        </div>
-      </div>
+        <dl className="ticket-enc-meta">
+          <div className="enc-dato">
+            <dt>Solicitante</dt>
+            <dd>
+              {t.solicitante}
+              {t.solicitante_email && <span className="enc-sub mono">{t.solicitante_email}</span>}
+            </dd>
+          </div>
+          <div className="enc-dato">
+            <dt>Asignado a</dt>
+            <dd>
+              {t.asignado_a ? (
+                <span className="enc-asignado">
+                  <span className="enc-avatar" aria-hidden>{iniciales(t.asignado_a)}</span>
+                  {t.asignado_a}
+                </span>
+              ) : (
+                <span className="suave">Sin asignar</span>
+              )}
+            </dd>
+          </div>
+          <div className="enc-dato">
+            <dt>Primera respuesta</dt>
+            <dd className="enc-sla">
+              <PildoraSla semaforo={resp.semaforo} />
+              <span className="enc-sub mono">
+                {resp.pendiente && resp.semaforo !== "pausado" ? "pendiente" : duracion(resp.ms)} · meta {objetivo.respuesta} h
+              </span>
+            </dd>
+          </div>
+          <div className="enc-dato">
+            <dt>Resolución</dt>
+            <dd className="enc-sla">
+              <PildoraSla semaforo={reso.semaforo} />
+              <span className="enc-sub mono">
+                {reso.pendiente || reso.semaforo === "na" ? "pendiente" : duracion(reso.ms)} · meta {objetivo.resolucion} h
+              </span>
+            </dd>
+          </div>
+          <div className="enc-dato">
+            <dt>{t.resuelto_at ? "Tiempo total" : "Tiempo abierto"}</dt>
+            <dd>{duracion(tiempoAbierto)}<span className="enc-sub mono">desde {fechaHora(t.created_at)}</span></dd>
+          </div>
+        </dl>
+      </section>
 
       <div className="detalle-grid">
-        {/* Columna principal: descripción + bitácora */}
+        {/* Columna principal: descripción + conversación */}
         <div className="detalle-principal">
           <section className="tarjeta-detalle">
             <h2 className="seccion-titulo">Descripción</h2>
@@ -121,34 +155,57 @@ export default async function DetalleTicket({
           </section>
 
           <section className="tarjeta-detalle">
-            <h2 className="seccion-titulo">Actividad</h2>
-            <form action={agregarComentario} className="comentario-form">
+            <div className="conv-cab">
+              <h2 className="seccion-titulo" style={{ margin: 0 }}>Conversación y actividad</h2>
+              <span className="conv-conteo">{respondidos} {respondidos === 1 ? "respuesta enviada" : "respuestas enviadas"}</span>
+            </div>
+
+            {/* Un solo cuadro de texto, dos destinos: nota interna o respuesta al cliente. */}
+            <form className="responder">
               <input type="hidden" name="id" value={t.id} />
-              <textarea name="cuerpo" required placeholder="Agregar un comentario o nota interna…" />
-              <button className="boton" type="submit">Comentar</button>
+              <textarea
+                name="cuerpo"
+                required
+                rows={3}
+                placeholder="Escribe una actualización: una nota interna para el equipo o una respuesta para el solicitante…"
+              />
+              <div className="responder-pie">
+                <span className="responder-hint">
+                  La <strong>nota interna</strong> solo la ve TI. La <strong>respuesta</strong> aparece en el portal del solicitante.
+                </span>
+                <div className="responder-acciones">
+                  <button className="boton secundario" type="submit" formAction={agregarComentario}>Nota interna</button>
+                  <button className="boton" type="submit" formAction={responderCliente}>Responder al cliente</button>
+                </div>
+              </div>
             </form>
 
             {eventos.length === 0 ? (
-              <div className="vacio">Sin movimientos todavía.</div>
+              <div className="vacio" style={{ marginTop: 18 }}>Sin movimientos todavía.</div>
             ) : (
               <ol className="bitacora">
-                {eventos.map((e: any) => (
-                  <li key={e.id} className={`bitacora-item tipo-${e.tipo}`}>
-                    <span className="bitacora-icono" aria-hidden>{ICONO_EVENTO[e.tipo] ?? "•"}</span>
-                    <div className="bitacora-cuerpo">
-                      <div className="bitacora-meta">
-                        <strong>{e.autor ?? "TI"}</strong>
-                        <span className="suave mono">{fechaHora(e.created_at)}</span>
-                      </div>
-                      {e.tipo === "estado" && (
-                        <div className="bitacora-texto">
-                          Cambió el estado: <Insignia valor={e.estado_anterior} /> → <Insignia valor={e.estado_nuevo} />
+                {eventos.map((e: any) => {
+                  const m = META_EVENTO[e.tipo] ?? META_EVENTO.sistema;
+                  return (
+                    <li key={e.id} className={`bitacora-item tipo-${e.tipo}`}>
+                      <span className="bitacora-icono" aria-hidden>{m.icono}</span>
+                      <div className="bitacora-cuerpo">
+                        <div className="bitacora-meta">
+                          <strong>{e.autor ?? "TI"}</strong>
+                          {e.tipo === "respuesta" && <span className="bitacora-tag enviado">Visible para el cliente</span>}
+                          {e.tipo === "comentario" && <span className="bitacora-tag interno">Interno</span>}
+                          <span className="suave mono">{fechaHora(e.created_at)}</span>
                         </div>
-                      )}
-                      {e.cuerpo && <div className="bitacora-texto">{e.cuerpo}</div>}
-                    </div>
-                  </li>
-                ))}
+                        {e.tipo === "estado" && (
+                          <div className="bitacora-texto">
+                            Cambió el estado: <Insignia valor={e.estado_anterior} /> → <Insignia valor={e.estado_nuevo} />
+                          </div>
+                        )}
+                        {e.cuerpo && <div className="bitacora-texto">{e.cuerpo}</div>}
+                      </div>
+                    </li>
+                  );
+                })}
               </ol>
             )}
           </section>
@@ -178,11 +235,11 @@ export default async function DetalleTicket({
           </section>
 
           <section className="tarjeta-detalle">
-            <h3 className="aside-titulo">Datos</h3>
+            <h3 className="aside-titulo">Detalles</h3>
             <dl className="datos-lista">
-              <dt>Solicitante</dt><dd>{t.solicitante}</dd>
-              {t.solicitante_email && (<><dt>Correo</dt><dd className="mono">{t.solicitante_email}</dd></>)}
               <dt>Estado</dt><dd>{meta.etiqueta}</dd>
+              <dt>Prioridad</dt><dd>{t.prioridad}</dd>
+              <dt>Categoría</dt><dd>{t.categoria}</dd>
               <dt>Actualizado</dt><dd className="mono">{fechaHora(t.updated_at)}</dd>
             </dl>
 

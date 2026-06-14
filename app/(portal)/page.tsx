@@ -51,6 +51,22 @@ export default async function Portal({
   const nombre = empleadoQ.data?.nombre?.split(" ")[0] || nombreDeCorreo(correo);
   const activos = tickets.filter((t) => ESTADO_PORTAL[t.estado]?.paso !== 3).length;
 
+  // Respuestas de TI visibles para el solicitante (solo eventos `respuesta` de sus
+  // tickets). El resto de la bitácora es interno y no se consulta aquí.
+  const ids = tickets.map((t) => t.id);
+  const respuestasQ = ids.length
+    ? await sb
+        .from("ticket_eventos")
+        .select("id, ticket_id, cuerpo, created_at")
+        .eq("tipo", "respuesta")
+        .in("ticket_id", ids)
+        .order("created_at", { ascending: true })
+    : { data: [] };
+  const respuestasPorTicket: Record<string, { id: string; cuerpo: string | null; created_at: string }[]> = {};
+  for (const r of respuestasQ.data ?? []) {
+    (respuestasPorTicket[r.ticket_id] ??= []).push(r);
+  }
+
   return (
     <>
       {creado && Number.isFinite(Number(creado)) && (
@@ -95,6 +111,7 @@ export default async function Portal({
           <div className="tickets-lista">
             {tickets.map((t) => {
               const estado = ESTADO_PORTAL[t.estado] ?? ESTADO_PORTAL.abierto;
+              const respuestas = respuestasPorTicket[t.id] ?? [];
               return (
                 <article className="ticket-card" key={t.id}>
                   <div className="ticket-card-cabecera">
@@ -109,6 +126,20 @@ export default async function Portal({
                     <span>{fechaCorta(t.created_at)}</span>
                   </div>
                   <Ruta paso={estado.paso} />
+                  {respuestas.length > 0 && (
+                    <div className="ticket-mensajes">
+                      <div className="ticket-mensajes-titulo">
+                        <IconoMensaje />
+                        Soporte TI te respondió
+                      </div>
+                      {respuestas.map((r) => (
+                        <div className="ticket-mensaje" key={r.id}>
+                          <p className="ticket-mensaje-texto">{r.cuerpo}</p>
+                          <span className="ticket-mensaje-fecha">{fechaCorta(r.created_at)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </article>
               );
             })}
@@ -218,6 +249,14 @@ function IconoFlecha() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M5 12h14" />
       <path d="m13 6 6 6-6 6" />
+    </svg>
+  );
+}
+
+function IconoMensaje() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
     </svg>
   );
 }

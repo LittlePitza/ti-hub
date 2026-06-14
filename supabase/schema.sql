@@ -93,14 +93,15 @@ create table if not exists tickets (
 );
 
 -- ---------- BITÁCORA DE TICKETS ----------
--- Historial por ticket: comentarios de TI, cambios de estado, reasignaciones y eventos
--- del sistema (creación, edición). Solo lo ve el panel de TI (RLS `to authenticated`);
--- el portal del empleado no lee esta tabla, por eso sirve para notas internas.
+-- Historial por ticket: comentarios internos de TI, cambios de estado, reasignaciones,
+-- eventos del sistema (creación, edición) y `respuesta` (mensaje enviado al solicitante).
+-- Casi todo es interno (RLS `to authenticated`); el portal del empleado solo lee los
+-- eventos `respuesta` (filtrados por su correo vía service role), para ver el seguimiento.
 create table if not exists ticket_eventos (
   id uuid primary key default gen_random_uuid(),
   ticket_id uuid not null references tickets(id) on delete cascade,
   tipo text not null default 'comentario'
-    check (tipo in ('comentario','estado','asignacion','sistema')),
+    check (tipo in ('comentario','estado','asignacion','sistema','respuesta')),
   autor text,                -- correo o nombre de quien generó el evento
   cuerpo text,               -- texto del comentario o detalle del cambio
   estado_anterior text,
@@ -137,6 +138,10 @@ alter table tickets add column if not exists resuelto_at timestamptz;
 alter table tickets drop constraint if exists tickets_estado_check;
 alter table tickets add constraint tickets_estado_check
   check (estado in ('abierto','en_proceso','en_espera','resuelto','cerrado','reabierto'));
+-- Bitácora: tipo `respuesta` (mensaje visible para el solicitante en el portal).
+alter table ticket_eventos drop constraint if exists ticket_eventos_tipo_check;
+alter table ticket_eventos add constraint ticket_eventos_tipo_check
+  check (tipo in ('comentario','estado','asignacion','sistema','respuesta'));
 
 -- ---------- SEGURIDAD (RLS) ----------
 -- Solo usuarios autenticados (Supabase Auth) pueden leer y escribir.
