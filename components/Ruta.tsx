@@ -1,7 +1,8 @@
 // Ruta del reporte: tres nodos (Recibido → En atención → Resuelto). El nodo del
-// paso actual se resalta; los anteriores se marcan como hechos. Es la firma visual
-// del portal —la línea de tiempo legible que reemplaza una barra de progreso— y la
-// comparten la tarjeta del inicio y la página de detalle del reporte.
+// paso actual se resalta; los anteriores se marcan como hechos. El último paso
+// (paso 3 = resuelto/cerrado/archivado) es el fin del recorrido: al alcanzarlo se
+// marca como completo (check), no como "actual" pendiente. Es la firma visual del
+// portal y la comparten la tarjeta del inicio y la página de detalle del reporte.
 
 export const PASOS_RUTA = ["Recibido", "En atención", "Resuelto"];
 
@@ -10,7 +11,9 @@ export default function Ruta({ paso }: { paso: number }) {
     <ol className="ruta" aria-label={`Avance: ${PASOS_RUTA[paso - 1] ?? PASOS_RUTA[0]}`}>
       {PASOS_RUTA.map((etiqueta, i) => {
         const n = i + 1;
-        const estado = n < paso ? "completo" : n === paso ? "actual" : "futuro";
+        // El nodo final, una vez alcanzado, cuenta como completo (recorrido terminado).
+        const completado = n < paso || (n === paso && n === PASOS_RUTA.length);
+        const estado = completado ? "completo" : n === paso ? "actual" : "futuro";
         return (
           <li className={`ruta-paso ${estado}`} key={etiqueta}>
             <span className="ruta-nodo" aria-hidden>
