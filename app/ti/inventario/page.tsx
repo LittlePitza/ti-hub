@@ -1,21 +1,32 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
-import { fechaCorta } from "@/lib/format";
+import { fechaCorta, folioResponsiva } from "@/lib/format";
 import { CATEGORIAS_INV, categoriaInv } from "@/lib/inventario";
+import { ESTADOS_RESP, plantillaDefault, type EstadoResponsiva } from "@/lib/responsivas";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
 import { crearEquipo, cambiarEstadoEquipo, asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
+import { generarResponsivaEquipo } from "../responsivas/actions";
 
 export const dynamic = "force-dynamic";
 
 const ESTADOS = ["activo", "en_reparacion", "almacen", "baja"];
 
+type Resp = {
+  id: string;
+  equipo_id: string | null;
+  plantilla: string;
+  num: number;
+  estado: string;
+  archivo_url: string | null;
+};
+
 export default async function Inventario({
   searchParams,
 }: {
-  searchParams: Promise<{ cat?: string }>;
+  searchParams: Promise<{ cat?: string; resguardo?: string }>;
 }) {
-  const { cat: catParam } = await searchParams;
+  const { cat: catParam, resguardo } = await searchParams;
   const cat = categoriaInv(catParam);
   const c = cat.campos;
 
@@ -26,17 +37,27 @@ export default async function Inventario({
         <h1 className="pagina-titulo">Inventario</h1>
         <p className="pagina-desc">Cómputo, celulares, líneas telefónicas y software</p>
       </div>
+      <Link href="/ti/responsivas" className="boton secundario">Responsivas</Link>
     </div>
   );
   if (!sb) return <>{head}<SinConexion /></>;
 
-  const [equiposQ, empleadosQ] = await Promise.all([
+  const [equiposQ, empleadosQ, respQ] = await Promise.all([
     sb.from("equipos").select("*").order("created_at", { ascending: false }),
     sb.from("empleados").select("nombre, correo").eq("estado", "activo").order("nombre"),
+    sb.from("responsivas").select("id, equipo_id, plantilla, num, estado, archivo_url").order("created_at", { ascending: false }),
   ]);
   const todos = equiposQ.data ?? [];
   const empleados = empleadosQ.data ?? [];
+  const responsivas = (respQ.data ?? []) as Resp[];
   const lista = todos.filter((e) => (e.categoria ?? "computo") === cat.valor);
+
+  // Responsiva más reciente por equipo (la lista ya viene de la más nueva a la más vieja).
+  const respPorEquipo = new Map<string, Resp>();
+  for (const r of responsivas) {
+    if (r.equipo_id && !respPorEquipo.has(r.equipo_id)) respPorEquipo.set(r.equipo_id, r);
+  }
+  const respAviso = resguardo ? responsivas.find((r) => r.id === resguardo) : undefined;
 
   const selectorEmpleado = (nombre: string, defaultValue?: string) => (
     <select name={nombre} defaultValue={defaultValue ?? ""}>
@@ -50,6 +71,22 @@ export default async function Inventario({
   return (
     <>
       {head}
+
+      {respAviso && (
+        <div className="banner-exito" style={{ marginBottom: 20 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          <div>
+            <strong>Responsiva generada · {folioResponsiva(plantillaDefault(respAviso.plantilla).prefijoFolio, respAviso.num)}</strong>
+            Quedó como borrador.{" "}
+            <Link href={`/ti/responsivas/${respAviso.id}`} style={{ textDecoration: "underline" }}>Abrir y completar</Link>
+            {" · "}
+            <Link href={`/ti/responsivas/${respAviso.id}/imprimir`} style={{ textDecoration: "underline" }}>Imprimir</Link>
+          </div>
+        </div>
+      )}
 
       <nav className="tabs" aria-label="Categorías del inventario">
         {CATEGORIAS_INV.map((t) => {
@@ -149,6 +186,7 @@ export default async function Inventario({
             <textarea id="eq-notas" name="notas" placeholder="Detalles, accesorios incluidos, historial…" />
           </div>
         </div>
+        <p className="alta-nota suave">Si lo asignas a un empleado, se generará su responsiva en automático.</p>
         <button className="boton" type="submit">Guardar {cat.singular}</button>
       </form>
 
@@ -165,6 +203,7 @@ export default async function Inventario({
               {c.num_serie && <th>{c.num_serie.label}</th>}
               {c.telefono && <th>{c.telefono.label}</th>}
               <th>Asignado a</th>
+              <th>Resguardo</th>
               {c.ubicacion && <th>Ubicación</th>}
               {c.fechas && <th>{c.garantiaLabel}</th>}
               <th>Estado</th>
@@ -172,7 +211,10 @@ export default async function Inventario({
             </tr>
           </thead>
           <tbody>
-            {lista.map((e) => (
+            {lista.map((e) => {
+              const r = respPorEquipo.get(e.id);
+              const ins = r ? (ESTADOS_RESP[r.estado as EstadoResponsiva] ?? ESTADOS_RESP.borrador) : null;
+              return (
               <tr key={e.id}>
                 <td>
                   <div className="celda-principal">{e.nombre}</div>
@@ -194,6 +236,20 @@ export default async function Inventario({
                     <span className="insignia ok">libre</span>
                   ) : (
                     "—"
+                  )}
+                </td>
+                <td>
+                  {r && ins ? (
+                    <Link href={`/ti/responsivas/${r.id}`} className={`resguardo-chip ${ins.tono}`} title="Abrir responsiva">
+                      <span className="punto" />{ins.texto}
+                    </Link>
+                  ) : e.asignado_email ? (
+                    <form action={generarResponsivaEquipo}>
+                      <input type="hidden" name="equipo_id" value={e.id} />
+                      <button className="boton secundario mini" type="submit">Generar</button>
+                    </form>
+                  ) : (
+                    <span className="suave">—</span>
                   )}
                 </td>
                 {c.ubicacion && <td className="suave">{e.ubicacion ?? "—"}</td>}
@@ -266,7 +322,8 @@ export default async function Inventario({
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       )}

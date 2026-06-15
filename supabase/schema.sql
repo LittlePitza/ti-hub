@@ -167,6 +167,57 @@ drop policy if exists "config_correo_autenticados" on config_correo;
 create policy "config_correo_autenticados" on config_correo
   for all to authenticated using (true) with check (true);
 
+-- ---------- RESPONSIVAS (cartas de resguardo) ----------
+-- Documento de custodia que nace al asignar un equipo a un empleado.
+-- Es un documento legal: guarda un SNAPSHOT congelado de los datos del
+-- empleado y del equipo al momento de generarse (no se rompe si luego cambian).
+-- `plantilla` elige el formato (ver lib/responsivas.ts y plantillas_responsiva);
+-- `num` (serial global) + prefijo de la plantilla forman el folio (RES-LAP-0001).
+-- Ciclo de vida: borrador -> pendiente_firma -> firmada -> devuelta (o cancelada).
+create table if not exists responsivas (
+  id uuid primary key default gen_random_uuid(),
+  num serial,
+  equipo_id uuid references equipos(id) on delete set null,
+  plantilla text not null default 'laptop',
+  -- snapshot del empleado (resguardante)
+  empleado_correo text,
+  empleado_nombre text,
+  empleado_puesto text,
+  empleado_departamento text,
+  -- snapshot del equipo + datos editables del documento
+  equipo_nombre text,
+  datos jsonb not null default '{}'::jsonb, -- { equipo:{...}, accesorios:[], seguridad:[], observaciones, estado_fisico }
+  estado text not null default 'borrador'
+    check (estado in ('borrador','pendiente_firma','firmada','devuelta','cancelada')),
+  archivo_url text,   -- ruta del escaneo firmado en el bucket 'responsivas' de Storage
+  archivo_nombre text,
+  fecha_generada date not null default current_date,
+  fecha_firmada date,
+  notas text,
+  created_at timestamptz not null default now()
+);
+
+-- ---------- PLANTILLAS DE RESPONSIVA ----------
+-- Formatos editables desde el panel (cláusulas, accesorios, seguridad, firmas).
+-- Arranca VACÍA: el contenido base de las 8 plantillas vive en código
+-- (PLANTILLAS_DEFAULT, lib/responsivas.ts). Editar una plantilla en el panel
+-- hace upsert de la fila aquí; las lecturas mezclan este override sobre el default.
+create table if not exists plantillas_responsiva (
+  clave text primary key,            -- laptop|pc|movil|monitor|impresora|servidor|software|devolucion
+  nombre text not null,              -- "Laptop / Portátil"
+  codigo text not null,              -- "TI-RES-01"
+  titulo text not null,              -- subtítulo del documento
+  prefijo_folio text not null,       -- "LAP"
+  clausulas jsonb not null default '[]'::jsonb,  -- [{ titulo, texto }]
+  accesorios jsonb not null default '[]'::jsonb, -- ["Cargador", ...]
+  seguridad jsonb not null default '[]'::jsonb,  -- ["Cifrado de disco", ...]
+  firmas jsonb not null default '[]'::jsonb,     -- [{ nombre, rol }]
+  aviso text,                        -- texto del recuadro de aviso
+  iso text,                          -- pie con controles ISO
+  version text not null default '1.0',
+  updated_at timestamptz not null default now()
+);
+
 create index if not exists idx_tickets_estado on tickets(estado);
 create index if not exists idx_tickets_asignado_email on tickets(asignado_email);
 create index if not exists idx_ticket_eventos_ticket on ticket_eventos(ticket_id, created_at);
@@ -176,6 +227,8 @@ create index if not exists idx_equipos_asignado_email on equipos(asignado_email)
 create index if not exists idx_equipos_categoria on equipos(categoria);
 create index if not exists idx_tickets_equipo on tickets(equipo_id);
 create index if not exists idx_mantenimientos_equipo on mantenimientos(equipo_id);
+create index if not exists idx_responsivas_equipo on responsivas(equipo_id);
+create index if not exists idx_responsivas_estado on responsivas(estado);
 
 -- ---------- MIGRACIÓN (bases creadas antes) ----------
 -- `create table if not exists` no agrega columnas a tablas existentes; estas líneas sí.
@@ -243,6 +296,8 @@ alter table mantenimientos enable row level security;
 alter table tickets enable row level security;
 alter table empleados enable row level security;
 alter table ticket_eventos enable row level security;
+alter table responsivas enable row level security;
+alter table plantillas_responsiva enable row level security;
 
 -- Si vienes del esquema anterior (acceso abierto), estas líneas retiran esas políticas.
 drop policy if exists "acceso_total_equipos" on equipos;
@@ -261,6 +316,25 @@ create policy "empleados_autenticados" on empleados
 drop policy if exists "ticket_eventos_autenticados" on ticket_eventos;
 create policy "ticket_eventos_autenticados" on ticket_eventos
   for all to authenticated using (true) with check (true);
+drop policy if exists "responsivas_autenticados" on responsivas;
+create policy "responsivas_autenticados" on responsivas
+  for all to authenticated using (true) with check (true);
+drop policy if exists "plantillas_autenticados" on plantillas_responsiva;
+create policy "plantillas_autenticados" on plantillas_responsiva
+  for all to authenticated using (true) with check (true);
+
+-- ---------- STORAGE: bucket de responsivas firmadas ----------
+-- Guarda el escaneo/PDF firmado de cada responsiva. Privado: solo el panel
+-- (usuarios autenticados) sube y descarga; el portal del empleado no lo toca.
+insert into storage.buckets (id, name, public)
+  values ('responsivas', 'responsivas', false)
+  on conflict (id) do nothing;
+
+drop policy if exists "responsivas_storage_rw" on storage.objects;
+create policy "responsivas_storage_rw" on storage.objects
+  for all to authenticated
+  using (bucket_id = 'responsivas')
+  with check (bucket_id = 'responsivas');
 
 -- ---------- DATOS DE EJEMPLO ----------
 -- Solo para instalaciones nuevas: NO re-ejecutar esta sección sobre una base con datos

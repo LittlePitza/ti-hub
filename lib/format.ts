@@ -54,3 +54,8 @@ export function duracionPartes(ms: number): { valor: string; unidad: string }[] 
 export function folio(n: number): string {
   return "TK-" + String(n).padStart(4, "0");
 }
+
+// Folio de responsiva: RES-<prefijo>-#### (p. ej. RES-LAP-0001).
+export function folioResponsiva(prefijo: string, n: number): string {
+  return `RES-${prefijo}-${String(n).padStart(4, "0")}`;
+}

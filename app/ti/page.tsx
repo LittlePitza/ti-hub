@@ -66,7 +66,7 @@ export default async function Resumen() {
   const en14 = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
   const en90 = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
 
-  const [equiposQ, ticketsQ, mantosQ] = await Promise.all([
+  const [equiposQ, ticketsQ, mantosQ, respQ] = await Promise.all([
     sb.from("equipos").select("nombre, tipo, estado, garantia_hasta"),
     sb.from("tickets")
       .select("id, num, titulo, solicitante, estado, prioridad, asignado_a, created_at, primera_respuesta_at, resuelto_at")
@@ -76,11 +76,13 @@ export default async function Resumen() {
       .in("estado", ["programado", "en_proceso"])
       .lte("fecha_programada", en14)
       .order("fecha_programada", { ascending: true }),
+    sb.from("responsivas").select("estado").in("estado", ["borrador", "pendiente_firma"]),
   ]);
 
   const equipos = equiposQ.data ?? [];
   const tickets = ticketsQ.data ?? [];
   const mantos = mantosQ.data ?? [];
+  const respPendientes = (respQ.data ?? []).length;
 
   // Métricas
   const enReparacion = equipos.filter((e) => e.estado === "en_reparacion").length;
@@ -236,6 +238,10 @@ export default async function Resumen() {
           <div className="metrica">
             <div className="metrica-valor">{proximos.length}</div>
             <div className="metrica-label">Próximos 14 días</div>
+          </div>
+          <div className="metrica">
+            <div className={`metrica-valor ${respPendientes > 0 ? "alerta" : ""}`}>{respPendientes}</div>
+            <div className="metrica-label">Responsivas sin firmar</div>
           </div>
         </div>
       </section>
