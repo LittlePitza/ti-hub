@@ -229,7 +229,7 @@ function htmlMarca(cuerpoTexto: string, cta: { texto: string; url: string } | nu
 ${boton}
 <tr><td style="padding:18px 28px 24px;border-top:1px solid ${LINEA};font-size:12px;color:${SUAVE};">Mensaje del portal de soporte de TI. Responde a este correo si necesitas más ayuda.</td></tr>
 </table>
-<div style="max-width:560px;margin:14px auto 0;font-size:11px;color:#9aa0a6;">Plásticos Industriales de Monterrey, S.A. de C.V.</div>
+<div style="max-width:560px;margin:14px auto 0;font-size:11px;color:#9aa0a6;">Plásticos PIMSA</div>
 </td></tr></table></body></html>`;
 }
 

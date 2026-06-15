@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 // Tipografía de la marca PIMSA (igual que el portal del empleado).
 const signika = Signika({ subsets: ["latin"], weight: ["300", "400", "600", "700"] });
 
-const RAZON_SOCIAL = "Plásticos Industriales de Monterrey, S.A. de C.V.";
+const RAZON_SOCIAL = "Plásticos PIMSA";
 
 // Renderiza pares etiqueta/valor en filas de 2 columnas (table.datos).
 function FilasDatos({ pares }: { pares: [string, string][] }) {
