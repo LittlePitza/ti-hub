@@ -170,7 +170,7 @@ export async function cambiarEstadoTicket(formData: FormData) {
     const c = await getConfigCorreo(sb);
     if (correoOperativo(c)) {
       const email = actual.solicitante_email!;
-      await enviarEstado(c, {
+      await enviarEstado(c, sb, {
         para: email,
         num: actual.num,
         titulo: actual.titulo,
@@ -266,7 +266,7 @@ export async function responderCliente(formData: FormData) {
     const c = await getConfigCorreo(sb);
     if (correoOperativo(c)) {
       const email = actual.solicitante_email!;
-      await enviarRespuesta(c, {
+      await enviarRespuesta(c, sb, {
         para: email,
         num: actual.num,
         titulo: actual.titulo,

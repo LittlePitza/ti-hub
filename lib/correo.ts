@@ -6,12 +6,27 @@ import { folio } from "./format";
 // Configuración de correo administrada desde el panel (/ti/correo), no por env.
 // Vive en la fila única `config_correo` (id = 1). El envío lo decide TI por ticket
 // (no es automático); aquí solo está el cómo enviar y con qué plantillas.
+//
+// Tres métodos de envío (Microsoft 365 retira la auth básica por SMTP a fin de 2026):
+//  - smtp_basico: usuario/contraseña por SMTP (legado).
+//  - graph_app: app-only (client credentials) vía Microsoft Graph. No caduca, manda
+//    como un buzón fijo. Necesita permiso de aplicación Mail.Send con consentimiento.
+//  - oauth_interactivo: "Iniciar sesión con Microsoft"; guarda un refresh token y
+//    manda como la cuenta que se conectó. Permiso delegado Mail.Send.
+export type MetodoCorreo = "smtp_basico" | "graph_app" | "oauth_interactivo";
+
 export type ConfigCorreo = {
   activo: boolean;
+  metodo: MetodoCorreo;
   smtp_host: string;
   smtp_port: number;
   smtp_user: string | null;
   smtp_pass: string | null;
+  azure_tenant_id: string | null;
+  azure_client_id: string | null;
+  azure_client_secret: string | null;
+  oauth_refresh_token: string | null;
+  oauth_cuenta: string | null;
   remitente: string | null;
   remitente_nombre: string;
   sitio_url: string | null;
@@ -28,9 +43,19 @@ export async function getConfigCorreo(sb: SupabaseClient): Promise<ConfigCorreo 
   return (data as ConfigCorreo) ?? null;
 }
 
-// Hay credenciales para enviar (sirve para la prueba, aunque el servicio esté apagado).
+// El buzón desde el que se manda (remitente explícito o el usuario configurado).
+function buzon(c: ConfigCorreo): string {
+  return c.remitente || c.smtp_user || c.oauth_cuenta || "";
+}
+
+// Hay con qué enviar según el método (sirve para la prueba aunque el servicio esté apagado).
 export function tieneCredenciales(c: ConfigCorreo | null): c is ConfigCorreo {
-  return Boolean(c && c.smtp_user && c.smtp_pass && (c.remitente || c.smtp_user));
+  if (!c) return false;
+  if (c.metodo === "graph_app")
+    return Boolean(c.azure_tenant_id && c.azure_client_id && c.azure_client_secret && buzon(c));
+  if (c.metodo === "oauth_interactivo")
+    return Boolean(c.azure_tenant_id && c.azure_client_id && c.azure_client_secret && c.oauth_refresh_token);
+  return Boolean(c.smtp_user && c.smtp_pass && (c.remitente || c.smtp_user));
 }
 // Listo para notificar de verdad: credenciales + interruptor maestro encendido.
 export function correoOperativo(c: ConfigCorreo | null): c is ConfigCorreo {
@@ -39,6 +64,130 @@ export function correoOperativo(c: ConfigCorreo | null): c is ConfigCorreo {
 
 type Resultado = { ok: true } | { ok: false; motivo: "no_config" | "error"; detalle?: string };
 
+// ---------- OAuth2 / Microsoft Entra ID ----------
+const GRAPH = "https://graph.microsoft.com/v1.0";
+const SCOPE_DELEGADO = "https://graph.microsoft.com/Mail.Send offline_access openid email";
+
+function urlToken(tenant: string): string {
+  return `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`;
+}
+
+// URL a la que mandamos al admin para que inicie sesión y consienta (flujo interactivo).
+export function urlAutorizacion(c: ConfigCorreo, redirectUri: string, state: string): string {
+  const p = new URLSearchParams({
+    client_id: c.azure_client_id ?? "",
+    response_type: "code",
+    redirect_uri: redirectUri,
+    response_mode: "query",
+    scope: SCOPE_DELEGADO,
+    state,
+    prompt: "select_account",
+  });
+  return `https://login.microsoftonline.com/${c.azure_tenant_id}/oauth2/v2.0/authorize?${p.toString()}`;
+}
+
+// Canjea el código del callback por tokens; devuelve el refresh token y la cuenta conectada.
+export async function intercambiarCodigo(
+  c: ConfigCorreo,
+  code: string,
+  redirectUri: string,
+): Promise<{ refresh_token: string; cuenta: string }> {
+  const res = await fetch(urlToken(c.azure_tenant_id!), {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: c.azure_client_id!,
+      client_secret: c.azure_client_secret!,
+      code,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+      scope: SCOPE_DELEGADO,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error_description || data.error || "No se pudo canjear el código.");
+
+  let cuenta = "";
+  try {
+    const me = await fetch(`${GRAPH}/me`, { headers: { authorization: `Bearer ${data.access_token}` } });
+    const mj = await me.json();
+    cuenta = mj.mail || mj.userPrincipalName || "";
+  } catch {
+    /* la cuenta es solo informativa */
+  }
+  return { refresh_token: data.refresh_token, cuenta };
+}
+
+// Access token app-only (client credentials): no requiere intervención del usuario.
+async function tokenAppOnly(c: ConfigCorreo): Promise<string> {
+  const res = await fetch(urlToken(c.azure_tenant_id!), {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: c.azure_client_id!,
+      client_secret: c.azure_client_secret!,
+      scope: "https://graph.microsoft.com/.default",
+      grant_type: "client_credentials",
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error_description || data.error || "Fallo al obtener el token de aplicación.");
+  return data.access_token;
+}
+
+// Access token interactivo: renueva con el refresh token guardado. Azure rota el
+// refresh token, así que persistimos el nuevo si llega uno distinto.
+async function tokenInteractivo(c: ConfigCorreo, sb: SupabaseClient): Promise<string> {
+  const res = await fetch(urlToken(c.azure_tenant_id!), {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: c.azure_client_id!,
+      client_secret: c.azure_client_secret!,
+      refresh_token: c.oauth_refresh_token!,
+      grant_type: "refresh_token",
+      scope: SCOPE_DELEGADO,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error_description || data.error || "Sesión de Microsoft expirada; vuelve a conectar.");
+  if (data.refresh_token && data.refresh_token !== c.oauth_refresh_token) {
+    await sb.from("config_correo").update({ oauth_refresh_token: data.refresh_token }).eq("id", 1);
+  }
+  return data.access_token;
+}
+
+// Envía por Microsoft Graph (sendMail). 202 Accepted = aceptado para entrega.
+async function enviarGraph(
+  accessToken: string,
+  endpoint: string,
+  html: string,
+  msg: { para: string; asunto: string; cuerpo: string },
+): Promise<Resultado> {
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+    body: JSON.stringify({
+      message: {
+        subject: msg.asunto,
+        body: { contentType: "HTML", content: html },
+        toRecipients: [{ emailAddress: { address: msg.para } }],
+      },
+      saveToSentItems: true,
+    }),
+  });
+  if (res.ok || res.status === 202) return { ok: true };
+  let detalle = `Microsoft Graph respondió ${res.status}`;
+  try {
+    const e = await res.json();
+    detalle = e?.error?.message ? `${detalle}: ${e.error.message}` : detalle;
+  } catch {
+    /* sin cuerpo JSON */
+  }
+  return { ok: false, motivo: "error", detalle };
+}
+
+// ---------- SMTP (legado) ----------
 function transporte(c: ConfigCorreo): Transporter {
   return nodemailer.createTransport({
     host: c.smtp_host,
@@ -79,14 +228,31 @@ ${cta}
 </td></tr></table></body></html>`;
 }
 
-async function enviar(c: ConfigCorreo, msg: { para: string; asunto: string; cuerpo: string }): Promise<Resultado> {
+// ---------- Envío unificado ----------
+// Despacha según el método configurado. Recibe `sb` para poder persistir el refresh
+// token rotado en el flujo interactivo.
+async function enviar(
+  c: ConfigCorreo,
+  sb: SupabaseClient,
+  msg: { para: string; asunto: string; cuerpo: string },
+): Promise<Resultado> {
+  const html = htmlMarca(msg.cuerpo, c.sitio_url);
   try {
+    if (c.metodo === "graph_app") {
+      const token = await tokenAppOnly(c);
+      const mb = encodeURIComponent(buzon(c));
+      return await enviarGraph(token, `${GRAPH}/users/${mb}/sendMail`, html, msg);
+    }
+    if (c.metodo === "oauth_interactivo") {
+      const token = await tokenInteractivo(c, sb);
+      return await enviarGraph(token, `${GRAPH}/me/sendMail`, html, msg);
+    }
     await transporte(c).sendMail({
       from: `"${c.remitente_nombre}" <${c.remitente || c.smtp_user}>`,
       to: msg.para,
       subject: msg.asunto,
       text: msg.cuerpo,
-      html: htmlMarca(msg.cuerpo, c.sitio_url),
+      html,
     });
     return { ok: true };
   } catch (e) {
@@ -97,24 +263,26 @@ async function enviar(c: ConfigCorreo, msg: { para: string; asunto: string; cuer
 
 export function enviarRespuesta(
   c: ConfigCorreo,
+  sb: SupabaseClient,
   d: { para: string; num: number; titulo: string; nombre: string; mensaje: string },
 ): Promise<Resultado> {
   const vars = { folio: folio(d.num), titulo: d.titulo, nombre: d.nombre, mensaje: d.mensaje };
-  return enviar(c, { para: d.para, asunto: render(c.asunto_respuesta, vars), cuerpo: render(c.cuerpo_respuesta, vars) });
+  return enviar(c, sb, { para: d.para, asunto: render(c.asunto_respuesta, vars), cuerpo: render(c.cuerpo_respuesta, vars) });
 }
 
 export function enviarEstado(
   c: ConfigCorreo,
+  sb: SupabaseClient,
   d: { para: string; num: number; titulo: string; nombre: string; estado: string },
 ): Promise<Resultado> {
   const vars = { folio: folio(d.num), titulo: d.titulo, nombre: d.nombre, estado: d.estado };
-  return enviar(c, { para: d.para, asunto: render(c.asunto_estado, vars), cuerpo: render(c.cuerpo_estado, vars) });
+  return enviar(c, sb, { para: d.para, asunto: render(c.asunto_estado, vars), cuerpo: render(c.cuerpo_estado, vars) });
 }
 
-export function enviarPrueba(c: ConfigCorreo, para: string): Promise<Resultado> {
-  return enviar(c, {
+export function enviarPrueba(c: ConfigCorreo, sb: SupabaseClient, para: string): Promise<Resultado> {
+  return enviar(c, sb, {
     para,
     asunto: "Correo de prueba · Soporte TI PIMSA",
-    cuerpo: "Hola,\n\nEste es un correo de prueba del portal de soporte de TI. Si lo recibes, la configuración SMTP está funcionando correctamente.",
+    cuerpo: "Hola,\n\nEste es un correo de prueba del portal de soporte de TI. Si lo recibes, la configuración está funcionando correctamente.",
   });
 }

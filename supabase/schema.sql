@@ -116,10 +116,19 @@ create table if not exists ticket_eventos (
 create table if not exists config_correo (
   id int primary key default 1 check (id = 1),
   activo boolean not null default false,
+  -- Método de envío: SMTP básico (legado), app-only Graph o login interactivo OAuth.
+  metodo text not null default 'smtp_basico'
+    check (metodo in ('smtp_basico','graph_app','oauth_interactivo')),
   smtp_host text not null default 'smtp.office365.com',
   smtp_port int not null default 587,
   smtp_user text,
   smtp_pass text,
+  -- Credenciales OAuth2 / Microsoft Entra ID (Azure) para graph_app y oauth_interactivo.
+  azure_tenant_id text,
+  azure_client_id text,
+  azure_client_secret text,
+  oauth_refresh_token text,            -- solo oauth_interactivo: token de actualización
+  oauth_cuenta text,                   -- correo de la cuenta conectada (para mostrar)
   remitente text,
   remitente_nombre text not null default 'Soporte TI · Plásticos PIMSA',
   sitio_url text,
@@ -176,6 +185,16 @@ alter table tickets add constraint tickets_estado_check
 alter table ticket_eventos drop constraint if exists ticket_eventos_tipo_check;
 alter table ticket_eventos add constraint ticket_eventos_tipo_check
   check (tipo in ('comentario','estado','asignacion','sistema','respuesta'));
+-- Correo: métodos OAuth2 (Microsoft Graph app-only y login interactivo).
+alter table config_correo add column if not exists metodo text not null default 'smtp_basico';
+alter table config_correo drop constraint if exists config_correo_metodo_check;
+alter table config_correo add constraint config_correo_metodo_check
+  check (metodo in ('smtp_basico','graph_app','oauth_interactivo'));
+alter table config_correo add column if not exists azure_tenant_id text;
+alter table config_correo add column if not exists azure_client_id text;
+alter table config_correo add column if not exists azure_client_secret text;
+alter table config_correo add column if not exists oauth_refresh_token text;
+alter table config_correo add column if not exists oauth_cuenta text;
 
 -- ---------- SEGURIDAD (RLS) ----------
 -- Solo usuarios autenticados (Supabase Auth) pueden leer y escribir.
