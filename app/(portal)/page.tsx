@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSupabasePortal } from "@/lib/supabase";
 import { fechaCorta, folio } from "@/lib/format";
 import { getCorreoPortal, nombreDeCorreo, CATEGORIAS_PORTAL, ESTADO_PORTAL } from "@/lib/portal";
+import Ruta from "@/components/Ruta";
 import { entrarPortal, salirPortal } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -9,10 +10,6 @@ export const dynamic = "force-dynamic";
 const TITULO_CATEGORIA: Record<string, string> = Object.fromEntries(
   CATEGORIAS_PORTAL.map((c) => [c.valor, c.titulo]),
 );
-
-// Etiquetas de la ruta del reporte (la firma visual del portal): el camino que
-// recorre cada reporte, no una barra de progreso anónima.
-const PASOS_RUTA = ["Recibido", "En atención", "Resuelto"];
 
 export default async function Portal({
   searchParams,
@@ -51,20 +48,19 @@ export default async function Portal({
   const nombre = empleadoQ.data?.nombre?.split(" ")[0] || nombreDeCorreo(correo);
   const activos = tickets.filter((t) => ESTADO_PORTAL[t.estado]?.paso !== 3).length;
 
-  // Respuestas de TI visibles para el solicitante (solo eventos `respuesta` de sus
-  // tickets). El resto de la bitácora es interno y no se consulta aquí.
+  // Cuántas respuestas de TI tiene cada ticket (solo eventos `respuesta`). El texto
+  // completo vive en el detalle del reporte; aquí basta el conteo para la tarjeta.
   const ids = tickets.map((t) => t.id);
   const respuestasQ = ids.length
     ? await sb
         .from("ticket_eventos")
-        .select("id, ticket_id, cuerpo, created_at")
+        .select("ticket_id")
         .eq("tipo", "respuesta")
         .in("ticket_id", ids)
-        .order("created_at", { ascending: true })
     : { data: [] };
-  const respuestasPorTicket: Record<string, { id: string; cuerpo: string | null; created_at: string }[]> = {};
+  const respuestasPorTicket: Record<string, number> = {};
   for (const r of respuestasQ.data ?? []) {
-    (respuestasPorTicket[r.ticket_id] ??= []).push(r);
+    respuestasPorTicket[r.ticket_id] = (respuestasPorTicket[r.ticket_id] ?? 0) + 1;
   }
 
   return (
@@ -111,9 +107,9 @@ export default async function Portal({
           <div className="tickets-lista">
             {tickets.map((t) => {
               const estado = ESTADO_PORTAL[t.estado] ?? ESTADO_PORTAL.abierto;
-              const respuestas = respuestasPorTicket[t.id] ?? [];
+              const numRespuestas = respuestasPorTicket[t.id] ?? 0;
               return (
-                <article className="ticket-card" key={t.id}>
+                <Link className="ticket-card" href={`/reporte/${t.id}`} key={t.id}>
                   <div className="ticket-card-cabecera">
                     <h3 className="ticket-card-titulo">{t.titulo}</h3>
                     <span className={`insignia ${estado.tono}`}>{estado.texto}</span>
@@ -126,21 +122,22 @@ export default async function Portal({
                     <span>{fechaCorta(t.created_at)}</span>
                   </div>
                   <Ruta paso={estado.paso} />
-                  {respuestas.length > 0 && (
-                    <div className="ticket-mensajes">
-                      <div className="ticket-mensajes-titulo">
+                  <div className="ticket-card-pie">
+                    {numRespuestas > 0 ? (
+                      <span className="ticket-card-respuestas">
                         <IconoMensaje />
                         Soporte TI te respondió
-                      </div>
-                      {respuestas.map((r) => (
-                        <div className="ticket-mensaje" key={r.id}>
-                          <p className="ticket-mensaje-texto">{r.cuerpo}</p>
-                          <span className="ticket-mensaje-fecha">{fechaCorta(r.created_at)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </article>
+                        {numRespuestas > 1 && ` · ${numRespuestas} mensajes`}
+                      </span>
+                    ) : (
+                      <span className="ticket-card-pie-vacio">Sin respuestas todavía</span>
+                    )}
+                    <span className="ticket-card-ver">
+                      Ver seguimiento
+                      <IconoFlechaMini />
+                    </span>
+                  </div>
+                </Link>
               );
             })}
           </div>
@@ -166,28 +163,6 @@ export default async function Portal({
         </section>
       )}
     </>
-  );
-}
-
-// Ruta del reporte: tres nodos (Recibido → En atención → Resuelto). El nodo del
-// paso actual se resalta; los anteriores se marcan como hechos. Es la línea de
-// tiempo legible que reemplaza a la barra de progreso.
-function Ruta({ paso }: { paso: number }) {
-  return (
-    <ol className="ruta" aria-label={`Avance: ${PASOS_RUTA[paso - 1] ?? PASOS_RUTA[0]}`}>
-      {PASOS_RUTA.map((etiqueta, i) => {
-        const n = i + 1;
-        const estado = n < paso ? "completo" : n === paso ? "actual" : "futuro";
-        return (
-          <li className={`ruta-paso ${estado}`} key={etiqueta}>
-            <span className="ruta-nodo" aria-hidden>
-              {estado === "completo" ? <IconoCheckMini /> : <span className="ruta-punto" />}
-            </span>
-            <span className="ruta-label">{etiqueta}</span>
-          </li>
-        );
-      })}
-    </ol>
   );
 }
 
@@ -236,10 +211,11 @@ function IconoCheck() {
   );
 }
 
-function IconoCheckMini() {
+function IconoFlechaMini() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="m5 12.5 4.5 4.5L19 6.5" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M5 12h14" />
+      <path d="m13 6 6 6-6 6" />
     </svg>
   );
 }

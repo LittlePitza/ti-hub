@@ -952,6 +952,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   display: flex;
   flex-direction: column;
   gap: 14px;
+  color: var(--tinta);
+  transition: border-color 130ms ease, box-shadow 130ms ease, transform 130ms ease;
+}
+a.ticket-card:hover {
+  border-color: var(--pimsa-verde);
+  box-shadow: 0 6px 20px -12px rgba(41, 68, 102, 0.4);
+  transform: translateY(-1px);
+}
+a.ticket-card:focus-visible {
+  outline: 2px solid var(--pimsa-azul);
+  outline-offset: 2px;
 }
 .ticket-card-cabecera {
   display: flex;
@@ -970,29 +981,37 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   margin-top: -4px;
 }
 
-/* Respuestas de TI dentro de la tarjeta del reporte (lo que TI escribió al cliente) */
-.ticket-mensajes {
+/* Pie de la tarjeta del reporte: aviso de respuestas + invitación a ver el detalle */
+.ticket-card-pie {
   border-top: 1px solid var(--linea);
-  padding-top: 14px;
+  padding-top: 12px;
   display: flex;
-  flex-direction: column;
-  gap: 9px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
 }
-.ticket-mensajes-titulo {
+.ticket-card-respuestas {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--pimsa-verde, var(--ok));
+  color: var(--ok);
 }
-.ticket-mensaje {
-  background: var(--ok-tenue);
-  border-radius: 12px;
-  padding: 11px 13px;
+.ticket-card-respuestas svg { color: var(--pimsa-verde); flex-shrink: 0; }
+.ticket-card-pie-vacio { font-size: 12.5px; color: var(--tinta-suave); }
+.ticket-card-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--petroleo);
+  margin-left: auto;
 }
-.ticket-mensaje-texto { font-size: 14px; line-height: 1.5; color: var(--tinta); white-space: pre-wrap; }
-.ticket-mensaje-fecha { font-size: 11.5px; color: var(--tinta-suave); display: block; margin-top: 5px; }
+.ticket-card-ver svg { transition: transform 140ms ease; }
+a.ticket-card:hover .ticket-card-ver svg { transform: translateX(3px); }
 
 /* Ruta del reporte: stepper Recibido → En atención → Resuelto (la firma) */
 .ruta {
@@ -1052,6 +1071,157 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 .ruta-paso.actual .ruta-label { color: var(--ok); font-weight: 600; }
 .ruta-paso.completo .ruta-label { color: var(--tinta); }
+
+/* ---------- Detalle del reporte (expediente del empleado) ---------- */
+.reporte-cabecera {
+  position: relative;
+  overflow: hidden;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 18px;
+  padding: 20px 20px 24px;
+  margin-bottom: 28px;
+}
+.reporte-cabecera::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--pimsa-verde);
+}
+.reporte-onda {
+  position: absolute;
+  right: -40px;
+  top: -28px;
+  width: 220px;
+  height: auto;
+  color: var(--pimsa-verde);
+  opacity: 0.06;
+  pointer-events: none;
+}
+.reporte-cabecera-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.reporte-folio { font-size: 13px; color: var(--tinta-suave); font-weight: 600; letter-spacing: 0.02em; }
+.reporte-titulo {
+  font-size: clamp(20px, 5.5vw, 25px);
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+  position: relative;
+}
+.reporte-cabecera-ruta { position: relative; }
+
+.reporte-datos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 16px;
+  padding: 18px;
+}
+.reporte-dato.ancho { grid-column: 1 / -1; }
+.reporte-dato dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tinta-suave);
+  margin-bottom: 3px;
+}
+.reporte-dato dd { font-size: 14.5px; color: var(--tinta); line-height: 1.45; }
+
+/* Seguimiento: hilo vertical sobre una espina verde→azul. Tu reporte es el origen;
+   debajo fluyen las respuestas de TI, como una continuación de la ruta. */
+.seguimiento {
+  list-style: none;
+  position: relative;
+  padding-left: 0;
+  margin-top: 4px;
+}
+.seguimiento::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 6px;
+  bottom: 14px;
+  width: 2px;
+  background: linear-gradient(var(--pimsa-verde), var(--pimsa-azul));
+  border-radius: 2px;
+}
+.seg-item {
+  position: relative;
+  padding-left: 42px;
+  padding-bottom: 20px;
+}
+.seg-item:last-child { padding-bottom: 0; }
+.seg-nodo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+  z-index: 1;
+  box-shadow: 0 0 0 4px var(--papel);
+}
+.seg-item.es-tuyo .seg-nodo { background: var(--pimsa-verde); }
+.seg-item.es-ti .seg-nodo { background: var(--pimsa-azul); }
+.seg-item.es-espera .seg-nodo { background: var(--superficie); border: 2px solid var(--linea-fuerte); color: var(--tinta-suave); }
+.seg-item.es-listo .seg-nodo { background: var(--ok); }
+.seg-cab {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 7px;
+  min-height: 28px;
+}
+.seg-cab strong { font-size: 14px; font-weight: 600; color: var(--tinta); }
+.seg-fecha { font-size: 12px; color: var(--tinta-suave); }
+.seg-burbuja {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--tinta);
+  border-radius: 13px;
+  padding: 12px 14px;
+  white-space: pre-wrap;
+}
+.seg-burbuja.tuyo {
+  background: var(--ok-tenue);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--pimsa-verde);
+}
+.seg-burbuja.ti {
+  background: var(--petroleo-tenue);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--pimsa-azul);
+}
+.seg-espera { font-size: 13.5px; line-height: 1.55; color: var(--tinta-suave); max-width: 46ch; }
+
+.reporte-cta-nuevo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--petroleo);
+}
+.reporte-cta-nuevo svg { transition: transform 140ms ease; }
+.reporte-cta-nuevo:hover svg { transform: translateX(3px); }
 
 /* ---------- Crear reporte: pasos numerados ---------- */
 .portal-volver {
