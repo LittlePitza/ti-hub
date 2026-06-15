@@ -1,7 +1,7 @@
 "use client";
 
 import { cambiarEstadoTicket } from "@/app/ti/tickets/actions";
-import { ESTADOS_TICKET } from "@/lib/tickets";
+import { ESTADOS_TICKET, ESTADOS_SELECCIONABLES } from "@/lib/tickets";
 
 // Control de triaje del tablero: al cambiar el estado en el select, el formulario
 // se envía solo (server action + revalidate), sin un botón "Mover" en cada tarjeta.
@@ -15,6 +15,11 @@ export default function MoverEstado({
   estado: string;
   etiqueta: string;
 }) {
+  // Opciones: los estados elegibles + el estado actual si fuera uno antiguo (resuelto/
+  // cerrado), para que el select no aparezca vacío en datos heredados.
+  const opciones = ESTADOS_SELECCIONABLES.includes(estado as never)
+    ? ESTADOS_SELECCIONABLES
+    : [estado, ...ESTADOS_SELECCIONABLES];
   return (
     <form action={cambiarEstadoTicket} className="tk-mover">
       <input type="hidden" name="id" value={id} />
@@ -24,9 +29,10 @@ export default function MoverEstado({
         aria-label={`Mover ${etiqueta} a otro estado`}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
       >
-        {ESTADOS_TICKET.map((s) => (
-          <option key={s.valor} value={s.valor}>{s.etiqueta}</option>
-        ))}
+        {opciones.map((valor) => {
+          const meta = ESTADOS_TICKET.find((s) => s.valor === valor);
+          return <option key={valor} value={valor}>{meta?.etiqueta ?? valor}</option>;
+        })}
       </select>
     </form>
   );

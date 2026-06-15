@@ -48,7 +48,7 @@ const COLUMNAS: {
   { titulo: "Por atender", estados: ["abierto", "reabierto"], destino: "abierto", acento: "var(--critico)" },
   { titulo: "En proceso", estados: ["en_proceso"], destino: "en_proceso", acento: "var(--aviso)" },
   { titulo: "En espera", estados: ["en_espera"], destino: "en_espera", acento: "var(--petroleo)" },
-  { titulo: "Resueltos", estados: ["resuelto", "cerrado"], destino: "resuelto", acento: "var(--ok)", limite: 10, hecho: true },
+  { titulo: "Archivados", estados: ["archivado", "resuelto", "cerrado"], destino: "archivado", acento: "var(--ok)", limite: 10, hecho: true },
 ];
 
 const iniciales = (s: string) =>
@@ -181,7 +181,6 @@ export default function TableroTickets({
   // Fila condensada para el trabajo terminado: el "done" se recoge, no compite.
   const filaHecha = (t: Tk) => {
     const reso = evaluarResolucion(t, ahora);
-    const cerrado = t.estado === "cerrado";
     return (
       <article
         key={t.id}
@@ -194,7 +193,6 @@ export default function TableroTickets({
           {reso.semaforo !== "na" && !reso.pendiente && (
             <span className="tk-done-tiempo" title={`Resuelto en ${duracion(reso.ms)}`}>{duracion(reso.ms)}</span>
           )}
-          {cerrado && <span className="tk-done-tag">cerrado</span>}
         </span>
       </article>
     );
@@ -238,7 +236,7 @@ export default function TableroTickets({
                 <span className="tablero-col-num">{enCol.length}</span>
               </div>
               {visibles.length === 0 ? (
-                <div className="tablero-col-vacio">{col.hecho ? "Nada resuelto aún" : "Sin tickets"}</div>
+                <div className="tablero-col-vacio">{col.hecho ? "Nada archivado aún" : "Sin tickets"}</div>
               ) : (
                 <div className={`tablero-col-lista ${col.hecho ? "lista-hecho" : ""}`}>
                   {visibles.map(col.hecho ? filaHecha : tarjeta)}

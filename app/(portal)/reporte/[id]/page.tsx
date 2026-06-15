@@ -4,6 +4,7 @@ import { getSupabasePortal } from "@/lib/supabase";
 import { getCorreoPortal, nombreDeCorreo, CATEGORIAS_PORTAL, ESTADO_PORTAL } from "@/lib/portal";
 import { fechaCorta, folio } from "@/lib/format";
 import Ruta from "@/components/Ruta";
+import { responderTicketPortal } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -40,18 +41,20 @@ export default async function DetalleReporte({
     .maybeSingle();
   if (!t) notFound();
 
-  const respuestasQ = await sb
+  // El hilo: respuestas de TI y los mensajes que el propio empleado ha escrito, en orden.
+  const eventosQ = await sb
     .from("ticket_eventos")
-    .select("id, cuerpo, created_at")
+    .select("id, tipo, cuerpo, created_at")
     .eq("ticket_id", t.id)
-    .eq("tipo", "respuesta")
+    .in("tipo", ["respuesta", "mensaje_cliente"])
     .order("created_at", { ascending: true });
-  const respuestas = respuestasQ.data ?? [];
+  const eventos = eventosQ.data ?? [];
 
   const empleadoQ = await sb.from("empleados").select("nombre").eq("correo", correo).maybeSingle();
   const nombre = empleadoQ.data?.nombre?.split(" ")[0] || nombreDeCorreo(correo);
 
   const estado = ESTADO_PORTAL[t.estado] ?? ESTADO_PORTAL.abierto;
+  const inicial = nombre.charAt(0).toUpperCase();
   const equipo = Array.isArray(t.equipos) ? t.equipos[0] : t.equipos;
   const equipoTexto = equipo
     ? [equipo.nombre, [equipo.marca, equipo.modelo].filter(Boolean).join(" ")].filter(Boolean).join(" · ")
@@ -98,13 +101,14 @@ export default async function DetalleReporte({
         </dl>
       </section>
 
-      {/* Seguimiento: el hilo del reporte. Tu mensaje arriba como origen; debajo,
-          cada respuesta que TI te ha enviado, en orden. */}
+      {/* Seguimiento: el hilo del reporte, una conversación de dos voces. Tu mensaje de
+          apertura arriba; debajo, en orden, lo que TI responde y lo que tú contestas.
+          Al final, el cuadro para escribir tu siguiente mensaje. */}
       <section className="portal-seccion">
-        <h2 className="portal-seccion-titulo">Seguimiento</h2>
+        <h2 className="portal-seccion-titulo">Conversación con TI</h2>
         <ol className="seguimiento">
           <li className="seg-item es-tuyo">
-            <span className="seg-nodo" aria-hidden>{nombre.charAt(0).toUpperCase()}</span>
+            <span className="seg-nodo" aria-hidden>{inicial}</span>
             <div className="seg-cuerpo">
               <div className="seg-cab">
                 <strong>Tú abriste el reporte</strong>
@@ -116,22 +120,35 @@ export default async function DetalleReporte({
             </div>
           </li>
 
-          {respuestas.map((r) => (
-            <li className="seg-item es-ti" key={r.id}>
-              <span className="seg-nodo" aria-hidden>
-                <IconoSoporte />
-              </span>
-              <div className="seg-cuerpo">
-                <div className="seg-cab">
-                  <strong>Soporte TI te respondió</strong>
-                  <span className="seg-fecha">{fechaCorta(r.created_at)}</span>
+          {eventos.map((e) =>
+            e.tipo === "respuesta" ? (
+              <li className="seg-item es-ti" key={e.id}>
+                <span className="seg-nodo" aria-hidden>
+                  <IconoSoporte />
+                </span>
+                <div className="seg-cuerpo">
+                  <div className="seg-cab">
+                    <strong>Soporte TI te respondió</strong>
+                    <span className="seg-fecha">{fechaCorta(e.created_at)}</span>
+                  </div>
+                  <div className="seg-burbuja ti">{e.cuerpo}</div>
                 </div>
-                <div className="seg-burbuja ti">{r.cuerpo}</div>
-              </div>
-            </li>
-          ))}
+              </li>
+            ) : (
+              <li className="seg-item es-tuyo" key={e.id}>
+                <span className="seg-nodo" aria-hidden>{inicial}</span>
+                <div className="seg-cuerpo">
+                  <div className="seg-cab">
+                    <strong>Tú escribiste</strong>
+                    <span className="seg-fecha">{fechaCorta(e.created_at)}</span>
+                  </div>
+                  <div className="seg-burbuja tuyo">{e.cuerpo}</div>
+                </div>
+              </li>
+            ),
+          )}
 
-          {respuestas.length === 0 && estado.paso < 3 && (
+          {eventos.length === 0 && estado.paso < 3 && (
             <li className="seg-item es-espera">
               <span className="seg-nodo" aria-hidden>
                 <IconoReloj />
@@ -141,28 +158,41 @@ export default async function DetalleReporte({
                   <strong>En la fila de TI</strong>
                 </div>
                 <div className="seg-espera">
-                  Tu reporte ya está con el equipo de TI. Cuando te escriban una respuesta,
-                  la verás aquí mismo.
+                  Tu reporte ya está con el equipo de TI. Cuando te escriban, su respuesta
+                  aparecerá aquí. También puedes escribirles tú abajo.
                 </div>
               </div>
             </li>
           )}
 
-          {respuestas.length === 0 && estado.paso === 3 && (
-            <li className="seg-item es-listo">
-              <span className="seg-nodo" aria-hidden>
-                <IconoCheck />
-              </span>
-              <div className="seg-cuerpo">
-                <div className="seg-cab">
-                  <strong>Reporte {estado.texto.toLowerCase()}</strong>
+          {/* Cuadro para responder: cierra el hilo con tu voz (nodo verde). */}
+          <li className="seg-item es-tuyo seg-redactar" id="fin">
+            <span className="seg-nodo" aria-hidden>{inicial}</span>
+            <div className="seg-cuerpo">
+              <form className="seg-responder" action={responderTicketPortal}>
+                <input type="hidden" name="id" value={t.id} />
+                <label htmlFor="seg-cuerpo" className="seg-responder-label">
+                  {estado.paso === 3
+                    ? "¿El problema sigue? Escríbenos y reabrimos tu reporte"
+                    : "Responder a Soporte TI"}
+                </label>
+                <textarea
+                  id="seg-cuerpo"
+                  name="cuerpo"
+                  required
+                  rows={3}
+                  placeholder="Escribe un mensaje para el equipo de TI sobre este reporte…"
+                />
+                <div className="seg-responder-pie">
+                  <span className="seg-responder-hint">TI lo verá junto a tu reporte.</span>
+                  <button type="submit" className="seg-enviar">
+                    Enviar
+                    <IconoEnviar />
+                  </button>
                 </div>
-                <div className="seg-espera">
-                  TI cerró este reporte. Si el problema sigue, abre uno nuevo y lo retomamos.
-                </div>
-              </div>
-            </li>
-          )}
+              </form>
+            </div>
+          </li>
         </ol>
       </section>
 
@@ -192,6 +222,15 @@ function IconoFlecha() {
   );
 }
 
+function IconoEnviar() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M22 2 11 13" />
+      <path d="M22 2 15 22l-4-9-9-4 20-7z" />
+    </svg>
+  );
+}
+
 function IconoSoporte() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -206,14 +245,6 @@ function IconoReloj() {
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 2" />
-    </svg>
-  );
-}
-
-function IconoCheck() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="m5 12.5 4.5 4.5L19 6.5" />
     </svg>
   );
 }

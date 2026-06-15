@@ -9,7 +9,8 @@ export type EstadoTicket =
   | "en_espera"
   | "resuelto"
   | "cerrado"
-  | "reabierto";
+  | "reabierto"
+  | "archivado";
 
 export type Prioridad = "baja" | "media" | "alta" | "critica";
 export type CategoriaTicket = "hardware" | "software" | "red" | "accesos" | "correo" | "otro";
@@ -27,6 +28,8 @@ export const ESTADOS_TICKET: {
   { valor: "en_proceso", etiqueta: "En proceso", tono: "aviso",   activo: true,  cuentaResuelto: false },
   { valor: "en_espera",  etiqueta: "En espera",  tono: "info",    activo: true,  cuentaResuelto: false },
   { valor: "reabierto",  etiqueta: "Reabierto",  tono: "critico", activo: true,  cuentaResuelto: false },
+  { valor: "archivado",  etiqueta: "Archivado",  tono: "neutro",  activo: false, cuentaResuelto: true  },
+  // resuelto/cerrado quedan para datos antiguos y la bitácora; el flujo nuevo archiva.
   { valor: "resuelto",   etiqueta: "Resuelto",   tono: "ok",      activo: false, cuentaResuelto: true  },
   { valor: "cerrado",    etiqueta: "Cerrado",    tono: "neutro",  activo: false, cuentaResuelto: true  },
 ];
@@ -35,7 +38,17 @@ export const PRIORIDADES: Prioridad[] = ["baja", "media", "alta", "critica"];
 export const CATEGORIAS_TK: CategoriaTicket[] = ["hardware", "software", "red", "accesos", "correo", "otro"];
 
 export const ESTADOS_ACTIVOS: EstadoTicket[] = ["abierto", "en_proceso", "en_espera", "reabierto"];
-export const ESTADOS_RESUELTOS: EstadoTicket[] = ["resuelto", "cerrado"];
+// Estados terminales (detienen el reloj de resolución y viven en "Archivados").
+export const ESTADOS_RESUELTOS: EstadoTicket[] = ["resuelto", "cerrado", "archivado"];
+// Estados que TI puede elegir en los selectores: el trabajo activo + Archivado como
+// destino único de cierre (ya no se ofrece resuelto/cerrado por separado).
+export const ESTADOS_SELECCIONABLES: EstadoTicket[] = [
+  "abierto",
+  "en_proceso",
+  "en_espera",
+  "reabierto",
+  "archivado",
+];
 // Estados desde los que un ticket todavía espera el primer contacto de TI.
 export const ESTADOS_SIN_ATENDER: EstadoTicket[] = ["abierto", "reabierto"];
 

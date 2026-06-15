@@ -3,6 +3,7 @@ import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folio, duracion } from "@/lib/format";
 import {
   ESTADOS_TICKET,
+  ESTADOS_SELECCIONABLES,
   ESTADOS_ACTIVOS,
   ESTADOS_RESUELTOS,
   PRIORIDADES,
@@ -115,7 +116,10 @@ export default async function Tickets({
             <form action={cambiarEstadoTicket}>
               <input type="hidden" name="id" value={t.id} />
               <select name="estado" defaultValue={t.estado}>
-                {ESTADOS_TICKET.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
+                {ESTADOS_SELECCIONABLES.map((valor) => {
+                  const meta = ESTADOS_TICKET.find((s) => s.valor === valor);
+                  return <option key={valor} value={valor}>{meta?.etiqueta ?? valor}</option>;
+                })}
               </select>
               <button className="boton secundario mini" type="submit">Actualizar</button>
             </form>
@@ -180,8 +184,11 @@ export default async function Tickets({
           <select name="estado" defaultValue={estado} aria-label="Filtrar por estado">
             <option value="">Todos los estados</option>
             <option value="activos">Solo activos</option>
-            <option value="cerrados">Resueltos y cerrados</option>
-            {ESTADOS_TICKET.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
+            <option value="cerrados">Archivados</option>
+            {ESTADOS_SELECCIONABLES.map((valor) => {
+              const meta = ESTADOS_TICKET.find((s) => s.valor === valor);
+              return <option key={valor} value={valor}>{meta?.etiqueta ?? valor}</option>;
+            })}
           </select>
           <select name="prioridad" defaultValue={prioridad} aria-label="Filtrar por prioridad">
             <option value="">Toda prioridad</option>
@@ -230,7 +237,7 @@ export default async function Tickets({
             </section>
             {cerrados.length > 0 && (
               <section className="seccion">
-                <h2 className="banda-titulo">Resueltos y cerrados <span className="conteo">{cerrados.length}</span></h2>
+                <h2 className="banda-titulo">Archivados <span className="conteo">{cerrados.length}</span></h2>
                 <table className="tabla">
                   <thead>{encabezado}</thead>
                   <tbody>{cerrados.map(fila)}</tbody>

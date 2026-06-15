@@ -42,4 +42,5 @@ export const ESTADO_PORTAL: Record<string, { texto: string; tono: string; paso: 
   reabierto:  { texto: "Reabierto",    tono: "aviso",  paso: 2 },
   resuelto:   { texto: "Resuelto",     tono: "ok",     paso: 3 },
   cerrado:    { texto: "Cerrado",      tono: "neutro", paso: 3 },
+  archivado:  { texto: "Archivado",    tono: "neutro", paso: 3 },
 };

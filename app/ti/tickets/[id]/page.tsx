@@ -4,6 +4,7 @@ import { getSupabase } from "@/lib/supabase";
 import { fechaHora, folio, duracion } from "@/lib/format";
 import {
   ESTADOS_TICKET,
+  ESTADOS_SELECCIONABLES,
   PRIORIDADES,
   CATEGORIAS_TK,
   SLA,
@@ -32,6 +33,7 @@ export const dynamic = "force-dynamic";
 // visible para el solicitante; el resto es interno.
 const META_EVENTO: Record<string, { icono: string; etiqueta: string }> = {
   respuesta: { icono: "↩", etiqueta: "Respuesta al solicitante" },
+  mensaje_cliente: { icono: "📨", etiqueta: "Mensaje del solicitante" },
   comentario: { icono: "💬", etiqueta: "Nota interna" },
   estado: { icono: "⇄", etiqueta: "Cambio de estado" },
   asignacion: { icono: "👤", etiqueta: "Asignación" },
@@ -216,6 +218,7 @@ export default async function DetalleTicket({
                         <div className="bitacora-meta">
                           <strong>{e.autor ?? "TI"}</strong>
                           {e.tipo === "respuesta" && <span className="bitacora-tag enviado">Visible para el cliente</span>}
+                          {e.tipo === "mensaje_cliente" && <span className="bitacora-tag cliente">Del solicitante</span>}
                           {e.tipo === "comentario" && <span className="bitacora-tag interno">Interno</span>}
                           <span className="suave mono">{fechaHora(e.created_at)}</span>
                         </div>
@@ -241,7 +244,10 @@ export default async function DetalleTicket({
             <form action={cambiarEstadoTicket} className="bloque-form">
               <input type="hidden" name="id" value={t.id} />
               <select name="estado" defaultValue={t.estado}>
-                {ESTADOS_TICKET.map((s) => <option key={s.valor} value={s.valor}>{s.etiqueta}</option>)}
+                {((ESTADOS_SELECCIONABLES as string[]).includes(t.estado) ? ESTADOS_SELECCIONABLES : [t.estado, ...ESTADOS_SELECCIONABLES]).map((valor) => {
+                  const meta = ESTADOS_TICKET.find((s) => s.valor === valor);
+                  return <option key={valor} value={valor}>{meta?.etiqueta ?? valor}</option>;
+                })}
               </select>
               <textarea name="nota" placeholder="Nota del cambio (opcional)" rows={2} />
               {puedeNotificar ? (

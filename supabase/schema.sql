@@ -66,7 +66,10 @@ create table if not exists mantenimientos (
 
 -- ---------- TICKETS ----------
 -- Ciclo de vida tipo mesa de ayuda (Jira-like):
---   abierto -> en_proceso <-> en_espera -> resuelto -> cerrado ; reabierto regresa al flujo.
+--   abierto -> en_proceso <-> en_espera -> archivado ; reabierto regresa al flujo.
+--   `archivado` es el estado terminal: al resolver, el ticket se archiva y sale del
+--   tablero activo. (resuelto/cerrado quedan permitidos por compatibilidad con datos
+--   antiguos y la bitácora, pero el flujo nuevo archiva directamente.)
 -- Tiempos de atención: `primera_respuesta_at` (primer contacto de TI) y `resuelto_at`
 --   (paso a resuelto/cerrado) permiten medir respuesta y resolución contra el SLA por
 --   prioridad definido en `lib/tickets.ts`.
@@ -83,7 +86,7 @@ create table if not exists tickets (
   prioridad text not null default 'media'
     check (prioridad in ('baja','media','alta','critica')),
   estado text not null default 'abierto'
-    check (estado in ('abierto','en_proceso','en_espera','resuelto','cerrado','reabierto')),
+    check (estado in ('abierto','en_proceso','en_espera','resuelto','cerrado','reabierto','archivado')),
   asignado_a text,
   asignado_email text,                -- correo del técnico de TI responsable (opcional)
   primera_respuesta_at timestamptz,   -- primer contacto de TI; base del tiempo de respuesta
@@ -94,14 +97,15 @@ create table if not exists tickets (
 
 -- ---------- BITÁCORA DE TICKETS ----------
 -- Historial por ticket: comentarios internos de TI, cambios de estado, reasignaciones,
--- eventos del sistema (creación, edición) y `respuesta` (mensaje enviado al solicitante).
--- Casi todo es interno (RLS `to authenticated`); el portal del empleado solo lee los
--- eventos `respuesta` (filtrados por su correo vía service role), para ver el seguimiento.
+-- eventos del sistema (creación, edición), `respuesta` (mensaje de TI al solicitante) y
+-- `mensaje_cliente` (respuesta que el solicitante escribe desde el portal).
+-- Casi todo es interno (RLS `to authenticated`); el portal del empleado lee/escribe solo
+-- `respuesta` y `mensaje_cliente` (filtrados por su correo vía service role) para el hilo.
 create table if not exists ticket_eventos (
   id uuid primary key default gen_random_uuid(),
   ticket_id uuid not null references tickets(id) on delete cascade,
   tipo text not null default 'comentario'
-    check (tipo in ('comentario','estado','asignacion','sistema','respuesta')),
+    check (tipo in ('comentario','estado','asignacion','sistema','respuesta','mensaje_cliente')),
   autor text,                -- correo o nombre de quien generó el evento
   cuerpo text,               -- texto del comentario o detalle del cambio
   estado_anterior text,
@@ -180,11 +184,18 @@ alter table tickets add column if not exists primera_respuesta_at timestamptz;
 alter table tickets add column if not exists resuelto_at timestamptz;
 alter table tickets drop constraint if exists tickets_estado_check;
 alter table tickets add constraint tickets_estado_check
-  check (estado in ('abierto','en_proceso','en_espera','resuelto','cerrado','reabierto'));
--- Bitácora: tipo `respuesta` (mensaje visible para el solicitante en el portal).
+  check (estado in ('abierto','en_proceso','en_espera','resuelto','cerrado','reabierto','archivado'));
+-- Bitácora: tipos `respuesta` (TI -> solicitante) y `mensaje_cliente` (solicitante -> TI),
+-- ambos visibles en el hilo del portal.
 alter table ticket_eventos drop constraint if exists ticket_eventos_tipo_check;
 alter table ticket_eventos add constraint ticket_eventos_tipo_check
-  check (tipo in ('comentario','estado','asignacion','sistema','respuesta'));
+  check (tipo in ('comentario','estado','asignacion','sistema','respuesta','mensaje_cliente'));
+-- Migración única: todos los tickets ya resueltos/cerrados pasan a archivado (sale del
+-- tablero activo). Sella resuelto_at si faltaba para conservar la métrica de resolución.
+update tickets set resuelto_at = coalesce(resuelto_at, updated_at, created_at)
+  where estado in ('resuelto','cerrado') and resuelto_at is null;
+update tickets set estado = 'archivado'
+  where estado in ('resuelto','cerrado');
 -- Correo: métodos OAuth2 (Microsoft Graph app-only y login interactivo).
 alter table config_correo add column if not exists metodo text not null default 'smtp_basico';
 alter table config_correo drop constraint if exists config_correo_metodo_check;

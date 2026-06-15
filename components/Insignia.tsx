@@ -15,6 +15,7 @@ const MAPA: Record<string, { tono: string; texto: string }> = {
   reabierto:     { tono: "critico", texto: "reabierto" },
   resuelto:      { tono: "ok",      texto: "resuelto" },
   cerrado:       { tono: "neutro",  texto: "cerrado" },
+  archivado:     { tono: "neutro",  texto: "archivado" },
   // prioridades
   baja_p:        { tono: "neutro",  texto: "baja" },
   media:         { tono: "info",    texto: "media" },
