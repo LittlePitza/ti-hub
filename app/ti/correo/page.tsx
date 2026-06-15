@@ -12,12 +12,28 @@ const AVISOS_PRUEBA: Record<string, { tono: string; texto: string }> = {
   falta: { tono: "aviso", texto: "Escribe un correo de destino para la prueba." },
 };
 
+// Traduce el error crudo de Microsoft 365 a una causa concreta y su solución.
+function pistaError(detalle: string): string | null {
+  const d = detalle.toLowerCase();
+  if (d.includes("disabled for the mailbox"))
+    return "Microsoft dice que SMTP AUTH sigue apagado en este buzón. Si acabas de activarlo, espera unos minutos a que propague y vuelve a probar.";
+  if (d.includes("disabled for the tenant"))
+    return "SMTP AUTH está bloqueado a nivel de toda la organización. Habilítalo con: Set-TransportConfig -SmtpClientAuthenticationDisabled $false";
+  if (d.includes("credentials") || d.includes("authentication unsuccessful") || d.includes("invalid login"))
+    return "Usuario o contraseña no válidos. Si la cuenta tiene MFA, su contraseña normal no funciona: genera una contraseña de aplicación y guárdala aquí.";
+  if (d.includes("tenant") && d.includes("basic"))
+    return "La autenticación básica está bloqueada para este tenant. Usa una contraseña de aplicación o habilita SMTP AUTH.";
+  if (d.includes("etimedout") || d.includes("econnection") || d.includes("econnrefused"))
+    return "No se alcanzó el servidor SMTP. Verifica el host y el puerto (587 para Microsoft 365).";
+  return null;
+}
+
 export default async function ConfigCorreo({
   searchParams,
 }: {
-  searchParams: Promise<{ guardado?: string; prueba?: string }>;
+  searchParams: Promise<{ guardado?: string; prueba?: string; detalle?: string }>;
 }) {
-  const { guardado, prueba } = await searchParams;
+  const { guardado, prueba, detalle } = await searchParams;
   const sb = await getSupabase();
   const head = (
     <div className="pagina-head">
@@ -33,6 +49,7 @@ export default async function ConfigCorreo({
   const operativo = correoOperativo(c);
   const conCreds = tieneCredenciales(c);
   const avisoPrueba = prueba ? AVISOS_PRUEBA[prueba] : null;
+  const pista = prueba === "error" && detalle ? pistaError(detalle) : null;
 
   // Estado del servicio: encendido y con credenciales / apagado / incompleto.
   const estado = operativo
@@ -46,7 +63,18 @@ export default async function ConfigCorreo({
       {head}
 
       {guardado && <div className="banner-config ok" role="status">Cambios guardados.</div>}
-      {avisoPrueba && <div className={`banner-config ${avisoPrueba.tono}`} role="status">{avisoPrueba.texto}</div>}
+      {avisoPrueba && (
+        <div className={`banner-config ${avisoPrueba.tono}`} role="status">
+          <div>{avisoPrueba.texto}</div>
+          {pista && <div className="banner-config-pista">{pista}</div>}
+          {prueba === "error" && detalle && (
+            <details className="banner-config-detalle">
+              <summary>Ver respuesta de Microsoft</summary>
+              <code>{detalle}</code>
+            </details>
+          )}
+        </div>
+      )}
 
       <div className={`estado-servicio ${estado.tono}`}>
         <span className="estado-punto" aria-hidden />

@@ -49,6 +49,11 @@ export async function enviarPruebaCorreo(formData: FormData) {
   const c = await getConfigCorreo(sb);
   if (!tieneCredenciales(c)) redirect("/ti/correo?prueba=sincreds");
 
-  const r = await enviarPrueba(c, para);
-  redirect(`/ti/correo?prueba=${r.ok ? "ok" : "error"}`);
+  const r: { ok: boolean; detalle?: string } = await enviarPrueba(c, para);
+  // Pasa el error crudo de Microsoft (el 535 …) al panel para diagnosticar sin
+  // tener que abrir los logs del servidor. Se recorta para no inflar la URL.
+  const detalle = !r.ok && r.detalle
+    ? `&detalle=${encodeURIComponent(r.detalle.slice(0, 400))}`
+    : "";
+  redirect(`/ti/correo?prueba=${r.ok ? "ok" : "error"}${detalle}`);
 }
