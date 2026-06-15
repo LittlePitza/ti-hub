@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSupabasePortal } from "@/lib/supabase";
 import { getCorreoPortal, CATEGORIAS_PORTAL } from "@/lib/portal";
+import SelectorImagenes from "@/components/SelectorImagenes";
 import { crearTicketPortal } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -117,6 +118,10 @@ export default async function NuevoReporte({
               className="portal-input"
               placeholder="¿Desde cuándo pasa? ¿Sale algún mensaje de error? ¿Qué ya intentaste?"
             />
+          </div>
+          <div className="portal-campo">
+            <label>Agrega fotos (opcional)</label>
+            <SelectorImagenes />
           </div>
         </section>
 

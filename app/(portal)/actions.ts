@@ -6,6 +6,7 @@ import { cookies } from "next/headers";
 import { getSupabasePortal } from "@/lib/supabase";
 import { COOKIE_PORTAL, CATEGORIAS_PORTAL, correoValido, getCorreoPortal } from "@/lib/portal";
 import { getConfigCorreo, avisaNuevo, enviarNuevoTicket } from "@/lib/correo";
+import { MAX_ADJUNTOS, esImagenValida, type Adjunto } from "@/lib/adjuntos";
 
 const OPCIONES_COOKIE = {
   httpOnly: true,
@@ -75,6 +76,27 @@ export async function crearTicketPortal(formData: FormData) {
     .select("id, num")
     .single();
   if (error || !data) redirect("/nuevo?error=guardar");
+
+  // Fotos adjuntas (opcional): se suben al bucket privado `tickets` y se guarda
+  // la lista de referencias en el ticket. Si algo falla aquí no se pierde el
+  // reporte (ya quedó guardado): solo se queda sin imágenes.
+  try {
+    const archivos = formData.getAll("imagenes").filter((f): f is File => f instanceof File);
+    const validas = archivos.filter((f) => esImagenValida(f)).slice(0, MAX_ADJUNTOS);
+    const adjuntos: Adjunto[] = [];
+    for (const [i, file] of validas.entries()) {
+      const ext = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+      const path = `${data.id}/${Date.now()}-${i}.${ext}`;
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const { error: errSubida } = await sb.storage
+        .from("tickets")
+        .upload(path, buffer, { contentType: file.type || "image/jpeg" });
+      if (!errSubida) adjuntos.push({ path, nombre: file.name, tipo: file.type });
+    }
+    if (adjuntos.length) await sb.from("tickets").update({ adjuntos }).eq("id", data.id);
+  } catch (e) {
+    console.error("[portal] no se pudieron subir las imágenes del reporte:", e);
+  }
 
   // Aviso interno a TI (configurable en /ti/correo). No bloquea ni rompe la creación
   // si el correo falla: el ticket ya quedó guardado.

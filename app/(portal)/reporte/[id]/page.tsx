@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getSupabasePortal } from "@/lib/supabase";
 import { getCorreoPortal, nombreDeCorreo, CATEGORIAS_PORTAL, ESTADO_PORTAL } from "@/lib/portal";
+import type { Adjunto } from "@/lib/adjuntos";
 import { fechaCorta, folio } from "@/lib/format";
 import Ruta from "@/components/Ruta";
 import { responderTicketPortal } from "./actions";
@@ -35,11 +36,23 @@ export default async function DetalleReporte({
   // para que nadie vea el reporte de alguien más cambiando el id de la URL.
   const { data: t } = await sb
     .from("tickets")
-    .select("id, num, titulo, descripcion, categoria, estado, created_at, equipos(nombre, marca, modelo)")
+    .select("id, num, titulo, descripcion, categoria, estado, created_at, adjuntos, equipos(nombre, marca, modelo)")
     .eq("id", id)
     .eq("solicitante_email", correo)
     .maybeSingle();
   if (!t) notFound();
+
+  // Fotos del reporte: el bucket es privado, así que se firman URLs temporales
+  // (service role) para mostrarlas. Si una falla, simplemente no se incluye.
+  const adjuntos: Adjunto[] = Array.isArray(t.adjuntos) ? t.adjuntos : [];
+  const fotos = (
+    await Promise.all(
+      adjuntos.map(async (a) => {
+        const { data } = await sb.storage.from("tickets").createSignedUrl(a.path, 3600);
+        return data?.signedUrl ? { url: data.signedUrl, nombre: a.nombre } : null;
+      }),
+    )
+  ).filter((f): f is { url: string; nombre: string } => f !== null);
 
   // El hilo: respuestas de TI y los mensajes que el propio empleado ha escrito, en orden.
   const eventosQ = await sb
@@ -117,6 +130,18 @@ export default async function DetalleReporte({
               <div className="seg-burbuja tuyo">
                 {t.descripcion || "Reportaste un problema y el equipo de TI lo recibió."}
               </div>
+              {fotos.length > 0 && (
+                <ul className="galeria-adjuntos">
+                  {fotos.map((f) => (
+                    <li key={f.url}>
+                      <a href={f.url} target="_blank" rel="noreferrer" title={f.nombre}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={f.url} alt={f.nombre} loading="lazy" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </li>
 

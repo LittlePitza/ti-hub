@@ -14,6 +14,7 @@ import {
   type Prioridad,
 } from "@/lib/tickets";
 import { correoValido } from "@/lib/portal";
+import type { Adjunto } from "@/lib/adjuntos";
 import { getConfigCorreo, correoOperativo } from "@/lib/correo";
 import Insignia from "@/components/Insignia";
 import PildoraSla from "@/components/PildoraSla";
@@ -72,6 +73,17 @@ export default async function DetalleTicket({
     .eq("ticket_id", id)
     .order("created_at", { ascending: false });
   const eventos = eventosData ?? [];
+
+  // Fotos que adjuntó el solicitante al reportar: bucket privado, URLs firmadas.
+  const adjuntos: Adjunto[] = Array.isArray(t.adjuntos) ? t.adjuntos : [];
+  const fotos = (
+    await Promise.all(
+      adjuntos.map(async (a) => {
+        const { data } = await sb.storage.from("tickets").createSignedUrl(a.path, 3600);
+        return data?.signedUrl ? { url: data.signedUrl, nombre: a.nombre } : null;
+      }),
+    )
+  ).filter((f): f is { url: string; nombre: string } => f !== null);
 
   const ahora = Date.now();
   const resp = evaluarRespuesta(t, ahora);
@@ -164,6 +176,21 @@ export default async function DetalleTicket({
             </p>
             {t.equipos?.nombre && (
               <p className="suave mono" style={{ marginTop: 10 }}>Equipo relacionado: {t.equipos.nombre}</p>
+            )}
+            {fotos.length > 0 && (
+              <>
+                <h3 className="aside-titulo" style={{ marginTop: 16 }}>Fotos del solicitante</h3>
+                <ul className="galeria-adjuntos">
+                  {fotos.map((f) => (
+                    <li key={f.url}>
+                      <a href={f.url} target="_blank" rel="noreferrer" title={f.nombre}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={f.url} alt={f.nombre} loading="lazy" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </section>
 

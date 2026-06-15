@@ -91,6 +91,7 @@ create table if not exists tickets (
   asignado_email text,                -- correo del técnico de TI responsable (opcional)
   primera_respuesta_at timestamptz,   -- primer contacto de TI; base del tiempo de respuesta
   resuelto_at timestamptz,            -- paso a resuelto/cerrado; base del tiempo de resolución
+  adjuntos jsonb not null default '[]'::jsonb, -- fotos del reporte (portal): [{path,nombre,tipo}] en bucket 'tickets'
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -246,6 +247,7 @@ alter table equipos add constraint equipos_tipo_check
 alter table tickets add column if not exists asignado_email text;
 alter table tickets add column if not exists primera_respuesta_at timestamptz;
 alter table tickets add column if not exists resuelto_at timestamptz;
+alter table tickets add column if not exists adjuntos jsonb not null default '[]'::jsonb;
 alter table tickets drop constraint if exists tickets_estado_check;
 alter table tickets add constraint tickets_estado_check
   check (estado in ('abierto','en_proceso','en_espera','resuelto','cerrado','reabierto','archivado'));
@@ -335,6 +337,20 @@ create policy "responsivas_storage_rw" on storage.objects
   for all to authenticated
   using (bucket_id = 'responsivas')
   with check (bucket_id = 'responsivas');
+
+-- ---------- STORAGE: bucket de fotos de reportes ----------
+-- Imágenes que el empleado adjunta al levantar un reporte desde el portal.
+-- Privado: el portal SUBE con la service role (salta RLS) y el panel de TI
+-- (usuarios autenticados) las LEE para mostrarlas en el detalle del ticket.
+insert into storage.buckets (id, name, public)
+  values ('tickets', 'tickets', false)
+  on conflict (id) do nothing;
+
+drop policy if exists "tickets_storage_rw" on storage.objects;
+create policy "tickets_storage_rw" on storage.objects
+  for all to authenticated
+  using (bucket_id = 'tickets')
+  with check (bucket_id = 'tickets');
 
 -- ---------- DATOS DE EJEMPLO ----------
 -- Solo para instalaciones nuevas: NO re-ejecutar esta sección sobre una base con datos
