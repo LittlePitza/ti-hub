@@ -3,7 +3,7 @@ import { getSupabasePortal } from "@/lib/supabase";
 import { fechaCorta, folio } from "@/lib/format";
 import { getCorreoPortal, nombreDeCorreo, CATEGORIAS_PORTAL, ESTADO_PORTAL } from "@/lib/portal";
 import Ruta from "@/components/Ruta";
-import { entrarPortal, salirPortal } from "./actions";
+import { entrarPortal, salirPortal, archivarReportePortal, reactivarReportePortal } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +47,9 @@ export default async function Portal({
   const tickets = ticketsQ.data ?? [];
   const nombre = empleadoQ.data?.nombre?.split(" ")[0] || nombreDeCorreo(correo);
   const activos = tickets.filter((t) => ESTADO_PORTAL[t.estado]?.paso !== 3).length;
+  // Los archivados se recogen en su propia pestaña; el resto queda a la vista.
+  const visibles = tickets.filter((t) => t.estado !== "archivado");
+  const archivados = tickets.filter((t) => t.estado === "archivado");
 
   // Cuántas respuestas de TI tiene cada ticket (solo eventos `respuesta`). El texto
   // completo vive en el detalle del reporte; aquí basta el conteo para la tarjeta.
@@ -97,21 +100,27 @@ export default async function Portal({
 
       <section className="portal-seccion">
         <h2 className="portal-seccion-titulo">Mis reportes</h2>
-        {tickets.length === 0 ? (
+        {visibles.length === 0 ? (
           <div className="portal-vacio">
             <IconoBandeja />
-            <strong>Todo en orden por ahora</strong>
-            <span>Cuando levantes un reporte, aquí verás en qué paso va.</span>
+            <strong>{archivados.length > 0 ? "Sin reportes a la vista" : "Todo en orden por ahora"}</strong>
+            <span>
+              {archivados.length > 0
+                ? "Tus reportes archivados están más abajo."
+                : "Cuando levantes un reporte, aquí verás en qué paso va."}
+            </span>
           </div>
         ) : (
           <div className="tickets-lista">
-            {tickets.map((t) => {
+            {visibles.map((t) => {
               const estado = ESTADO_PORTAL[t.estado] ?? ESTADO_PORTAL.abierto;
               const numRespuestas = respuestasPorTicket[t.id] ?? 0;
               return (
-                <Link className="ticket-card" href={`/reporte/${t.id}`} key={t.id}>
+                <article className="ticket-card" key={t.id}>
                   <div className="ticket-card-cabecera">
-                    <h3 className="ticket-card-titulo">{t.titulo}</h3>
+                    <h3 className="ticket-card-titulo">
+                      <Link className="ticket-card-link" href={`/reporte/${t.id}`}>{t.titulo}</Link>
+                    </h3>
                     <span className={`insignia ${estado.tono}`}>{estado.texto}</span>
                   </div>
                   <div className="ticket-card-meta">
@@ -132,17 +141,53 @@ export default async function Portal({
                     ) : (
                       <span className="ticket-card-pie-vacio">Sin respuestas todavía</span>
                     )}
-                    <span className="ticket-card-ver">
-                      Ver seguimiento
-                      <IconoFlechaMini />
-                    </span>
+                    <form action={archivarReportePortal} className="ticket-card-archivar">
+                      <input type="hidden" name="id" value={t.id} />
+                      <button type="submit" title="Guardar este reporte en tus archivados">
+                        <IconoArchivar />
+                        Archivar
+                      </button>
+                    </form>
                   </div>
-                </Link>
+                </article>
               );
             })}
           </div>
         )}
       </section>
+
+      {archivados.length > 0 && (
+        <section className="portal-seccion">
+          <details className="portal-archivados">
+            <summary>
+              <span className="portal-archivados-resumen">
+                <IconoArchivar />
+                Archivados
+                <span className="portal-archivados-num">{archivados.length}</span>
+              </span>
+              <span className="portal-archivados-chevron" aria-hidden>
+                <IconoChevron />
+              </span>
+            </summary>
+            <ul className="portal-archivados-lista">
+              {archivados.map((t) => (
+                <li className="portal-archivado" key={t.id}>
+                  <Link className="portal-archivado-cuerpo" href={`/reporte/${t.id}`}>
+                    <span className="portal-archivado-titulo">{t.titulo}</span>
+                    <span className="portal-archivado-meta mono">{folio(t.num)} · {fechaCorta(t.created_at)}</span>
+                  </Link>
+                  <form action={reactivarReportePortal}>
+                    <input type="hidden" name="id" value={t.id} />
+                    <button type="submit" className="portal-archivado-reactivar" title="Regresar este reporte a tus reportes activos">
+                      Reactivar
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          </details>
+        </section>
+      )}
 
       {equipos.length > 0 && (
         <section className="portal-seccion">
@@ -211,11 +256,20 @@ function IconoCheck() {
   );
 }
 
-function IconoFlechaMini() {
+function IconoArchivar() {
   return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M5 12h14" />
-      <path d="m13 6 6 6-6 6" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="4" width="18" height="4" rx="1" />
+      <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8" />
+      <path d="M10 12h4" />
+    </svg>
+  );
+}
+
+function IconoChevron() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="m6 9 6 6 6-6" />
     </svg>
   );
 }

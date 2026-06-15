@@ -5,7 +5,8 @@ import {
   ESTADOS_TICKET,
   ESTADOS_SELECCIONABLES,
   ESTADOS_ACTIVOS,
-  ESTADOS_RESUELTOS,
+  ESTADOS_CERRADOS,
+  ESTADOS_ARCHIVADOS,
   PRIORIDADES,
   CATEGORIAS_TK,
   ORDEN_PRIORIDAD,
@@ -56,7 +57,8 @@ export default async function Tickets({
     if (prioridad && t.prioridad !== prioridad) return false;
     if (estado) {
       if (estado === "activos") return ESTADOS_ACTIVOS.includes(t.estado);
-      if (estado === "cerrados") return ESTADOS_RESUELTOS.includes(t.estado);
+      if (estado === "cerrados") return ESTADOS_CERRADOS.includes(t.estado);
+      if (estado === "archivados") return ESTADOS_ARCHIVADOS.includes(t.estado);
       return t.estado === estado;
     }
     return true;
@@ -68,7 +70,8 @@ export default async function Tickets({
   const filtrados = lista.filter(coincide);
   const ahora = Date.now();
   const activos = filtrados.filter((t) => ESTADOS_ACTIVOS.includes(t.estado)).sort(porPrioridad);
-  const cerrados = filtrados.filter((t) => ESTADOS_RESUELTOS.includes(t.estado));
+  const cerrados = filtrados.filter((t) => ESTADOS_CERRADOS.includes(t.estado));
+  const archivados = filtrados.filter((t) => ESTADOS_ARCHIVADOS.includes(t.estado));
 
   // Conserva los filtros activos al alternar de vista.
   const hrefVista = (v: string) => {
@@ -184,7 +187,8 @@ export default async function Tickets({
           <select name="estado" defaultValue={estado} aria-label="Filtrar por estado">
             <option value="">Todos los estados</option>
             <option value="activos">Solo activos</option>
-            <option value="cerrados">Archivados</option>
+            <option value="cerrados">Cerrados</option>
+            <option value="archivados">Archivados</option>
             {ESTADOS_SELECCIONABLES.map((valor) => {
               const meta = ESTADOS_TICKET.find((s) => s.valor === valor);
               return <option key={valor} value={valor}>{meta?.etiqueta ?? valor}</option>;
@@ -218,7 +222,7 @@ export default async function Tickets({
             ) : (
               <table className="tabla">
                 <thead>{encabezado}</thead>
-                <tbody>{[...activos, ...cerrados].map(fila)}</tbody>
+                <tbody>{[...activos, ...cerrados, ...archivados].map(fila)}</tbody>
               </table>
             )}
           </section>
@@ -237,10 +241,19 @@ export default async function Tickets({
             </section>
             {cerrados.length > 0 && (
               <section className="seccion">
-                <h2 className="banda-titulo">Archivados <span className="conteo">{cerrados.length}</span></h2>
+                <h2 className="banda-titulo">Cerrados <span className="conteo">{cerrados.length}</span></h2>
                 <table className="tabla">
                   <thead>{encabezado}</thead>
                   <tbody>{cerrados.map(fila)}</tbody>
+                </table>
+              </section>
+            )}
+            {archivados.length > 0 && (
+              <section className="seccion">
+                <h2 className="banda-titulo">Archivados <span className="conteo">{archivados.length}</span></h2>
+                <table className="tabla">
+                  <thead>{encabezado}</thead>
+                  <tbody>{archivados.map(fila)}</tbody>
                 </table>
               </section>
             )}

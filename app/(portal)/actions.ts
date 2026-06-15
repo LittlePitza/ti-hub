@@ -29,6 +29,87 @@ export async function salirPortal() {
   redirect("/");
 }
 
+// Archivar: el empleado guarda su reporte en una pestaña aparte. Es un estado
+// COMPARTIDO: el ticket pasa a 'archivado' también para TI (sale de su trabajo a
+// la vista). La service role salta el RLS, así que se filtra por su correo.
+export async function archivarReportePortal(formData: FormData) {
+  const correo = await getCorreoPortal();
+  if (!correo) redirect("/");
+  const id = (formData.get("id") as string)?.trim();
+  if (!id) redirect("/");
+
+  const sb = getSupabasePortal();
+  if (!sb) redirect("/");
+
+  const { data: t } = await sb
+    .from("tickets")
+    .select("id, estado, resuelto_at")
+    .eq("id", id)
+    .eq("solicitante_email", correo)
+    .maybeSingle();
+  if (!t || t.estado === "archivado") redirect("/");
+
+  const ahora = new Date().toISOString();
+  await sb
+    .from("tickets")
+    .update({ estado: "archivado", resuelto_at: t.resuelto_at ?? ahora, updated_at: ahora })
+    .eq("id", id);
+  await sb.from("ticket_eventos").insert({
+    ticket_id: id,
+    tipo: "estado",
+    autor: correo,
+    cuerpo: "Archivado por el solicitante desde el portal",
+    estado_anterior: t.estado,
+    estado_nuevo: "archivado",
+  });
+
+  refrescarTodo(id);
+  redirect("/");
+}
+
+// Reactivar: saca el reporte de archivados y lo regresa a la bandeja de TI.
+export async function reactivarReportePortal(formData: FormData) {
+  const correo = await getCorreoPortal();
+  if (!correo) redirect("/");
+  const id = (formData.get("id") as string)?.trim();
+  if (!id) redirect("/");
+
+  const sb = getSupabasePortal();
+  if (!sb) redirect("/");
+
+  const { data: t } = await sb
+    .from("tickets")
+    .select("id, estado")
+    .eq("id", id)
+    .eq("solicitante_email", correo)
+    .maybeSingle();
+  if (!t || t.estado !== "archivado") redirect("/");
+
+  await sb
+    .from("tickets")
+    .update({ estado: "reabierto", resuelto_at: null, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  await sb.from("ticket_eventos").insert({
+    ticket_id: id,
+    tipo: "estado",
+    autor: correo,
+    cuerpo: "Reactivado por el solicitante desde el portal",
+    estado_anterior: "archivado",
+    estado_nuevo: "reabierto",
+  });
+
+  refrescarTodo(id);
+  redirect("/");
+}
+
+function refrescarTodo(id: string) {
+  revalidatePath("/");
+  revalidatePath(`/reporte/${id}`);
+  revalidatePath("/ti/tickets");
+  revalidatePath("/ti");
+  revalidatePath(`/ti/tickets/${id}`);
+}
+
 export async function crearTicketPortal(formData: FormData) {
   const correo = await getCorreoPortal();
   if (!correo) redirect("/");

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { folio, duracion } from "@/lib/format";
 import {
   ESTADOS_ACTIVOS,
+  ESTADOS_ARCHIVADOS,
   ORDEN_PRIORIDAD,
   evaluarRespuesta,
   evaluarResolucion,
@@ -48,7 +49,9 @@ const COLUMNAS: {
   { titulo: "Por atender", estados: ["abierto", "reabierto"], destino: "abierto", acento: "var(--critico)" },
   { titulo: "En proceso", estados: ["en_proceso"], destino: "en_proceso", acento: "var(--aviso)" },
   { titulo: "En espera", estados: ["en_espera"], destino: "en_espera", acento: "var(--petroleo)" },
-  { titulo: "Archivados", estados: ["archivado", "resuelto", "cerrado"], destino: "archivado", acento: "var(--ok)", limite: 10, hecho: true },
+  // Cerrar es el final normal del trabajo; Archivar (guardar en frío) se hace con el
+  // selector de la tarjeta y vive en el acordeón de abajo, no en una columna.
+  { titulo: "Cerrados", estados: ["cerrado", "resuelto"], destino: "cerrado", acento: "var(--ok)", limite: 8, hecho: true },
 ];
 
 const iniciales = (s: string) =>
@@ -89,6 +92,9 @@ export default function TableroTickets({
     evaluarResolucion(t, ahora).semaforo === "incumplido";
 
   const activos = efectivo.filter((t) => ESTADOS_ACTIVOS.includes(t.estado as never));
+  const archivados = efectivo
+    .filter((t) => ESTADOS_ARCHIVADOS.includes(t.estado as never))
+    .sort(porResueltoReciente);
   const fueraSla = activos.filter(fueraDeSla).length;
   const sinAsignar = activos.filter((t) => !t.asignado_a).length;
   const porPrioridad = (a: Tk, b: Tk) =>
@@ -251,6 +257,20 @@ export default function TableroTickets({
           );
         })}
       </div>
+
+      {/* Archivados: guardados en frío, recogidos en un acordeón colapsado. Siguen
+          siendo arrastrables a una columna para reactivarlos. */}
+      {archivados.length > 0 && (
+        <details className="tablero-archivados">
+          <summary>
+            <span className="tablero-archivados-titulo">Archivados</span>
+            <span className="tablero-col-num">{archivados.length}</span>
+          </summary>
+          <div className="tablero-archivados-lista lista-hecho">
+            {archivados.map(filaHecha)}
+          </div>
+        </details>
+      )}
     </>
   );
 }

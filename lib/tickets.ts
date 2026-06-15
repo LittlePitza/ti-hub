@@ -28,25 +28,32 @@ export const ESTADOS_TICKET: {
   { valor: "en_proceso", etiqueta: "En proceso", tono: "aviso",   activo: true,  cuentaResuelto: false },
   { valor: "en_espera",  etiqueta: "En espera",  tono: "info",    activo: true,  cuentaResuelto: false },
   { valor: "reabierto",  etiqueta: "Reabierto",  tono: "critico", activo: true,  cuentaResuelto: false },
+  // Cerrado = trabajo terminado (visible, se reabre si el solicitante responde).
+  { valor: "cerrado",    etiqueta: "Cerrado",    tono: "ok",      activo: false, cuentaResuelto: true  },
+  // Archivado = guardado en frío: sale del trabajo a la vista y vive en su pestaña.
   { valor: "archivado",  etiqueta: "Archivado",  tono: "neutro",  activo: false, cuentaResuelto: true  },
-  // resuelto/cerrado quedan para datos antiguos y la bitácora; el flujo nuevo archiva.
+  // resuelto se conserva para datos antiguos y la bitácora; el flujo nuevo cierra.
   { valor: "resuelto",   etiqueta: "Resuelto",   tono: "ok",      activo: false, cuentaResuelto: true  },
-  { valor: "cerrado",    etiqueta: "Cerrado",    tono: "neutro",  activo: false, cuentaResuelto: true  },
 ];
 
 export const PRIORIDADES: Prioridad[] = ["baja", "media", "alta", "critica"];
 export const CATEGORIAS_TK: CategoriaTicket[] = ["hardware", "software", "red", "accesos", "correo", "otro"];
 
 export const ESTADOS_ACTIVOS: EstadoTicket[] = ["abierto", "en_proceso", "en_espera", "reabierto"];
-// Estados terminales (detienen el reloj de resolución y viven en "Archivados").
+// Estados terminales (detienen el reloj de resolución). Engloba cerrados + archivados.
 export const ESTADOS_RESUELTOS: EstadoTicket[] = ["resuelto", "cerrado", "archivado"];
-// Estados que TI puede elegir en los selectores: el trabajo activo + Archivado como
-// destino único de cierre (ya no se ofrece resuelto/cerrado por separado).
+// Cerrados: trabajo terminado, todavía a la vista (resuelto es el legado de cerrado).
+export const ESTADOS_CERRADOS: EstadoTicket[] = ["cerrado", "resuelto"];
+// Archivados: guardado en frío, fuera del trabajo a la vista (su propia pestaña).
+export const ESTADOS_ARCHIVADOS: EstadoTicket[] = ["archivado"];
+// Estados que TI puede elegir en los selectores: el trabajo activo + Cerrado (cierre
+// normal) + Archivado (guardar en frío).
 export const ESTADOS_SELECCIONABLES: EstadoTicket[] = [
   "abierto",
   "en_proceso",
   "en_espera",
   "reabierto",
+  "cerrado",
   "archivado",
 ];
 // Estados desde los que un ticket todavía espera el primer contacto de TI.
