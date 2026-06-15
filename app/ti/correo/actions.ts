@@ -44,10 +44,16 @@ export async function guardarConfigCorreo(formData: FormData) {
     sitio_url: txt("sitio_url"),
     notif_respuesta_def: activado("notif_respuesta_def"),
     notif_estado_def: activado("notif_estado_def"),
+    notif_nuevo: activado("notif_nuevo"),
+    notif_nuevo_destinos: txt("notif_nuevo_destinos"),
     asunto_respuesta: txt("asunto_respuesta") || "Respuesta a tu reporte {{folio}}",
     cuerpo_respuesta: txt("cuerpo_respuesta") || "Hola {{nombre}},\n\n{{mensaje}}",
     asunto_estado: txt("asunto_estado") || "Tu reporte {{folio}} ahora está: {{estado}}",
     cuerpo_estado: txt("cuerpo_estado") || "Hola {{nombre}},\n\nTu reporte {{folio}} cambió a: {{estado}}.",
+    asunto_nuevo: txt("asunto_nuevo") || "Nuevo reporte {{folio}} · {{titulo}}",
+    cuerpo_nuevo:
+      txt("cuerpo_nuevo") ||
+      "Nuevo reporte de {{solicitante}}.\n\nFolio: {{folio}}\nAsunto: {{titulo}}\nCategoría: {{categoria}}\n\n{{descripcion}}",
     updated_at: new Date().toISOString(),
   };
 

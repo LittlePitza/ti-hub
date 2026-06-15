@@ -32,10 +32,14 @@ export type ConfigCorreo = {
   sitio_url: string | null;
   notif_respuesta_def: boolean;
   notif_estado_def: boolean;
+  notif_nuevo: boolean;
+  notif_nuevo_destinos: string | null;
   asunto_respuesta: string;
   cuerpo_respuesta: string;
   asunto_estado: string;
   cuerpo_estado: string;
+  asunto_nuevo: string;
+  cuerpo_nuevo: string;
 };
 
 export async function getConfigCorreo(sb: SupabaseClient): Promise<ConfigCorreo | null> {
@@ -162,7 +166,7 @@ async function enviarGraph(
   accessToken: string,
   endpoint: string,
   html: string,
-  msg: { para: string; asunto: string; cuerpo: string },
+  msg: { destinatarios: string[]; asunto: string },
 ): Promise<Resultado> {
   const res = await fetch(endpoint, {
     method: "POST",
@@ -171,7 +175,7 @@ async function enviarGraph(
       message: {
         subject: msg.asunto,
         body: { contentType: "HTML", content: html },
-        toRecipients: [{ emailAddress: { address: msg.para } }],
+        toRecipients: msg.destinatarios.map((address) => ({ emailAddress: { address } })),
       },
       saveToSentItems: true,
     }),
@@ -209,10 +213,11 @@ function escapar(s: string): string {
 }
 
 // Envuelve el cuerpo (texto plano con saltos de línea) en el HTML de marca PIMSA.
-function htmlMarca(cuerpoTexto: string, sitio: string | null): string {
+// `cta` es el botón opcional (texto + destino); si falta, no se pinta.
+function htmlMarca(cuerpoTexto: string, cta: { texto: string; url: string } | null): string {
   const cuerpo = escapar(cuerpoTexto).replace(/\n/g, "<br>");
-  const cta = sitio
-    ? `<tr><td style="padding:4px 28px 26px;"><a href="${escapar(sitio)}" style="display:inline-block;background:${AZUL};color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 20px;border-radius:8px;">Ver mis reportes</a></td></tr>`
+  const boton = cta
+    ? `<tr><td style="padding:4px 28px 26px;"><a href="${escapar(cta.url)}" style="display:inline-block;background:${AZUL};color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 20px;border-radius:8px;">${escapar(cta.texto)}</a></td></tr>`
     : "";
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;background:#f4f5f7;font-family:'Segoe UI',Helvetica,Arial,sans-serif;color:${TINTA};">
@@ -221,7 +226,7 @@ function htmlMarca(cuerpoTexto: string, sitio: string | null): string {
 <tr><td style="height:4px;background:${VERDE};"></td></tr>
 <tr><td style="padding:22px 28px 6px;"><div style="font-size:13px;font-weight:700;letter-spacing:.04em;color:${AZUL};text-transform:uppercase;">Soporte TI · Plásticos PIMSA</div></td></tr>
 <tr><td style="padding:10px 28px 0;font-size:15px;line-height:1.6;color:${TINTA};">${cuerpo}</td></tr>
-${cta}
+${boton}
 <tr><td style="padding:18px 28px 24px;border-top:1px solid ${LINEA};font-size:12px;color:${SUAVE};">Mensaje del portal de soporte de TI. Responde a este correo si necesitas más ayuda.</td></tr>
 </table>
 <div style="max-width:560px;margin:14px auto 0;font-size:11px;color:#9aa0a6;">Plásticos Industriales de Monterrey, S.A. de C.V.</div>
@@ -234,22 +239,27 @@ ${cta}
 async function enviar(
   c: ConfigCorreo,
   sb: SupabaseClient,
-  msg: { para: string; asunto: string; cuerpo: string },
+  msg: { para: string | string[]; asunto: string; cuerpo: string; cta?: { texto: string; url: string } | null },
 ): Promise<Resultado> {
-  const html = htmlMarca(msg.cuerpo, c.sitio_url);
+  // CTA por defecto: el botón "Ver mis reportes" al portal; las funciones que mandan
+  // a TI pasan su propio CTA (enlace directo al ticket).
+  const cta = msg.cta === undefined ? (c.sitio_url ? { texto: "Ver mis reportes", url: c.sitio_url } : null) : msg.cta;
+  const html = htmlMarca(msg.cuerpo, cta);
+  const destinatarios = (Array.isArray(msg.para) ? msg.para : [msg.para]).filter(Boolean);
+  if (destinatarios.length === 0) return { ok: false, motivo: "no_config", detalle: "Sin destinatarios." };
   try {
     if (c.metodo === "graph_app") {
       const token = await tokenAppOnly(c);
       const mb = encodeURIComponent(buzon(c));
-      return await enviarGraph(token, `${GRAPH}/users/${mb}/sendMail`, html, msg);
+      return await enviarGraph(token, `${GRAPH}/users/${mb}/sendMail`, html, { destinatarios, asunto: msg.asunto });
     }
     if (c.metodo === "oauth_interactivo") {
       const token = await tokenInteractivo(c, sb);
-      return await enviarGraph(token, `${GRAPH}/me/sendMail`, html, msg);
+      return await enviarGraph(token, `${GRAPH}/me/sendMail`, html, { destinatarios, asunto: msg.asunto });
     }
     await transporte(c).sendMail({
       from: `"${c.remitente_nombre}" <${c.remitente || c.smtp_user}>`,
-      to: msg.para,
+      to: destinatarios.join(", "),
       subject: msg.asunto,
       text: msg.cuerpo,
       html,
@@ -277,6 +287,42 @@ export function enviarEstado(
 ): Promise<Resultado> {
   const vars = { folio: folio(d.num), titulo: d.titulo, nombre: d.nombre, estado: d.estado };
   return enviar(c, sb, { para: d.para, asunto: render(c.asunto_estado, vars), cuerpo: render(c.cuerpo_estado, vars) });
+}
+
+// Destinatarios del aviso interno: lista separada por coma, punto y coma o saltos
+// de línea; se quedan solo los correos con forma válida.
+export function destinosNuevo(c: ConfigCorreo): string[] {
+  return (c.notif_nuevo_destinos ?? "")
+    .split(/[\s,;]+/)
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+}
+
+// ¿Toca avisar a TI de un ticket nuevo? Servicio operativo + aviso encendido + hay a quién.
+export function avisaNuevo(c: ConfigCorreo | null): c is ConfigCorreo {
+  return correoOperativo(c) && c.notif_nuevo && destinosNuevo(c).length > 0;
+}
+
+// Aviso interno a TI cuando entra un ticket desde el portal. Lleva botón al detalle.
+export function enviarNuevoTicket(
+  c: ConfigCorreo,
+  sb: SupabaseClient,
+  d: { num: number; titulo: string; solicitante: string; categoria: string; descripcion: string; enlace: string | null },
+): Promise<Resultado> {
+  const vars = {
+    folio: folio(d.num),
+    titulo: d.titulo,
+    solicitante: d.solicitante,
+    categoria: d.categoria,
+    descripcion: d.descripcion || "(sin descripción)",
+    enlace: d.enlace ?? "",
+  };
+  return enviar(c, sb, {
+    para: destinosNuevo(c),
+    asunto: render(c.asunto_nuevo, vars),
+    cuerpo: render(c.cuerpo_nuevo, vars),
+    cta: d.enlace ? { texto: "Abrir el ticket", url: d.enlace } : null,
+  });
 }
 
 export function enviarPrueba(c: ConfigCorreo, sb: SupabaseClient, para: string): Promise<Resultado> {

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getSupabasePortal } from "@/lib/supabase";
 import { COOKIE_PORTAL, CATEGORIAS_PORTAL, correoValido, getCorreoPortal } from "@/lib/portal";
+import { getConfigCorreo, avisaNuevo, enviarNuevoTicket } from "@/lib/correo";
 
 const OPCIONES_COOKIE = {
   httpOnly: true,
@@ -71,9 +72,29 @@ export async function crearTicketPortal(formData: FormData) {
       equipo_id: equipoId,
       prioridad: "media", // TI la ajusta desde el panel; el empleado no ve prioridades
     })
-    .select("num")
+    .select("id, num")
     .single();
   if (error || !data) redirect("/nuevo?error=guardar");
+
+  // Aviso interno a TI (configurable en /ti/correo). No bloquea ni rompe la creación
+  // si el correo falla: el ticket ya quedó guardado.
+  try {
+    const c = await getConfigCorreo(sb);
+    if (avisaNuevo(c)) {
+      const base = c.sitio_url?.replace(/\/+$/, "");
+      const categoriaTexto = CATEGORIAS_PORTAL.find((x) => x.valor === categoria)?.titulo ?? categoria!;
+      await enviarNuevoTicket(c, sb, {
+        num: data.num,
+        titulo: titulo!,
+        solicitante: empleado?.nombre ?? correo,
+        categoria: categoriaTexto,
+        descripcion: v("descripcion") ?? "",
+        enlace: base ? `${base}/ti/tickets/${data.id}` : null,
+      });
+    }
+  } catch (e) {
+    console.error("[portal] aviso de ticket nuevo falló:", e);
+  }
 
   revalidatePath("/");
   revalidatePath("/ti/tickets");

@@ -44,6 +44,12 @@ function pistaError(detalle: string): string | null {
   return null;
 }
 
+const ETIQUETA_METODO: Record<string, string> = {
+  graph_app: "App (Graph)",
+  oauth_interactivo: "Microsoft",
+  smtp_basico: "SMTP",
+};
+
 export default async function ConfigCorreo({
   searchParams,
 }: {
@@ -55,7 +61,7 @@ export default async function ConfigCorreo({
     <div className="pagina-head">
       <div>
         <h1 className="pagina-titulo">Correo</h1>
-        <p className="pagina-desc">Notificaciones al solicitante: método de envío, plantillas y preferencias</p>
+        <p className="pagina-desc">Notificaciones al solicitante y avisos internos: método de envío, plantillas y preferencias</p>
       </div>
     </div>
   );
@@ -74,6 +80,14 @@ export default async function ConfigCorreo({
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const redirectUri = `${proto}://${host}/ti/correo/callback`;
   const conectado = Boolean(c?.oauth_refresh_token);
+
+  // Chips de estado en los encabezados plegables (la estructura comunica el estado).
+  const numDestinos = (c?.notif_nuevo_destinos ?? "")
+    .split(/[\s,;]+/)
+    .map((s) => s.trim())
+    .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)).length;
+  const avisoNuevoOn = (c?.notif_nuevo ?? true) && numDestinos > 0;
+  const remitente = c?.remitente || c?.oauth_cuenta || c?.smtp_user || "";
 
   // Estado del servicio: encendido y con credenciales / apagado / incompleto.
   const estado = operativo
@@ -108,161 +122,237 @@ export default async function ConfigCorreo({
         </div>
       </div>
 
+      {/* Prueba arriba: lo que más se usa, a un clic y sin scroll. */}
+      <form className="config-prueba destacada" action={enviarPruebaCorreo}>
+        <h2>Enviar correo de prueba</h2>
+        <div className="config-prueba-fila">
+          <input name="para" type="email" required placeholder="tu.correo@plasticospimsa.com" aria-label="Correo de destino" />
+          <button className="boton" type="submit">Enviar prueba</button>
+        </div>
+        <p className="config-ayuda" style={{ marginBottom: 0, marginTop: 10 }}>
+          Usa el método y las credenciales guardadas. Si acabas de cambiar algo, guarda primero abajo.
+        </p>
+      </form>
+
       <form className="formulario config-form" action={guardarConfigCorreo}>
-        <section className="config-seccion">
-          <h2>Método de envío</h2>
-          <p className="config-ayuda">
-            Microsoft retira la contraseña por SMTP a fin de 2026. Los métodos OAuth no guardan
-            contraseña y son a prueba de futuro. Elige uno; abajo aparecen solo sus campos.
-          </p>
-          <div className="metodo-opciones">
-            <label className="metodo-opcion">
-              <input type="radio" id="m-graph" name="metodo" value="graph_app" defaultChecked={metodo === "graph_app"} />
-              <span className="metodo-cuerpo">
-                <span className="metodo-titulo">Conexión de app (Graph) <span className="metodo-tag">recomendado</span></span>
-                <span className="metodo-detalle">Sin contraseña, no caduca. Manda como un buzón fijo. Requiere registrar una app en Azure.</span>
-              </span>
-            </label>
-            <label className="metodo-opcion">
-              <input type="radio" id="m-oauth" name="metodo" value="oauth_interactivo" defaultChecked={metodo === "oauth_interactivo"} />
-              <span className="metodo-cuerpo">
-                <span className="metodo-titulo">Iniciar sesión con Microsoft</span>
-                <span className="metodo-detalle">Te lleva a la página de Microsoft, inicias sesión y manda como esa cuenta.</span>
-              </span>
-            </label>
-            <label className="metodo-opcion">
-              <input type="radio" id="m-smtp" name="metodo" value="smtp_basico" defaultChecked={metodo === "smtp_basico"} />
-              <span className="metodo-cuerpo">
-                <span className="metodo-titulo">SMTP básico <span className="metodo-tag legado">legado</span></span>
-                <span className="metodo-detalle">Usuario y contraseña. Funciona hasta diciembre 2026.</span>
-              </span>
-            </label>
-          </div>
-        </section>
+        {/* ---------- Método y conexión ---------- */}
+        <details className="config-fold" open={!conCreds}>
+          <summary>
+            Método y conexión
+            <span className="fold-chip">{ETIQUETA_METODO[metodo] ?? metodo}</span>
+          </summary>
+          <div className="config-fold-cuerpo">
+            <p className="config-ayuda">
+              Microsoft retira la contraseña por SMTP a fin de 2026. Los métodos OAuth no guardan
+              contraseña y son a prueba de futuro. Elige uno; abajo aparecen solo sus campos.
+            </p>
+            <div className="metodo-opciones">
+              <label className="metodo-opcion">
+                <input type="radio" id="m-graph" name="metodo" value="graph_app" defaultChecked={metodo === "graph_app"} />
+                <span className="metodo-cuerpo">
+                  <span className="metodo-titulo">Conexión de app (Graph) <span className="metodo-tag">recomendado</span></span>
+                  <span className="metodo-detalle">Sin contraseña, no caduca. Manda como un buzón fijo. Requiere registrar una app en Azure.</span>
+                </span>
+              </label>
+              <label className="metodo-opcion">
+                <input type="radio" id="m-oauth" name="metodo" value="oauth_interactivo" defaultChecked={metodo === "oauth_interactivo"} />
+                <span className="metodo-cuerpo">
+                  <span className="metodo-titulo">Iniciar sesión con Microsoft</span>
+                  <span className="metodo-detalle">Te lleva a la página de Microsoft, inicias sesión y manda como esa cuenta.</span>
+                </span>
+              </label>
+              <label className="metodo-opcion">
+                <input type="radio" id="m-smtp" name="metodo" value="smtp_basico" defaultChecked={metodo === "smtp_basico"} />
+                <span className="metodo-cuerpo">
+                  <span className="metodo-titulo">SMTP básico <span className="metodo-tag legado">legado</span></span>
+                  <span className="metodo-detalle">Usuario y contraseña. Funciona hasta diciembre 2026.</span>
+                </span>
+              </label>
+            </div>
 
-        {/* SMTP básico */}
-        <section className="config-seccion metodo-bloque bloque-smtp">
-          <h2>Servidor SMTP</h2>
-          <p className="config-ayuda">
-            Microsoft 365: <code>smtp.office365.com</code>, puerto <code>587</code>. El buzón necesita
-            <strong> SMTP AUTH habilitado</strong> y, si tiene MFA, una <strong>contraseña de aplicación</strong>.
-          </p>
-          <div className="campos">
-            <div className="campo">
-              <label htmlFor="smtp_host">Servidor</label>
-              <input id="smtp_host" name="smtp_host" defaultValue={c?.smtp_host ?? "smtp.office365.com"} />
+            {/* SMTP básico */}
+            <div className="metodo-bloque bloque-smtp">
+              <h3 className="config-sub">Servidor SMTP</h3>
+              <p className="config-ayuda">
+                Microsoft 365: <code>smtp.office365.com</code>, puerto <code>587</code>. El buzón necesita
+                <strong> SMTP AUTH habilitado</strong> y, si tiene MFA, una <strong>contraseña de aplicación</strong>.
+              </p>
+              <div className="campos">
+                <div className="campo">
+                  <label htmlFor="smtp_host">Servidor</label>
+                  <input id="smtp_host" name="smtp_host" defaultValue={c?.smtp_host ?? "smtp.office365.com"} />
+                </div>
+                <div className="campo">
+                  <label htmlFor="smtp_port">Puerto</label>
+                  <input id="smtp_port" name="smtp_port" type="number" defaultValue={c?.smtp_port ?? 587} />
+                </div>
+                <div className="campo">
+                  <label htmlFor="smtp_user">Usuario (correo)</label>
+                  <input id="smtp_user" name="smtp_user" type="email" defaultValue={c?.smtp_user ?? ""} placeholder="soporteti@plasticospimsa.com" />
+                </div>
+                <div className="campo">
+                  <label htmlFor="smtp_pass">Contraseña</label>
+                  <input id="smtp_pass" name="smtp_pass" type="password" placeholder={c?.smtp_pass ? "•••••••• (sin cambios)" : "Contraseña o app password"} autoComplete="new-password" />
+                </div>
+              </div>
             </div>
-            <div className="campo">
-              <label htmlFor="smtp_port">Puerto</label>
-              <input id="smtp_port" name="smtp_port" type="number" defaultValue={c?.smtp_port ?? 587} />
-            </div>
-            <div className="campo">
-              <label htmlFor="smtp_user">Usuario (correo)</label>
-              <input id="smtp_user" name="smtp_user" type="email" defaultValue={c?.smtp_user ?? ""} placeholder="soporteti@plasticospimsa.com" />
-            </div>
-            <div className="campo">
-              <label htmlFor="smtp_pass">Contraseña</label>
-              <input id="smtp_pass" name="smtp_pass" type="password" placeholder={c?.smtp_pass ? "•••••••• (sin cambios)" : "Contraseña o app password"} autoComplete="new-password" />
+
+            {/* Datos de Azure (compartidos por Graph y login interactivo) */}
+            <div className="metodo-bloque bloque-azure">
+              <h3 className="config-sub">Microsoft Entra ID (Azure)</h3>
+              <p className="config-ayuda">
+                En <strong>portal.azure.com → Microsoft Entra ID → Registros de aplicaciones → Nuevo registro</strong>,
+                registra una app y copia aquí el <strong>Directorio (tenant) ID</strong> y el <strong>Id. de aplicación (cliente)</strong>.
+                En <strong>Certificados y secretos</strong> genera un <strong>secreto de cliente</strong>.
+              </p>
+              <ul className="config-pasos">
+                <li><strong>App-only (Graph):</strong> en Permisos de API agrega <code>Microsoft Graph → Aplicación → Mail.Send</code> y da <strong>consentimiento de administrador</strong>. Limita el envío al buzón con una <code>ApplicationAccessPolicy</code>.</li>
+                <li><strong>Login interactivo:</strong> agrega <code>Microsoft Graph → Delegado → Mail.Send</code> y registra esta URL de redirección (tipo Web):</li>
+              </ul>
+              <code className="config-redirect">{redirectUri}</code>
+              <div className="campos">
+                <div className="campo ancho">
+                  <label htmlFor="azure_tenant_id">Directorio (tenant) ID</label>
+                  <input id="azure_tenant_id" name="azure_tenant_id" defaultValue={c?.azure_tenant_id ?? ""} placeholder="00000000-0000-0000-0000-000000000000" />
+                </div>
+                <div className="campo">
+                  <label htmlFor="azure_client_id">Id. de aplicación (cliente)</label>
+                  <input id="azure_client_id" name="azure_client_id" defaultValue={c?.azure_client_id ?? ""} placeholder="00000000-0000-0000-0000-000000000000" />
+                </div>
+                <div className="campo">
+                  <label htmlFor="azure_client_secret">Secreto de cliente</label>
+                  <input id="azure_client_secret" name="azure_client_secret" type="password" placeholder={c?.azure_client_secret ? "•••••••• (sin cambios)" : "Valor del secreto"} autoComplete="new-password" />
+                </div>
+              </div>
             </div>
           </div>
-        </section>
+        </details>
 
-        {/* Datos de Azure (compartidos por Graph y login interactivo) */}
-        <section className="config-seccion metodo-bloque bloque-azure">
-          <h2>Microsoft Entra ID (Azure)</h2>
-          <p className="config-ayuda">
-            En <strong>portal.azure.com → Microsoft Entra ID → Registros de aplicaciones → Nuevo registro</strong>,
-            registra una app y copia aquí el <strong>Directorio (tenant) ID</strong> y el <strong>Id. de aplicación (cliente)</strong>.
-            En <strong>Certificados y secretos</strong> genera un <strong>secreto de cliente</strong>.
-          </p>
-          <ul className="config-pasos">
-            <li><strong>App-only (Graph):</strong> en Permisos de API agrega <code>Microsoft Graph → Aplicación → Mail.Send</code> y da <strong>consentimiento de administrador</strong>. Limita el envío al buzón con una <code>ApplicationAccessPolicy</code>.</li>
-            <li><strong>Login interactivo:</strong> agrega <code>Microsoft Graph → Delegado → Mail.Send</code> y registra esta URL de redirección (tipo Web):</li>
-          </ul>
-          <code className="config-redirect">{redirectUri}</code>
-          <div className="campos">
+        {/* ---------- Avisos de ticket nuevo (a TI) ---------- */}
+        <details className="config-fold">
+          <summary>
+            Avisos de ticket nuevo
+            <span className={`fold-chip ${avisoNuevoOn ? "ok" : "aviso"}`}>
+              {avisoNuevoOn ? `${numDestinos} destinatario${numDestinos === 1 ? "" : "s"}` : "apagado"}
+            </span>
+          </summary>
+          <div className="config-fold-cuerpo">
+            <p className="config-ayuda">
+              Cuando un empleado levanta un reporte en el portal, TI recibe un correo con el resumen y un
+              botón para abrir el ticket. El envío usa el método configurado arriba (necesita el servicio activo).
+            </p>
+            <label className="config-switch">
+              <input type="checkbox" name="notif_nuevo" defaultChecked={c?.notif_nuevo ?? true} />
+              <span><strong>Avisar por correo al entrar un ticket nuevo.</strong></span>
+            </label>
             <div className="campo ancho">
-              <label htmlFor="azure_tenant_id">Directorio (tenant) ID</label>
-              <input id="azure_tenant_id" name="azure_tenant_id" defaultValue={c?.azure_tenant_id ?? ""} placeholder="00000000-0000-0000-0000-000000000000" />
+              <label htmlFor="notif_nuevo_destinos">¿A quién le llegan?</label>
+              <textarea
+                id="notif_nuevo_destinos"
+                name="notif_nuevo_destinos"
+                rows={2}
+                defaultValue={c?.notif_nuevo_destinos ?? ""}
+                placeholder="sistemas@plasticospimsa.com, soporte@plasticospimsa.com"
+              />
+              <span className="campo-pista">Uno o varios correos, separados por coma o salto de línea.</span>
             </div>
             <div className="campo">
-              <label htmlFor="azure_client_id">Id. de aplicación (cliente)</label>
-              <input id="azure_client_id" name="azure_client_id" defaultValue={c?.azure_client_id ?? ""} placeholder="00000000-0000-0000-0000-000000000000" />
+              <label htmlFor="asunto_nuevo">Asunto</label>
+              <input id="asunto_nuevo" name="asunto_nuevo" defaultValue={c?.asunto_nuevo ?? ""} />
             </div>
             <div className="campo">
-              <label htmlFor="azure_client_secret">Secreto de cliente</label>
-              <input id="azure_client_secret" name="azure_client_secret" type="password" placeholder={c?.azure_client_secret ? "•••••••• (sin cambios)" : "Valor del secreto"} autoComplete="new-password" />
+              <label htmlFor="cuerpo_nuevo">Cuerpo</label>
+              <textarea id="cuerpo_nuevo" name="cuerpo_nuevo" rows={6} defaultValue={c?.cuerpo_nuevo ?? ""} />
             </div>
+            <p className="config-ayuda" style={{ marginBottom: 0 }}>
+              Variables: <code>{"{{folio}}"}</code> <code>{"{{titulo}}"}</code> <code>{"{{solicitante}}"}</code>
+              <code>{"{{categoria}}"}</code> <code>{"{{descripcion}}"}</code>. El botón al ticket se agrega solo.
+            </p>
           </div>
-        </section>
+        </details>
 
-        {/* Buzón remitente (aplica a SMTP y a Graph app-only) */}
-        <section className="config-seccion">
-          <h2>Remitente y enlace</h2>
-          <div className="campos">
+        {/* ---------- Remitente y enlace ---------- */}
+        <details className="config-fold">
+          <summary>
+            Remitente y enlace
+            <span className={`fold-chip ${remitente ? "" : "aviso"}`}>{remitente || "sin definir"}</span>
+          </summary>
+          <div className="config-fold-cuerpo">
+            <div className="campos">
+              <div className="campo">
+                <label htmlFor="remitente">Buzón remitente (De:)</label>
+                <input id="remitente" name="remitente" type="email" defaultValue={c?.remitente ?? ""} placeholder="soporteti@plasticospimsa.com" />
+              </div>
+              <div className="campo">
+                <label htmlFor="remitente_nombre">Nombre mostrado</label>
+                <input id="remitente_nombre" name="remitente_nombre" defaultValue={c?.remitente_nombre ?? "Soporte TI · Plásticos PIMSA"} />
+              </div>
+              <div className="campo ancho">
+                <label htmlFor="sitio_url">URL del portal (botones del correo)</label>
+                <input id="sitio_url" name="sitio_url" type="url" defaultValue={c?.sitio_url ?? ""} placeholder="https://ti-hub.vercel.app/" />
+              </div>
+            </div>
+            <p className="config-ayuda" style={{ marginBottom: 0 }}>
+              En el login interactivo se manda como la cuenta conectada; en los demás métodos, desde este buzón.
+              La URL del portal arma el botón que abre el ticket o los reportes.
+            </p>
+          </div>
+        </details>
+
+        {/* ---------- Plantillas al solicitante ---------- */}
+        <details className="config-fold">
+          <summary>Plantillas al solicitante</summary>
+          <div className="config-fold-cuerpo">
+            <p className="config-ayuda">
+              Variables disponibles (se reemplazan al enviar):
+              <code>{"{{folio}}"}</code> <code>{"{{titulo}}"}</code> <code>{"{{nombre}}"}</code>
+              <code>{"{{mensaje}}"}</code> (solo respuesta) <code>{"{{estado}}"}</code> (solo cambio de estado).
+              El cuerpo es texto; se le aplica el diseño de marca PIMSA automáticamente.
+            </p>
+
+            <h3 className="config-sub">Respuesta al cliente</h3>
             <div className="campo">
-              <label htmlFor="remitente">Buzón remitente (De:)</label>
-              <input id="remitente" name="remitente" type="email" defaultValue={c?.remitente ?? ""} placeholder="soporteti@plasticospimsa.com" />
+              <label htmlFor="asunto_respuesta">Asunto</label>
+              <input id="asunto_respuesta" name="asunto_respuesta" defaultValue={c?.asunto_respuesta ?? ""} />
             </div>
             <div className="campo">
-              <label htmlFor="remitente_nombre">Nombre mostrado</label>
-              <input id="remitente_nombre" name="remitente_nombre" defaultValue={c?.remitente_nombre ?? "Soporte TI · Plásticos PIMSA"} />
+              <label htmlFor="cuerpo_respuesta">Cuerpo</label>
+              <textarea id="cuerpo_respuesta" name="cuerpo_respuesta" rows={6} defaultValue={c?.cuerpo_respuesta ?? ""} />
             </div>
-            <div className="campo ancho">
-              <label htmlFor="sitio_url">URL del portal (botón del correo)</label>
-              <input id="sitio_url" name="sitio_url" type="url" defaultValue={c?.sitio_url ?? ""} placeholder="https://ti-hub.vercel.app/" />
+
+            <h3 className="config-sub">Cambio de estado</h3>
+            <div className="campo">
+              <label htmlFor="asunto_estado">Asunto</label>
+              <input id="asunto_estado" name="asunto_estado" defaultValue={c?.asunto_estado ?? ""} />
+            </div>
+            <div className="campo">
+              <label htmlFor="cuerpo_estado">Cuerpo</label>
+              <textarea id="cuerpo_estado" name="cuerpo_estado" rows={5} defaultValue={c?.cuerpo_estado ?? ""} />
             </div>
           </div>
-          <p className="config-ayuda">
-            En el login interactivo se manda como la cuenta conectada; en los demás métodos, desde este buzón.
-          </p>
-        </section>
+        </details>
 
-        <section className="config-seccion">
-          <h2>Servicio y preferencias</h2>
-          <label className="config-switch">
-            <input type="checkbox" name="activo" defaultChecked={c?.activo ?? false} />
-            <span><strong>Activar el envío de correos.</strong> Si está apagado, nunca se envía nada aunque marques la casilla en un ticket.</span>
-          </label>
-          <label className="config-switch">
-            <input type="checkbox" name="notif_respuesta_def" defaultChecked={c?.notif_respuesta_def ?? true} />
-            <span>Al responder a un cliente, <strong>precargar</strong> la casilla "enviar por correo".</span>
-          </label>
-          <label className="config-switch">
-            <input type="checkbox" name="notif_estado_def" defaultChecked={c?.notif_estado_def ?? false} />
-            <span>Al cambiar el estado, <strong>precargar</strong> la casilla "notificar por correo".</span>
-          </label>
-        </section>
-
-        <section className="config-seccion">
-          <h2>Plantillas</h2>
-          <p className="config-ayuda">
-            Variables disponibles (se reemplazan al enviar):
-            <code>{"{{folio}}"}</code> <code>{"{{titulo}}"}</code> <code>{"{{nombre}}"}</code>
-            <code>{"{{mensaje}}"}</code> (solo respuesta) <code>{"{{estado}}"}</code> (solo cambio de estado).
-            El cuerpo es texto; se le aplica el diseño de marca PIMSA automáticamente.
-          </p>
-
-          <h3 className="config-sub">Respuesta al cliente</h3>
-          <div className="campo">
-            <label htmlFor="asunto_respuesta">Asunto</label>
-            <input id="asunto_respuesta" name="asunto_respuesta" defaultValue={c?.asunto_respuesta ?? ""} />
+        {/* ---------- Servicio y preferencias ---------- */}
+        <details className="config-fold">
+          <summary>
+            Servicio y preferencias
+            <span className={`fold-chip ${c?.activo ? "ok" : "aviso"}`}>{c?.activo ? "encendido" : "apagado"}</span>
+          </summary>
+          <div className="config-fold-cuerpo">
+            <label className="config-switch">
+              <input type="checkbox" name="activo" defaultChecked={c?.activo ?? false} />
+              <span><strong>Activar el envío de correos.</strong> Si está apagado, nunca se envía nada (ni avisos ni notificaciones).</span>
+            </label>
+            <label className="config-switch">
+              <input type="checkbox" name="notif_respuesta_def" defaultChecked={c?.notif_respuesta_def ?? true} />
+              <span>Al responder a un cliente, <strong>precargar</strong> la casilla "enviar por correo".</span>
+            </label>
+            <label className="config-switch">
+              <input type="checkbox" name="notif_estado_def" defaultChecked={c?.notif_estado_def ?? false} />
+              <span>Al cambiar el estado, <strong>precargar</strong> la casilla "notificar por correo".</span>
+            </label>
           </div>
-          <div className="campo">
-            <label htmlFor="cuerpo_respuesta">Cuerpo</label>
-            <textarea id="cuerpo_respuesta" name="cuerpo_respuesta" rows={6} defaultValue={c?.cuerpo_respuesta ?? ""} />
-          </div>
-
-          <h3 className="config-sub">Cambio de estado</h3>
-          <div className="campo">
-            <label htmlFor="asunto_estado">Asunto</label>
-            <input id="asunto_estado" name="asunto_estado" defaultValue={c?.asunto_estado ?? ""} />
-          </div>
-          <div className="campo">
-            <label htmlFor="cuerpo_estado">Cuerpo</label>
-            <textarea id="cuerpo_estado" name="cuerpo_estado" rows={5} defaultValue={c?.cuerpo_estado ?? ""} />
-          </div>
-        </section>
+        </details>
 
         <button className="boton" type="submit">Guardar configuración</button>
       </form>
@@ -300,15 +390,6 @@ export default async function ConfigCorreo({
           </>
         )}
       </section>
-
-      <form className="formulario config-prueba" action={enviarPruebaCorreo}>
-        <h2>Enviar correo de prueba</h2>
-        <p className="config-ayuda">Usa el método y las credenciales guardadas. Guarda primero si acabas de cambiarlos.</p>
-        <div className="config-prueba-fila">
-          <input name="para" type="email" required placeholder="tu.correo@plasticospimsa.com" aria-label="Correo de destino" />
-          <button className="boton secundario" type="submit">Enviar prueba</button>
-        </div>
-      </form>
     </div>
   );
 }

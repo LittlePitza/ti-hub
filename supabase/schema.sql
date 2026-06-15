@@ -138,6 +138,17 @@ create table if not exists config_correo (
   sitio_url text,
   notif_respuesta_def boolean not null default true,  -- casilla precargada al responder
   notif_estado_def boolean not null default false,    -- casilla precargada al cambiar estado
+  -- Aviso interno a TI cuando entra un ticket nuevo desde el portal del empleado.
+  notif_nuevo boolean not null default true,
+  notif_nuevo_destinos text,                          -- correos destino (coma/salto de línea)
+  asunto_nuevo text not null default 'Nuevo reporte {{folio}} · {{titulo}}',
+  cuerpo_nuevo text not null default 'Nuevo reporte de {{solicitante}}.
+
+Folio: {{folio}}
+Asunto: {{titulo}}
+Categoría: {{categoria}}
+
+{{descripcion}}',
   asunto_respuesta text not null default 'Respuesta a tu reporte {{folio}}',
   cuerpo_respuesta text not null default 'Hola {{nombre}},
 
@@ -206,6 +217,19 @@ alter table config_correo add column if not exists azure_client_id text;
 alter table config_correo add column if not exists azure_client_secret text;
 alter table config_correo add column if not exists oauth_refresh_token text;
 alter table config_correo add column if not exists oauth_cuenta text;
+-- Aviso interno a TI al entrar un ticket nuevo desde el portal (destinatarios configurables).
+alter table config_correo add column if not exists notif_nuevo boolean not null default true;
+alter table config_correo add column if not exists notif_nuevo_destinos text;
+alter table config_correo add column if not exists asunto_nuevo text not null default 'Nuevo reporte {{folio}} · {{titulo}}';
+alter table config_correo add column if not exists cuerpo_nuevo text not null default 'Nuevo reporte de {{solicitante}}.
+
+Folio: {{folio}}
+Asunto: {{titulo}}
+Categoría: {{categoria}}
+
+{{descripcion}}';
+update config_correo set notif_nuevo_destinos = 'sistemas@plasticospimsa.com'
+  where notif_nuevo_destinos is null;
 
 -- ---------- SEGURIDAD (RLS) ----------
 -- Solo usuarios autenticados (Supabase Auth) pueden leer y escribir.
