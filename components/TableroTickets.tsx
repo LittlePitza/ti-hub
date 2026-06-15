@@ -211,6 +211,12 @@ export default function TableroTickets({
         {fueraSla > 0 && <span className="alerta">{fueraSla} fuera de SLA</span>}
         {sinAsignar > 0 && <span className="aviso-txt">{sinAsignar} sin asignar</span>}
         <span className="suave" style={{ fontSize: 11.5 }}>Arrastra una tarjeta para cambiar su estado</span>
+        {pendiente && (
+          <span className="tablero-guardando" role="status">
+            <span className="spinner" aria-hidden />
+            Guardando…
+          </span>
+        )}
         {hayFiltro && <Link href={hrefLimpiar} className="boton-texto">Limpiar filtros</Link>}
       </div>
 

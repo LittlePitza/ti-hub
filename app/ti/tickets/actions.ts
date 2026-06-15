@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseAutenticado } from "@/lib/supabase";
@@ -301,18 +302,27 @@ export async function responderCliente(formData: FormData) {
   });
 
   // La respuesta se ve siempre en el portal; por correo solo si TI marcó la casilla.
+  // El correo se difiere con after(): el panel responde de inmediato y el envío
+  // (que puede tardar segundos) ocurre después de mandar la respuesta.
   if (formData.get("notificar") === "on" && actual && correoValido(actual.solicitante_email ?? "")) {
-    const c = await getConfigCorreo(sb);
-    if (correoOperativo(c)) {
-      const email = actual.solicitante_email!;
-      await enviarRespuesta(c, sb, {
-        para: email,
-        num: actual.num,
-        titulo: actual.titulo,
-        nombre: await nombreParaCorreo(sb, email),
-        mensaje: cuerpo,
-      });
-    }
+    const email = actual.solicitante_email!;
+    const datosCorreo = { num: actual.num, titulo: actual.titulo, mensaje: cuerpo };
+    after(async () => {
+      try {
+        const c = await getConfigCorreo(sb);
+        if (correoOperativo(c)) {
+          await enviarRespuesta(c, sb, {
+            para: email,
+            num: datosCorreo.num,
+            titulo: datosCorreo.titulo,
+            nombre: await nombreParaCorreo(sb, email),
+            mensaje: datosCorreo.mensaje,
+          });
+        }
+      } catch (e) {
+        console.error("[tickets] correo de respuesta al cliente falló:", e);
+      }
+    });
   }
   refrescar(id);
   revalidatePath("/"); // el portal del empleado muestra las respuestas de TI

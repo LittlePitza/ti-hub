@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getSupabasePortal } from "@/lib/supabase";
@@ -179,25 +180,29 @@ export async function crearTicketPortal(formData: FormData) {
     console.error("[portal] no se pudieron subir las imágenes del reporte:", e);
   }
 
-  // Aviso interno a TI (configurable en /ti/correo). No bloquea ni rompe la creación
+  // Aviso interno a TI (configurable en /ti/correo). El envío SMTP/Graph puede tardar
+  // segundos, así que se difiere con after(): el empleado ve su confirmación al
+  // instante y el correo sale después de responder. No bloquea ni rompe la creación
   // si el correo falla: el ticket ya quedó guardado.
-  try {
-    const c = await getConfigCorreo(sb);
-    if (avisaNuevo(c)) {
-      const base = c.sitio_url?.replace(/\/+$/, "");
-      const categoriaTexto = CATEGORIAS_PORTAL.find((x) => x.valor === categoria)?.titulo ?? categoria!;
-      await enviarNuevoTicket(c, sb, {
-        num: data.num,
-        titulo: titulo!,
-        solicitante: empleado?.nombre ?? correo,
-        categoria: categoriaTexto,
-        descripcion: v("descripcion") ?? "",
-        enlace: base ? `${base}/ti/tickets/${data.id}` : null,
-      });
+  after(async () => {
+    try {
+      const c = await getConfigCorreo(sb);
+      if (avisaNuevo(c)) {
+        const base = c.sitio_url?.replace(/\/+$/, "");
+        const categoriaTexto = CATEGORIAS_PORTAL.find((x) => x.valor === categoria)?.titulo ?? categoria!;
+        await enviarNuevoTicket(c, sb, {
+          num: data.num,
+          titulo: titulo!,
+          solicitante: empleado?.nombre ?? correo,
+          categoria: categoriaTexto,
+          descripcion: v("descripcion") ?? "",
+          enlace: base ? `${base}/ti/tickets/${data.id}` : null,
+        });
+      }
+    } catch (e) {
+      console.error("[portal] aviso de ticket nuevo falló:", e);
     }
-  } catch (e) {
-    console.error("[portal] aviso de ticket nuevo falló:", e);
-  }
+  });
 
   revalidatePath("/");
   revalidatePath("/ti/tickets");

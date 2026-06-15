@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSupabasePortal } from "@/lib/supabase";
 import { getCorreoPortal, CATEGORIAS_PORTAL } from "@/lib/portal";
 import SelectorImagenes from "@/components/SelectorImagenes";
+import BotonEnviar from "@/components/BotonEnviar";
 import { crearTicketPortal } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -125,10 +126,10 @@ export default async function NuevoReporte({
           </div>
         </section>
 
-        <button type="submit" className="portal-boton">
+        <BotonEnviar className="portal-boton" ocupado="Enviando tu reporte…">
           Enviar reporte
           <IconoFlecha />
-        </button>
+        </BotonEnviar>
         <p className="portal-nota">
           Tu reporte quedará ligado a <strong>{correo}</strong> y podrás ver su avance en la
           pantalla principal.

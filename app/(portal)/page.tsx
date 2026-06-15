@@ -3,6 +3,7 @@ import { getSupabasePortal } from "@/lib/supabase";
 import { fechaCorta, folio } from "@/lib/format";
 import { getCorreoPortal, nombreDeCorreo, CATEGORIAS_PORTAL, ESTADO_PORTAL } from "@/lib/portal";
 import Ruta from "@/components/Ruta";
+import BotonEnviar from "@/components/BotonEnviar";
 import { entrarPortal, salirPortal, archivarReportePortal, reactivarReportePortal } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -93,7 +94,7 @@ export default async function Portal({
         <div className="portal-hero-pie">
           <span className="portal-hero-correo">{correo}</span>
           <form action={salirPortal}>
-            <button type="submit" className="portal-hero-cambiar">No soy yo</button>
+            <BotonEnviar className="portal-hero-cambiar" ocupado="Saliendo…">No soy yo</BotonEnviar>
           </form>
         </div>
       </section>
@@ -143,10 +144,10 @@ export default async function Portal({
                     )}
                     <form action={archivarReportePortal} className="ticket-card-archivar">
                       <input type="hidden" name="id" value={t.id} />
-                      <button type="submit" title="Guardar este reporte en tus archivados">
+                      <BotonEnviar className="" title="Guardar este reporte en tus archivados" ocupado="Archivando…">
                         <IconoArchivar />
                         Archivar
-                      </button>
+                      </BotonEnviar>
                     </form>
                   </div>
                 </article>
@@ -178,9 +179,9 @@ export default async function Portal({
                   </Link>
                   <form action={reactivarReportePortal}>
                     <input type="hidden" name="id" value={t.id} />
-                    <button type="submit" className="portal-archivado-reactivar" title="Regresar este reporte a tus reportes activos">
+                    <BotonEnviar className="portal-archivado-reactivar" title="Regresar este reporte a tus reportes activos" ocupado="Reactivando…">
                       Reactivar
-                    </button>
+                    </BotonEnviar>
                   </form>
                 </li>
               ))}
@@ -235,10 +236,10 @@ function Bienvenida({ conError }: { conError: boolean }) {
           required
           autoFocus
         />
-        <button type="submit" className="portal-boton">
+        <BotonEnviar className="portal-boton" ocupado="Un momento…">
           Continuar
           <IconoFlecha />
-        </button>
+        </BotonEnviar>
       </form>
       <p className="portal-nota">
         Sin contraseñas: tu correo solo se usa para mostrarte tus equipos y tus reportes.

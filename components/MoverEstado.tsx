@@ -1,5 +1,6 @@
 "use client";
 
+import { useFormStatus } from "react-dom";
 import { cambiarEstadoTicket } from "@/app/ti/tickets/actions";
 import { ESTADOS_TICKET, ESTADOS_SELECCIONABLES } from "@/lib/tickets";
 
@@ -23,10 +24,32 @@ export default function MoverEstado({
   return (
     <form action={cambiarEstadoTicket} className="tk-mover">
       <input type="hidden" name="id" value={id} />
+      <SelectEstado estado={estado} etiqueta={etiqueta} opciones={opciones} />
+    </form>
+  );
+}
+
+// El select y su spinner viven aquí dentro para poder leer useFormStatus (el estado
+// del <form> ascendiente): mientras la acción corre, el select se deshabilita y se
+// muestra un spinner, así el usuario sabe que su cambio se está guardando.
+function SelectEstado({
+  estado,
+  etiqueta,
+  opciones,
+}: {
+  estado: string;
+  etiqueta: string;
+  opciones: string[];
+}) {
+  const { pending } = useFormStatus();
+  return (
+    <>
       <select
         name="estado"
         defaultValue={estado}
         aria-label={`Mover ${etiqueta} a otro estado`}
+        disabled={pending}
+        aria-busy={pending}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
       >
         {opciones.map((valor) => {
@@ -34,6 +57,7 @@ export default function MoverEstado({
           return <option key={valor} value={valor}>{meta?.etiqueta ?? valor}</option>;
         })}
       </select>
-    </form>
+      {pending && <span className="spinner tk-mover-spinner" aria-hidden />}
+    </>
   );
 }

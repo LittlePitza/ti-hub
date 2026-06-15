@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import TemaToggle from "./TemaToggle";
 import { cerrarSesion } from "@/app/login/actions";
+import BotonEnviar from "@/components/BotonEnviar";
 
 // Navegación agrupada por función, como una consola de operaciones: primero la
 // vista general, luego el trabajo del día (tickets, mantenimientos) y al final
@@ -96,7 +97,7 @@ export default function Sidebar() {
         </Link>
         <div className="rail-pie-fila">
           <form action={cerrarSesion} style={{ flex: 1 }}>
-            <button type="submit" className="rail-salir">Cerrar sesión</button>
+            <BotonEnviar className="rail-salir" ocupado="Saliendo…">Cerrar sesión</BotonEnviar>
           </form>
           <TemaToggle />
         </div>

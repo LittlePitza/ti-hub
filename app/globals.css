@@ -369,6 +369,67 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .boton.secundario:hover { background: var(--neutro-tenue); opacity: 1; }
 .boton.mini { padding: 4px 10px; font-size: 12.5px; border-radius: 5px; }
 
+/* Estado "ocupado": mientras corre la Server Action el botón se deshabilita
+   (evita doble envío) y baja de intensidad, sin perder su color. Lo comparten
+   todos los botones de envío (.boton, .portal-boton, .seg-enviar, etc.). */
+.boton:disabled,
+.portal-boton:disabled,
+.portal-hero-cta:disabled,
+.seg-enviar:disabled {
+  opacity: 0.72;
+  cursor: progress;
+}
+
+/* Spinner: anillo que hereda el color del texto del botón, así sirve igual sobre
+   botón sólido (texto blanco) o secundario (tinta). Tamaño ligado a la fuente. */
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex: none;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  opacity: 0.85;
+  animation: girar 0.6s linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+
+/* Solo para lectores de pantalla (estado de carga anunciado, no visible). */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Carga de ruta del panel (app/ti/loading.tsx): esqueleto tenue + spinner. */
+.ti-cargando { padding: 4px 0; }
+.ti-cargando-head { margin-bottom: 24px; }
+.ti-cargando-filas { display: flex; flex-direction: column; gap: 10px; }
+.esqueleto {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--neutro-tenue) 25%, var(--linea) 50%, var(--neutro-tenue) 75%);
+  background-size: 200% 100%;
+  animation: esqueleto-brillo 1.2s ease-in-out infinite;
+}
+.esqueleto-titulo { width: 220px; height: 26px; margin-bottom: 10px; }
+.esqueleto-desc { width: 340px; max-width: 80%; height: 14px; }
+.esqueleto-fila { width: 100%; height: 46px; }
+@keyframes esqueleto-brillo { to { background-position: -200% 0; } }
+.ti-cargando-spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 22px;
+  font-size: 13px;
+  color: var(--tinta-suave);
+}
+
 /* Botón-enlace de texto: acciones terciarias (volver, limpiar, ver más) */
 .boton-texto {
   display: inline-flex;
@@ -1551,6 +1612,9 @@ a.ticket-card:hover .ticket-card-ver svg { transform: translateX(3px); }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+  /* El spinner deja de girar; la etiqueta "…ando" sigue comunicando el estado. */
+  .spinner { animation: none; opacity: 0.55; }
+  .esqueleto { animation: none; }
 }
 
 /* ============================================================
@@ -2373,6 +2437,23 @@ td .editar { position: relative; }
   gap: 14px;
   align-items: start;
 }
+/* Mientras la server action del arrastre/triaje persiste, el tablero baja un poco
+   de intensidad: confirma que el movimiento se está guardando. */
+.tablero[aria-busy="true"] { opacity: 0.78; }
+
+/* Píldora "Guardando…" flotante mientras se confirma un cambio de estado. */
+.tablero-guardando {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--petroleo);
+  background: var(--petroleo-tenue);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+.tablero-guardando .spinner { width: 12px; height: 12px; }
 .tablero-col {
   background: var(--neutro-tenue);
   border: 1px solid var(--linea);
@@ -2561,6 +2642,7 @@ td .editar { position: relative; }
   max-width: 128px;
 }
 .tk-mover .boton.mini { padding: 4px 8px; }
+.tk-mover-spinner { width: 12px; height: 12px; color: var(--petroleo); }
 
 /* ---------- Columna de resueltos: registro condensado ----------
    El trabajo terminado se recoge en filas de una línea con check, atenuadas y

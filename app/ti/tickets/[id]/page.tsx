@@ -19,6 +19,7 @@ import { getConfigCorreo, correoOperativo } from "@/lib/correo";
 import Insignia from "@/components/Insignia";
 import PildoraSla from "@/components/PildoraSla";
 import SinConexion from "@/components/SinConexion";
+import BotonEnviar from "@/components/BotonEnviar";
 import {
   editarTicket,
   cambiarEstadoTicket,
@@ -226,8 +227,8 @@ export default async function DetalleTicket({
                   )}
                 </div>
                 <div className="responder-acciones">
-                  <button className="boton secundario" type="submit" formAction={agregarComentario}>Nota interna</button>
-                  <button className="boton" type="submit" formAction={responderCliente}>Responder al cliente</button>
+                  <BotonEnviar className="boton secundario" formAction={agregarComentario} ocupado="Guardando…">Nota interna</BotonEnviar>
+                  <BotonEnviar className="boton" formAction={responderCliente} ocupado="Enviando…">Responder al cliente</BotonEnviar>
                 </div>
               </div>
             </form>
@@ -285,7 +286,7 @@ export default async function DetalleTicket({
               ) : emailDestino ? (
                 <span className="correo-aviso">Correo apagado · <Link href="/ti/correo">configurar</Link></span>
               ) : null}
-              <button className="boton" type="submit">Guardar estado</button>
+              <BotonEnviar className="boton" ocupado="Guardando…">Guardar estado</BotonEnviar>
             </form>
           </section>
 
@@ -294,7 +295,7 @@ export default async function DetalleTicket({
             <form action={asignarTicket} className="bloque-form">
               <input type="hidden" name="id" value={t.id} />
               <input name="asignado_a" defaultValue={t.asignado_a ?? ""} placeholder="Técnico responsable" />
-              <button className="boton secundario" type="submit">Asignar</button>
+              <BotonEnviar className="boton secundario" ocupado="Asignando…">Asignar</BotonEnviar>
             </form>
           </section>
 
@@ -333,7 +334,7 @@ export default async function DetalleTicket({
                 <input name="asignado_a" defaultValue={t.asignado_a ?? ""} />
                 <label className="mini-label">Descripción</label>
                 <textarea name="descripcion" defaultValue={t.descripcion ?? ""} rows={4} />
-                <button className="boton" type="submit">Guardar cambios</button>
+                <BotonEnviar className="boton" ocupado="Guardando…">Guardar cambios</BotonEnviar>
               </form>
             </details>
 
@@ -345,9 +346,9 @@ export default async function DetalleTicket({
                 <p className="suave" style={{ fontSize: 12.5, marginBottom: 8 }}>
                   Esta acción es permanente y borra también su bitácora.
                 </p>
-                <button className="boton secundario" type="submit" style={{ color: "var(--critico)" }}>
+                <BotonEnviar className="boton secundario" style={{ color: "var(--critico)" }} ocupado="Eliminando…">
                   Eliminar definitivamente
-                </button>
+                </BotonEnviar>
               </form>
             </details>
           </section>

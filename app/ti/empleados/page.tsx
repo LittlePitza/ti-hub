@@ -2,6 +2,7 @@ import { getSupabase } from "@/lib/supabase";
 import { CATEGORIAS_INV } from "@/lib/inventario";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
+import BotonEnviar from "@/components/BotonEnviar";
 import { crearEmpleado, cambiarEstadoEmpleado, editarEmpleado, eliminarEmpleado } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -62,7 +63,7 @@ export default async function Empleados() {
             <input id="em-ext" name="extension" placeholder="110" />
           </div>
         </div>
-        <button className="boton" type="submit">Guardar empleado</button>
+        <BotonEnviar className="boton" ocupado="Guardando…">Guardar empleado</BotonEnviar>
       </form>
 
       {empleados.length === 0 ? (
@@ -120,7 +121,7 @@ export default async function Empleados() {
                           <input name="puesto" defaultValue={p.puesto ?? ""} />
                           <label className="mini-label">Extensión</label>
                           <input name="extension" defaultValue={p.extension ?? ""} />
-                          <button className="boton mini" type="submit">Guardar</button>
+                          <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar</BotonEnviar>
                         </form>
                       </details>
                       <form action={cambiarEstadoEmpleado}>
@@ -129,11 +130,11 @@ export default async function Empleados() {
                           <option value="activo">activo</option>
                           <option value="baja">baja</option>
                         </select>
-                        <button className="boton secundario mini" type="submit">Actualizar</button>
+                        <BotonEnviar className="boton secundario mini" ocupado="…">Actualizar</BotonEnviar>
                       </form>
                       <form action={eliminarEmpleado}>
                         <input type="hidden" name="id" value={p.id} />
-                        <button className="boton secundario mini" type="submit" style={{ color: "var(--critico)" }}>Eliminar</button>
+                        <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">Eliminar</BotonEnviar>
                       </form>
                     </div>
                   </td>

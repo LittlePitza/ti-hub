@@ -15,6 +15,7 @@ import {
 import Insignia from "@/components/Insignia";
 import PildoraSla from "@/components/PildoraSla";
 import SinConexion from "@/components/SinConexion";
+import BotonEnviar from "@/components/BotonEnviar";
 import TableroTickets from "@/components/TableroTickets";
 import { crearTicket, cambiarEstadoTicket } from "./actions";
 
@@ -124,7 +125,7 @@ export default async function Tickets({
                   return <option key={valor} value={valor}>{meta?.etiqueta ?? valor}</option>;
                 })}
               </select>
-              <button className="boton secundario mini" type="submit">Actualizar</button>
+              <BotonEnviar className="boton secundario mini" ocupado="…">Actualizar</BotonEnviar>
             </form>
             <Link href={`/ti/tickets/${t.id}`} className="boton secundario mini">Abrir</Link>
           </div>
@@ -170,7 +171,7 @@ export default async function Tickets({
               <textarea id="tk-desc" name="descripcion" placeholder="Qué pasa, desde cuándo, qué se ha intentado…" />
             </div>
           </div>
-          <button className="boton" type="submit">Crear ticket</button>
+          <BotonEnviar className="boton" ocupado="Creando…">Crear ticket</BotonEnviar>
         </form>
       </details>
 

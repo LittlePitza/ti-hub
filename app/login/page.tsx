@@ -1,4 +1,5 @@
 import { iniciarSesion } from "./actions";
+import BotonEnviar from "@/components/BotonEnviar";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function Login({
           <input id="password" name="password" type="password" autoComplete="current-password" required />
         </div>
 
-        <button type="submit" className="boton login-boton">Entrar</button>
+        <BotonEnviar className="boton login-boton" ocupado="Entrando…">Entrar</BotonEnviar>
       </form>
     </div>
   );

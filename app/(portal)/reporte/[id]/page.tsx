@@ -5,6 +5,7 @@ import { getCorreoPortal, nombreDeCorreo, CATEGORIAS_PORTAL, ESTADO_PORTAL } fro
 import type { Adjunto } from "@/lib/adjuntos";
 import { fechaCorta, folio } from "@/lib/format";
 import Ruta from "@/components/Ruta";
+import BotonEnviar from "@/components/BotonEnviar";
 import { responderTicketPortal } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -210,10 +211,10 @@ export default async function DetalleReporte({
                 />
                 <div className="seg-responder-pie">
                   <span className="seg-responder-hint">TI lo verá junto a tu reporte.</span>
-                  <button type="submit" className="seg-enviar">
+                  <BotonEnviar className="seg-enviar" ocupado="Enviando…">
                     Enviar
                     <IconoEnviar />
-                  </button>
+                  </BotonEnviar>
                 </div>
               </form>
             </div>

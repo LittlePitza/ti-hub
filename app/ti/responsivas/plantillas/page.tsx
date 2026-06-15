@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { PLANTILLAS_LISTA, fusionarPlantilla, type Plantilla } from "@/lib/responsivas";
 import SinConexion from "@/components/SinConexion";
+import BotonEnviar from "@/components/BotonEnviar";
 import { guardarPlantilla, restablecerPlantilla } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -81,16 +82,16 @@ export default async function Plantillas() {
                   </div>
                 </div>
                 <div className="fila-acciones">
-                  <button className="boton" type="submit">Guardar plantilla</button>
+                  <BotonEnviar className="boton" ocupado="Guardando…">Guardar plantilla</BotonEnviar>
                 </div>
               </form>
 
               {override && (
                 <form action={restablecerPlantilla} style={{ marginTop: 8 }}>
                   <input type="hidden" name="clave" value={clave} />
-                  <button className="boton secundario mini" type="submit" style={{ color: "var(--critico)" }}>
+                  <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">
                     Restablecer al formato base
-                  </button>
+                  </BotonEnviar>
                 </form>
               )}
             </details>

@@ -2,6 +2,7 @@ import { getSupabase } from "@/lib/supabase";
 import { fechaCorta } from "@/lib/format";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
+import BotonEnviar from "@/components/BotonEnviar";
 import { crearMantenimiento, cambiarEstadoMantenimiento, editarMantenimiento, eliminarMantenimiento } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -75,7 +76,7 @@ export default async function Mantenimientos() {
                 <input name="responsable" defaultValue={m.responsable ?? ""} />
                 <label className="mini-label">Notas</label>
                 <textarea name="notas" defaultValue={m.notas ?? ""} rows={2} />
-                <button className="boton mini" type="submit">Guardar</button>
+                <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar</BotonEnviar>
               </form>
             </details>
             <form action={cambiarEstadoMantenimiento}>
@@ -83,11 +84,11 @@ export default async function Mantenimientos() {
               <select name="estado" defaultValue={m.estado}>
                 {ESTADOS.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
               </select>
-              <button className="boton secundario mini" type="submit">Actualizar</button>
+              <BotonEnviar className="boton secundario mini" ocupado="…">Actualizar</BotonEnviar>
             </form>
             <form action={eliminarMantenimiento}>
               <input type="hidden" name="id" value={m.id} />
-              <button className="boton secundario mini" type="submit" style={{ color: "var(--critico)" }}>Eliminar</button>
+              <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">Eliminar</BotonEnviar>
             </form>
           </div>
         </td>
@@ -133,7 +134,7 @@ export default async function Mantenimientos() {
             <textarea id="mt-notas" name="notas" placeholder="Material necesario, ventana de tiempo, pendientes…" />
           </div>
         </div>
-        <button className="boton" type="submit">Programar</button>
+        <BotonEnviar className="boton" ocupado="Programando…">Programar</BotonEnviar>
       </form>
 
       <section className="seccion">

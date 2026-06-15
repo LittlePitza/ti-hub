@@ -13,6 +13,7 @@ import {
   type EstadoResponsiva,
 } from "@/lib/responsivas";
 import SinConexion from "@/components/SinConexion";
+import BotonEnviar from "@/components/BotonEnviar";
 import { editarResponsiva, subirFirmada, cambiarEstadoResponsiva } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -149,7 +150,7 @@ export default async function DetalleResponsiva({
             <textarea id="notas" name="notas" defaultValue={r.notas ?? ""} placeholder="Notas de TI sobre esta responsiva" />
           </div>
         </div>
-        <button className="boton" type="submit">Guardar cambios</button>
+        <BotonEnviar className="boton" ocupado="Guardando…">Guardar cambios</BotonEnviar>
       </form>
 
       {/* Ciclo de firma y archivo */}
@@ -175,7 +176,7 @@ export default async function DetalleResponsiva({
             <input id="archivo" name="archivo" type="file" accept="application/pdf,image/*" />
           </div>
         </div>
-        <button className="boton" type="submit">Subir firmada</button>
+        <BotonEnviar className="boton" ocupado="Subiendo…">Subir firmada</BotonEnviar>
       </form>
 
       {/* Cambiar estado manualmente */}
@@ -186,7 +187,7 @@ export default async function DetalleResponsiva({
           <select name="estado" defaultValue={r.estado}>
             {ESTADOS_RESP_LISTA.map((e) => <option key={e} value={e}>{ESTADOS_RESP[e].texto}</option>)}
           </select>
-          <button className="boton secundario" type="submit">Actualizar estado</button>
+          <BotonEnviar className="boton secundario" ocupado="…">Actualizar estado</BotonEnviar>
         </div>
       </form>
     </>

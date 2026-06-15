@@ -10,6 +10,7 @@ import {
   type EstadoResponsiva,
 } from "@/lib/responsivas";
 import SinConexion from "@/components/SinConexion";
+import BotonEnviar from "@/components/BotonEnviar";
 import { eliminarResponsiva } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -109,7 +110,7 @@ export default async function Responsivas({
                       <form action={eliminarResponsiva}>
                         <input type="hidden" name="id" value={r.id} />
                         <input type="hidden" name="archivo_url" value={r.archivo_url ?? ""} />
-                        <button className="boton secundario mini" type="submit" style={{ color: "var(--critico)" }}>Eliminar</button>
+                        <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">Eliminar</BotonEnviar>
                       </form>
                     </div>
                   </td>

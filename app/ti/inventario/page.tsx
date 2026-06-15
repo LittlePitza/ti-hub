@@ -5,6 +5,7 @@ import { CATEGORIAS_INV, categoriaInv } from "@/lib/inventario";
 import { ESTADOS_RESP, plantillaDefault, type EstadoResponsiva } from "@/lib/responsivas";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
+import BotonEnviar from "@/components/BotonEnviar";
 import { crearEquipo, cambiarEstadoEquipo, asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
 import { generarResponsivaEquipo } from "../responsivas/actions";
 
@@ -187,7 +188,7 @@ export default async function Inventario({
           </div>
         </div>
         <p className="alta-nota suave">Si lo asignas a un empleado, se generará su responsiva en automático.</p>
-        <button className="boton" type="submit">Guardar {cat.singular}</button>
+        <BotonEnviar className="boton" ocupado="Guardando…">Guardar {cat.singular}</BotonEnviar>
       </form>
 
       {lista.length === 0 ? (
@@ -246,7 +247,7 @@ export default async function Inventario({
                   ) : e.asignado_email ? (
                     <form action={generarResponsivaEquipo}>
                       <input type="hidden" name="equipo_id" value={e.id} />
-                      <button className="boton secundario mini" type="submit">Generar</button>
+                      <BotonEnviar className="boton secundario mini" ocupado="…">Generar</BotonEnviar>
                     </form>
                   ) : (
                     <span className="suave">—</span>
@@ -297,14 +298,14 @@ export default async function Inventario({
                         )}
                         <label className="mini-label">Notas</label>
                         <textarea name="notas" defaultValue={e.notas ?? ""} rows={2} />
-                        <button className="boton mini" type="submit">Guardar</button>
+                        <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar</BotonEnviar>
                       </form>
                     </details>
                     <form action={asignarEquipo}>
                       <input type="hidden" name="id" value={e.id} />
                       <input type="hidden" name="categoria" value={cat.valor} />
                       {selectorEmpleado("empleado", e.asignado_email ?? "")}
-                      <button className="boton secundario mini" type="submit">Asignar</button>
+                      <BotonEnviar className="boton secundario mini" ocupado="…">Asignar</BotonEnviar>
                     </form>
                     <form action={cambiarEstadoEquipo}>
                       <input type="hidden" name="id" value={e.id} />
@@ -312,12 +313,12 @@ export default async function Inventario({
                       <select name="estado" defaultValue={e.estado}>
                         {ESTADOS.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
                       </select>
-                      <button className="boton secundario mini" type="submit">Actualizar</button>
+                      <BotonEnviar className="boton secundario mini" ocupado="…">Actualizar</BotonEnviar>
                     </form>
                     <form action={eliminarEquipo}>
                       <input type="hidden" name="id" value={e.id} />
                       <input type="hidden" name="categoria" value={cat.valor} />
-                      <button className="boton secundario mini" type="submit" style={{ color: "var(--critico)" }}>Eliminar</button>
+                      <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">Eliminar</BotonEnviar>
                     </form>
                   </div>
                 </td>

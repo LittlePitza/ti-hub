@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { getSupabase } from "@/lib/supabase";
 import { getConfigCorreo, correoOperativo, tieneCredenciales } from "@/lib/correo";
 import SinConexion from "@/components/SinConexion";
+import BotonEnviar from "@/components/BotonEnviar";
 import {
   guardarConfigCorreo,
   enviarPruebaCorreo,
@@ -127,7 +128,7 @@ export default async function ConfigCorreo({
         <h2>Enviar correo de prueba</h2>
         <div className="config-prueba-fila">
           <input name="para" type="email" required placeholder="tu.correo@plasticospimsa.com" aria-label="Correo de destino" />
-          <button className="boton" type="submit">Enviar prueba</button>
+          <BotonEnviar className="boton" ocupado="Enviando…">Enviar prueba</BotonEnviar>
         </div>
         <p className="config-ayuda" style={{ marginBottom: 0, marginTop: 10 }}>
           Usa el método y las credenciales guardadas. Si acabas de cambiar algo, guarda primero abajo.
@@ -354,7 +355,7 @@ export default async function ConfigCorreo({
           </div>
         </details>
 
-        <button className="boton" type="submit">Guardar configuración</button>
+        <BotonEnviar className="boton" ocupado="Guardando…">Guardar configuración</BotonEnviar>
       </form>
 
       {/* Conexión interactiva con Microsoft (fuera del form de guardar: otra acción) */}
@@ -371,10 +372,10 @@ export default async function ConfigCorreo({
             </div>
             <div className="oauth-acciones">
               <form action={conectarMicrosoft}>
-                <button className="boton secundario" type="submit">Reconectar</button>
+                <BotonEnviar className="boton secundario" ocupado="Conectando…">Reconectar</BotonEnviar>
               </form>
               <form action={desconectarMicrosoft}>
-                <button className="boton secundario" type="submit" style={{ color: "var(--critico)" }}>Desconectar</button>
+                <BotonEnviar className="boton secundario" style={{ color: "var(--critico)" }} ocupado="…">Desconectar</BotonEnviar>
               </form>
             </div>
           </>
@@ -385,7 +386,7 @@ export default async function ConfigCorreo({
               página de Microsoft para iniciar sesión y autorizar el envío de correo.
             </p>
             <form action={conectarMicrosoft}>
-              <button className="boton" type="submit">Conectar con Microsoft</button>
+              <BotonEnviar className="boton" ocupado="Conectando…">Conectar con Microsoft</BotonEnviar>
             </form>
           </>
         )}
