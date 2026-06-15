@@ -68,8 +68,12 @@ export default async function Resumen() {
 
   const [equiposQ, ticketsQ, mantosQ] = await Promise.all([
     sb.from("equipos").select("nombre, tipo, estado, garantia_hasta"),
-    sb.from("tickets").select("*").order("created_at", { ascending: false }),
-    sb.from("mantenimientos").select("*").in("estado", ["programado", "en_proceso"])
+    sb.from("tickets")
+      .select("id, num, titulo, solicitante, estado, prioridad, asignado_a, created_at, primera_respuesta_at, resuelto_at")
+      .order("created_at", { ascending: false }),
+    sb.from("mantenimientos")
+      .select("id, titulo, tipo, responsable, fecha_programada, estado")
+      .in("estado", ["programado", "en_proceso"])
       .lte("fecha_programada", en14)
       .order("fecha_programada", { ascending: true }),
   ]);
