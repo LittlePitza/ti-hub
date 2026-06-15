@@ -13,6 +13,8 @@ import {
 } from "@/lib/tickets";
 import { ESTADO_PORTAL, correoValido, nombreDeCorreo } from "@/lib/portal";
 import { getConfigCorreo, correoOperativo, enviarRespuesta, enviarEstado } from "@/lib/correo";
+import { recomprimirArchivado } from "@/lib/imagen";
+import type { Adjunto } from "@/lib/adjuntos";
 
 function refrescar(id?: string) {
   revalidatePath("/ti/tickets");
@@ -42,6 +44,40 @@ async function registrarEvento(
 
 const limpiar = (formData: FormData, k: string) =>
   (formData.get(k) as string)?.trim() || null;
+
+// Al archivar un ticket, sus fotos pasan a almacenamiento en frío: se recomprimen
+// (más pequeñas, menor calidad) y se sobreescriben en su misma ruta. Cada adjunto
+// se marca `comprimido` para no re-encogerlo si el ticket se vuelve a archivar.
+// No bloquea ni rompe el archivado si algo falla.
+async function comprimirAdjuntosArchivados(sb: SupabaseClient, id: string) {
+  try {
+    const { data } = await sb.from("tickets").select("adjuntos").eq("id", id).maybeSingle();
+    const adjuntos: Adjunto[] = Array.isArray(data?.adjuntos) ? data.adjuntos : [];
+    if (!adjuntos.length) return;
+
+    let cambio = false;
+    for (const a of adjuntos) {
+      if (a.comprimido) continue;
+      const { data: blob } = await sb.storage.from("tickets").download(a.path);
+      if (!blob) continue;
+      const entrada = Buffer.from(await blob.arrayBuffer());
+      const salida = await recomprimirArchivado(entrada);
+      // Solo se reemplaza si realmente quedó más liviana; en cualquier caso se
+      // marca comprimido para no reintentar en el siguiente archivado.
+      if (salida && salida.length < entrada.length) {
+        const { error } = await sb.storage
+          .from("tickets")
+          .upload(a.path, salida, { contentType: "image/webp", upsert: true });
+        if (!error) a.tipo = "image/webp";
+      }
+      a.comprimido = true;
+      cambio = true;
+    }
+    if (cambio) await sb.from("tickets").update({ adjuntos }).eq("id", id);
+  } catch (e) {
+    console.error("[tickets] no se pudieron recomprimir los adjuntos al archivar:", e);
+  }
+}
 
 // Nombre de pila para el saludo del correo: el de `empleados` si existe, si no el
 // derivado del correo ("juan.perez@…" -> "Juan").
@@ -164,6 +200,9 @@ export async function cambiarEstadoTicket(formData: FormData) {
     estado_anterior: actual.estado,
     estado_nuevo: nuevo,
   });
+
+  // Almacenamiento en frío: al archivar, recomprimir las fotos del ticket.
+  if (nuevo === "archivado") await comprimirAdjuntosArchivados(sb, id);
 
   // Aviso al solicitante: solo si TI marcó la casilla (no automático, para no saturar).
   if (formData.get("notificar") === "on" && correoValido(actual.solicitante_email ?? "")) {

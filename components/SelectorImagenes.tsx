@@ -1,7 +1,41 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MAX_ADJUNTOS, MAX_BYTES_ADJUNTO, esImagen, esImagenValida } from "@/lib/adjuntos";
+import { MAX_ADJUNTOS, MAX_BYTES_ORIGEN, esImagen } from "@/lib/adjuntos";
+
+// Comprime la foto en el navegador antes de subir: la reescala a un máximo
+// razonable y la reencoda a WebP (mucho más ligero que JPEG/PNG/HEIC). Así el
+// archivo viaja pequeño y se guarda en un formato liviano. `createImageBitmap`
+// con `imageOrientation:"from-image"` aplica la orientación EXIF (fotos de
+// celular en vertical). Si el navegador no puede, devuelve el archivo original.
+const MAX_LADO = 1600;
+const CALIDAD = 0.82;
+
+async function comprimirEnNavegador(file: File): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    let { width, height } = bitmap;
+    if (width > MAX_LADO || height > MAX_LADO) {
+      const escala = MAX_LADO / Math.max(width, height);
+      width = Math.round(width * escala);
+      height = Math.round(height * escala);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/webp", CALIDAD));
+    // Si no hubo WebP o no ayudó (imagen ya minúscula), nos quedamos con el original.
+    if (!blob || blob.size >= file.size) return file;
+    const nombre = file.name.replace(/\.[^.]+$/, "") + ".webp";
+    return new File([blob], nombre, { type: "image/webp" });
+  } catch {
+    return file;
+  }
+}
 
 // Selector de fotos del reporte (portal del empleado). Vive dentro del
 // <form action={crearTicketPortal}>: el <input file> oculto es el que ACARREA
@@ -28,23 +62,28 @@ export default function SelectorImagenes() {
     inputRef.current.files = dt.files;
   }
 
-  function agregar(nuevos: FileList | File[]) {
-    const entrantes = Array.from(nuevos);
+  async function agregar(nuevos: FileList | File[]) {
     let mensaje: string | null = null;
+    const candidatos: File[] = [];
+    for (const file of Array.from(nuevos)) {
+      if (!esImagen(file.type)) {
+        mensaje = "Solo se pueden adjuntar imágenes (fotos o capturas).";
+        continue;
+      }
+      if (file.size > MAX_BYTES_ORIGEN) {
+        mensaje = `“${file.name}” es demasiado grande.`;
+        continue;
+      }
+      candidatos.push(file);
+    }
+    setError(mensaje);
 
+    const comprimidos = await Promise.all(candidatos.map(comprimirEnNavegador));
     setFotos((prev) => {
       const lista = [...prev];
-      for (const file of entrantes) {
-        if (!esImagen(file.type)) {
-          mensaje = "Solo se pueden adjuntar imágenes (fotos o capturas).";
-          continue;
-        }
-        if (!esImagenValida(file)) {
-          mensaje = `“${file.name}” pesa más de ${MAX_BYTES_ADJUNTO / 1024 / 1024} MB.`;
-          continue;
-        }
+      for (const file of comprimidos) {
         if (lista.length >= MAX_ADJUNTOS) {
-          mensaje = `Puedes adjuntar hasta ${MAX_ADJUNTOS} fotos.`;
+          setError(`Puedes adjuntar hasta ${MAX_ADJUNTOS} fotos.`);
           break;
         }
         lista.push({ file, url: URL.createObjectURL(file) });
@@ -52,8 +91,6 @@ export default function SelectorImagenes() {
       sincronizar(lista);
       return lista;
     });
-
-    setError(mensaje);
   }
 
   function quitar(url: string) {
