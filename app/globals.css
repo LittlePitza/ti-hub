@@ -2856,6 +2856,111 @@ td .editar { position: relative; }
 .resguardo-chip.info    { background: var(--petroleo-tenue); color: var(--petroleo); }
 .resguardo-chip.neutro  { background: var(--neutro-tenue);   color: var(--tinta-suave); }
 
+/* ---------- Inventario: vista refinada ---------- */
+.inv-resumen { margin-bottom: 20px; }
+
+/* Celda de identidad del equipo: icono de tipo + nombre + submarca/modelo */
+.inv-celda-equipo { display: flex; align-items: center; gap: 11px; }
+.inv-tipo-icono { flex-shrink: 0; color: var(--tinta-suave); }
+
+/* Asignado: avatar de iniciales + nombre/correo */
+.inv-asignado { display: inline-flex; align-items: center; gap: 9px; }
+.inv-avatar {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 99px;
+  background: var(--petroleo-tenue);
+  color: var(--petroleo);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.inv-asignado-nombre { font-weight: 500; }
+
+/* Garantía por vencer (≤ 90 días): aviso sutil */
+.inv-garantia.por-vencer { color: var(--aviso); font-weight: 600; }
+
+/* Cajón "Gestionar": popover anclado a la celda (igual patrón que .panel-editar),
+   con los tres bloques de acción apilados y separados con aire. */
+.inv-acciones-celda { white-space: nowrap; }
+.inv-gestionar {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  width: 320px;
+  max-width: 84vw;
+  white-space: normal;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--superficie);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+}
+.inv-gestionar-asignar,
+.inv-gestionar-eliminar { padding-top: 12px; border-top: 1px solid var(--linea); }
+.inv-gestionar-asignar { display: flex; flex-direction: column; gap: 6px; }
+.inv-gestionar-asignar select { width: 100%; }
+.inv-gestionar-eliminar { text-align: center; }
+
+/* Móvil: la tabla se vuelve tarjetas (una por equipo) sin duplicar markup. */
+@media (max-width: 720px) {
+  .inv-tabla,
+  .inv-tabla thead,
+  .inv-tabla tbody,
+  .inv-tabla tr,
+  .inv-tabla td { display: block; width: 100%; }
+  .inv-tabla thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .inv-tabla tr {
+    border: 1px solid var(--linea);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    background: var(--superficie);
+  }
+  .inv-tabla tr:hover td { background: transparent; }
+  .inv-tabla td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    padding: 6px 0;
+    border: none;
+    text-align: right;
+  }
+  .inv-tabla td::before {
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tinta-suave);
+    text-align: left;
+    flex-shrink: 0;
+  }
+  /* La celda de identidad y la de acciones ocupan todo el ancho, sin etiqueta. */
+  .inv-tabla td.inv-acciones-celda,
+  .inv-tabla td:first-child { text-align: left; }
+  .inv-tabla td:first-child::before,
+  .inv-tabla td.inv-acciones-celda::before { display: none; }
+  .inv-tabla td.inv-acciones-celda { padding-top: 12px; }
+  .inv-tabla .editar { width: 100%; }
+  .inv-tabla .editar > summary { width: 100%; text-align: center; }
+  /* En tarjeta el cajón fluye en bloque, no como popover absoluto. */
+  .inv-gestionar {
+    position: static;
+    width: 100%;
+    max-width: none;
+    margin-top: 10px;
+    box-shadow: none;
+  }
+}
+
 /* Alta de equipo colapsable (<details>) */
 details.alta {
   border: 1px solid var(--linea);
