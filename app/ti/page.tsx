@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folio, duracionPartes } from "@/lib/format";
 import { ESTADOS_ACTIVOS, evaluarRespuesta, evaluarResolucion } from "@/lib/tickets";
+import { getConfigCorreo, resolverSla } from "@/lib/correo";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
 import { Dona, Barras, type DatoGrafica } from "@/components/Graficas";
@@ -66,7 +67,7 @@ export default async function Resumen() {
   const en14 = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
   const en90 = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
 
-  const [equiposQ, ticketsQ, mantosQ, respQ] = await Promise.all([
+  const [equiposQ, ticketsQ, mantosQ, respQ, configCorreo] = await Promise.all([
     sb.from("equipos").select("nombre, tipo, estado, garantia_hasta"),
     sb.from("tickets")
       .select("id, num, titulo, solicitante, estado, prioridad, asignado_a, created_at, primera_respuesta_at, resuelto_at")
@@ -77,6 +78,7 @@ export default async function Resumen() {
       .lte("fecha_programada", en14)
       .order("fecha_programada", { ascending: true }),
     sb.from("responsivas").select("estado").in("estado", ["borrador", "pendiente_firma"]),
+    getConfigCorreo(sb),
   ]);
 
   const equipos = equiposQ.data ?? [];
@@ -92,30 +94,31 @@ export default async function Resumen() {
 
   // Métricas de atención (SLA)
   const ahora = Date.now();
+  const { sla, porVencerPct } = resolverSla(configCorreo);
   const promedio = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
   const conRespuesta = tickets.filter((t) => t.primera_respuesta_at);
-  const tiemposRespuesta = conRespuesta.map((t) => evaluarRespuesta(t, ahora).ms);
-  const respuestaEnSla = conRespuesta.filter((t) => evaluarRespuesta(t, ahora).semaforo === "cumplido").length;
+  const tiemposRespuesta = conRespuesta.map((t) => evaluarRespuesta(t, ahora, sla, porVencerPct).ms);
+  const respuestaEnSla = conRespuesta.filter((t) => evaluarRespuesta(t, ahora, sla, porVencerPct).semaforo === "cumplido").length;
   const pctRespuestaSla = conRespuesta.length
     ? Math.round((respuestaEnSla / conRespuesta.length) * 100)
     : null;
 
   const resueltosTk = tickets.filter((t) => t.resuelto_at);
-  const tiemposResolucion = resueltosTk.map((t) => evaluarResolucion(t, ahora).ms);
+  const tiemposResolucion = resueltosTk.map((t) => evaluarResolucion(t, ahora, sla, porVencerPct).ms);
 
   // Velocidad + calidad de atención, para el hero del resumen.
   const atendidos = conRespuesta.length;
   const resueltos = resueltosTk.length;
-  const resolucionEnSla = resueltosTk.filter((t) => evaluarResolucion(t, ahora).semaforo === "cumplido").length;
+  const resolucionEnSla = resueltosTk.filter((t) => evaluarResolucion(t, ahora, sla, porVencerPct).semaforo === "cumplido").length;
   const pctResolucionSla = resueltos ? Math.round((resolucionEnSla / resueltos) * 100) : null;
   const msResolucion = tiemposResolucion.length ? promedio(tiemposResolucion) : null;
   const msRespuesta = tiemposRespuesta.length ? promedio(tiemposRespuesta) : null;
   const sinAsignar = ticketsActivos.filter((t) => !t.asignado_a).length;
 
   const fueraDeSla = ticketsActivos.filter((t) => {
-    const r = evaluarRespuesta(t, ahora);
-    const s = evaluarResolucion(t, ahora);
+    const r = evaluarRespuesta(t, ahora, sla, porVencerPct);
+    const s = evaluarResolucion(t, ahora, sla, porVencerPct);
     return r.semaforo === "incumplido" || s.semaforo === "incumplido";
   }).length;
   const porVencer = ticketsActivos.filter((t) => {

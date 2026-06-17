@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSupabasePortal } from "@/lib/supabase";
 import { fechaCorta, folio } from "@/lib/format";
-import { getCorreoPortal, nombreDeCorreo, CATEGORIAS_PORTAL, ESTADO_PORTAL } from "@/lib/portal";
+import { getCorreoPortal, nombreDeCorreo, CATEGORIAS_PORTAL, ESTADO_PORTAL, DOMINIO_CORREO } from "@/lib/portal";
 import Ruta from "@/components/Ruta";
 import BotonEnviar from "@/components/BotonEnviar";
 import { entrarPortal, salirPortal, archivarReportePortal, reactivarReportePortal } from "./actions";
@@ -226,16 +226,24 @@ function Bienvenida({ conError }: { conError: boolean }) {
       <form className="portal-form-correo" action={entrarPortal}>
         {conError && <div className="login-error">Ese correo no se ve bien, revísalo.</div>}
         <label htmlFor="bv-correo" className="portal-form-label">Tu correo de trabajo</label>
-        <input
-          id="bv-correo"
-          className="portal-input"
-          type="email"
-          name="correo"
-          placeholder="tu.correo@plasticospimsa.com"
-          autoComplete="email"
-          required
-          autoFocus
-        />
+        <div className="portal-correo-campo">
+          <input
+            id="bv-correo"
+            className="portal-correo-usuario"
+            type="text"
+            name="correo"
+            placeholder="nombre.apellido"
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            aria-describedby="bv-dominio"
+            required
+            autoFocus
+          />
+          <span id="bv-dominio" className="portal-correo-dominio">@{DOMINIO_CORREO}</span>
+        </div>
         <BotonEnviar className="portal-boton" ocupado="Un momento…">
           Continuar
           <IconoFlecha />

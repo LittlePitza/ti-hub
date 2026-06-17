@@ -31,6 +31,16 @@ export async function guardarConfigCorreo(formData: FormData) {
   const metodoRaw = (formData.get("metodo") as string) ?? "smtp_basico";
   const metodo = METODOS.includes(metodoRaw as MetodoCorreo) ? metodoRaw : "smtp_basico";
 
+  // Convierte un campo de horas a número entero positivo o null (null = usar predeterminado).
+  const horas = (k: string): number | null => {
+    const v = Number(formData.get(k));
+    return Number.isFinite(v) && v > 0 ? Math.round(v) : null;
+  };
+  const pct = (k: string, def: number): number => {
+    const v = Number(formData.get(k));
+    return Number.isFinite(v) && v >= 1 && v <= 99 ? Math.round(v) : def;
+  };
+
   const patch: Record<string, unknown> = {
     activo: activado("activo"),
     metodo,
@@ -54,6 +64,16 @@ export async function guardarConfigCorreo(formData: FormData) {
     cuerpo_nuevo:
       txt("cuerpo_nuevo") ||
       "Nuevo reporte de {{solicitante}}.\n\nFolio: {{folio}}\nAsunto: {{titulo}}\nCategoría: {{categoria}}\n\n{{descripcion}}",
+    // SLA configurable (null = predeterminado del código).
+    sla_critica_respuesta:  horas("sla_critica_respuesta"),
+    sla_critica_resolucion: horas("sla_critica_resolucion"),
+    sla_alta_respuesta:     horas("sla_alta_respuesta"),
+    sla_alta_resolucion:    horas("sla_alta_resolucion"),
+    sla_media_respuesta:    horas("sla_media_respuesta"),
+    sla_media_resolucion:   horas("sla_media_resolucion"),
+    sla_baja_respuesta:     horas("sla_baja_respuesta"),
+    sla_baja_resolucion:    horas("sla_baja_resolucion"),
+    sla_por_vencer_pct:     pct("sla_por_vencer_pct", 80),
     updated_at: new Date().toISOString(),
   };
 

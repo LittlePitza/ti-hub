@@ -9,6 +9,7 @@ import {
   ORDEN_PRIORIDAD,
   evaluarRespuesta,
   evaluarResolucion,
+  type SlaTabla,
 } from "@/lib/tickets";
 import Insignia from "./Insignia";
 import PildoraSla from "./PildoraSla";
@@ -64,12 +65,16 @@ const porResueltoReciente = (a: Tk, b: Tk) =>
 export default function TableroTickets({
   tickets,
   ahora,
+  sla,
+  porVencerPct,
   hrefLista,
   hayFiltro,
   hrefLimpiar,
 }: {
   tickets: Tk[];
   ahora: number;
+  sla?: SlaTabla;
+  porVencerPct?: number;
   hrefLista: string;
   hayFiltro: boolean;
   hrefLimpiar: string;
@@ -88,8 +93,8 @@ export default function TableroTickets({
   const efectivo = tickets.map((t) => ({ ...t, estado: moves[t.id] ?? t.estado }));
 
   const fueraDeSla = (t: Tk) =>
-    evaluarRespuesta(t, ahora).semaforo === "incumplido" ||
-    evaluarResolucion(t, ahora).semaforo === "incumplido";
+    evaluarRespuesta(t, ahora, sla, porVencerPct).semaforo === "incumplido" ||
+    evaluarResolucion(t, ahora, sla, porVencerPct).semaforo === "incumplido";
 
   const activos = efectivo.filter((t) => ESTADOS_ACTIVOS.includes(t.estado as never));
   const archivados = efectivo
@@ -141,7 +146,7 @@ export default function TableroTickets({
 
   // Tarjeta completa para el trabajo activo.
   const tarjeta = (t: Tk) => {
-    const r = evaluarRespuesta(t, ahora);
+    const r = evaluarRespuesta(t, ahora, sla, porVencerPct);
     const fuera = fueraDeSla(t);
     return (
       <article
@@ -186,7 +191,7 @@ export default function TableroTickets({
 
   // Fila condensada para el trabajo terminado: el "done" se recoge, no compite.
   const filaHecha = (t: Tk) => {
-    const reso = evaluarResolucion(t, ahora);
+    const reso = evaluarResolucion(t, ahora, sla, porVencerPct);
     return (
       <article
         key={t.id}

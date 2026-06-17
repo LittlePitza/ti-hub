@@ -355,6 +355,76 @@ export default async function ConfigCorreo({
           </div>
         </details>
 
+        {/* ---------- SLA ---------- */}
+        <details className="config-fold">
+          <summary>Tiempos de respuesta (SLA)</summary>
+          <div className="config-fold-cuerpo">
+            <p className="config-ayuda">
+              Tiempos máximos comprometidos por prioridad, en <strong>horas de reloj</strong> (no horas hábiles).
+              Vacío = usar el predeterminado de la app. Los valores predeterminados siguen ITIL 4
+              adaptado a empresa manufacturera con turnos continuos: crítica activa producción,
+              alta bloquea a un usuario, media degrada parcialmente, baja es consulta o mejora.
+            </p>
+
+            <div className="sla-tabla">
+              <div className="sla-cabecera">
+                <span>Prioridad</span>
+                <span>1ª respuesta (h)</span>
+                <span>Resolución (h)</span>
+                <span className="sla-ref">Referencia ITIL</span>
+              </div>
+
+              {([
+                { key: "critica", label: "Crítica",  defResp: 1,  defReso: 4,   ref: "≤ 30 min / 4 h",  valor: c?.sla_critica_respuesta,  valorR: c?.sla_critica_resolucion  },
+                { key: "alta",    label: "Alta",     defResp: 4,  defReso: 24,  ref: "1–2 h / 4–8 h",   valor: c?.sla_alta_respuesta,     valorR: c?.sla_alta_resolucion     },
+                { key: "media",   label: "Media",    defResp: 8,  defReso: 48,  ref: "4–8 h / 24–48 h", valor: c?.sla_media_respuesta,    valorR: c?.sla_media_resolucion    },
+                { key: "baja",    label: "Baja",     defResp: 24, defReso: 96,  ref: "24 h / 72–120 h", valor: c?.sla_baja_respuesta,     valorR: c?.sla_baja_resolucion     },
+              ] as const).map((fila) => (
+                <div key={fila.key} className="sla-fila">
+                  <span className={`insignia ${{ critica: "critico", alta: "aviso", media: "info", baja: "neutro" }[fila.key]}`}>
+                    {fila.label}
+                  </span>
+                  <input
+                    type="number"
+                    name={`sla_${fila.key}_respuesta`}
+                    min={1}
+                    step={1}
+                    placeholder={String(fila.defResp)}
+                    defaultValue={fila.valor ?? ""}
+                    aria-label={`Respuesta ${fila.label}`}
+                  />
+                  <input
+                    type="number"
+                    name={`sla_${fila.key}_resolucion`}
+                    min={1}
+                    step={1}
+                    placeholder={String(fila.defReso)}
+                    defaultValue={fila.valorR ?? ""}
+                    aria-label={`Resolución ${fila.label}`}
+                  />
+                  <span className="sla-ref suave">{fila.ref}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="campo" style={{ maxWidth: 260, marginTop: 16 }}>
+              <label htmlFor="sla_por_vencer_pct">Umbral "por vencer" (%)</label>
+              <input
+                id="sla_por_vencer_pct"
+                name="sla_por_vencer_pct"
+                type="number"
+                min={1}
+                max={99}
+                step={1}
+                defaultValue={c?.sla_por_vencer_pct ?? 80}
+              />
+              <span className="campo-pista">
+                Cuando el tiempo transcurrido supera este porcentaje del objetivo, el semáforo cambia de verde a naranja. Predeterminado: 80 %.
+              </span>
+            </div>
+          </div>
+        </details>
+
         <BotonEnviar className="boton" ocupado="Guardando…">Guardar configuración</BotonEnviar>
       </form>
 

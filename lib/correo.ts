@@ -2,6 +2,7 @@ import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { folio } from "./format";
+import { type SlaTabla, SLA_DEFAULTS, SLA_POR_VENCER_PCT_DEFAULT } from "./tickets";
 
 // Configuración de correo administrada desde el panel (/ti/correo), no por env.
 // Vive en la fila única `config_correo` (id = 1). El envío lo decide TI por ticket
@@ -40,7 +41,44 @@ export type ConfigCorreo = {
   cuerpo_estado: string;
   asunto_nuevo: string;
   cuerpo_nuevo: string;
+  // SLA configurable (horas de reloj). null = usar el predeterminado de lib/tickets.ts.
+  sla_critica_respuesta: number | null;
+  sla_critica_resolucion: number | null;
+  sla_alta_respuesta: number | null;
+  sla_alta_resolucion: number | null;
+  sla_media_respuesta: number | null;
+  sla_media_resolucion: number | null;
+  sla_baja_respuesta: number | null;
+  sla_baja_resolucion: number | null;
+  sla_por_vencer_pct: number;
 };
+
+// Construye la tabla de SLA activa combinando los valores de config_correo con los
+// predeterminados del código (NULL en BD = usar el valor del código).
+export function resolverSla(config: ConfigCorreo | null): { sla: SlaTabla; porVencerPct: number } {
+  const d = SLA_DEFAULTS;
+  return {
+    sla: {
+      critica: {
+        respuesta: config?.sla_critica_respuesta ?? d.critica.respuesta,
+        resolucion: config?.sla_critica_resolucion ?? d.critica.resolucion,
+      },
+      alta: {
+        respuesta: config?.sla_alta_respuesta ?? d.alta.respuesta,
+        resolucion: config?.sla_alta_resolucion ?? d.alta.resolucion,
+      },
+      media: {
+        respuesta: config?.sla_media_respuesta ?? d.media.respuesta,
+        resolucion: config?.sla_media_resolucion ?? d.media.resolucion,
+      },
+      baja: {
+        respuesta: config?.sla_baja_respuesta ?? d.baja.respuesta,
+        resolucion: config?.sla_baja_resolucion ?? d.baja.resolucion,
+      },
+    },
+    porVencerPct: config?.sla_por_vencer_pct ?? SLA_POR_VENCER_PCT_DEFAULT,
+  };
+}
 
 export async function getConfigCorreo(sb: SupabaseClient): Promise<ConfigCorreo | null> {
   const { data } = await sb.from("config_correo").select("*").eq("id", 1).maybeSingle();

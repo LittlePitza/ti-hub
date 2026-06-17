@@ -285,6 +285,18 @@ Categoría: {{categoria}}
 {{descripcion}}';
 update config_correo set notif_nuevo_destinos = 'sistemas@plasticospimsa.com'
   where notif_nuevo_destinos is null;
+-- SLA configurable por prioridad (horas de reloj). NULL = usar predeterminado del código.
+-- Se administra desde /ti/correo (sección "Tiempos de respuesta"). Valores ITIL 4 para
+-- empresa manufacturera (turnos continuos): crítica 1h/4h, alta 4h/24h, media 8h/48h, baja 24h/96h.
+alter table config_correo add column if not exists sla_critica_respuesta  int;
+alter table config_correo add column if not exists sla_critica_resolucion int;
+alter table config_correo add column if not exists sla_alta_respuesta     int;
+alter table config_correo add column if not exists sla_alta_resolucion    int;
+alter table config_correo add column if not exists sla_media_respuesta    int;
+alter table config_correo add column if not exists sla_media_resolucion   int;
+alter table config_correo add column if not exists sla_baja_respuesta     int;
+alter table config_correo add column if not exists sla_baja_resolucion    int;
+alter table config_correo add column if not exists sla_por_vencer_pct int not null default 80;
 
 -- ---------- SEGURIDAD (RLS) ----------
 -- Solo usuarios autenticados (Supabase Auth) pueden leer y escribir.

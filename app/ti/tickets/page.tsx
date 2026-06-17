@@ -12,6 +12,7 @@ import {
   ORDEN_PRIORIDAD,
   evaluarRespuesta,
 } from "@/lib/tickets";
+import { getConfigCorreo, resolverSla } from "@/lib/correo";
 import Insignia from "@/components/Insignia";
 import PildoraSla from "@/components/PildoraSla";
 import SinConexion from "@/components/SinConexion";
@@ -39,11 +40,12 @@ export default async function Tickets({
   );
   if (!sb) return <>{head}<SinConexion /></>;
 
-  const { data } = await sb
-    .from("tickets")
-    .select("*, equipos(nombre)")
-    .order("created_at", { ascending: false });
+  const [{ data }, configCorreo] = await Promise.all([
+    sb.from("tickets").select("*, equipos(nombre)").order("created_at", { ascending: false }),
+    getConfigCorreo(sb),
+  ]);
   const lista = data ?? [];
+  const { sla, porVencerPct } = resolverSla(configCorreo);
 
   const hayFiltro = Boolean(q || estado || prioridad);
   const texto = q.trim().toLowerCase();
@@ -92,7 +94,7 @@ export default async function Tickets({
     </tr>
   );
   const fila = (t: any) => {
-    const r = evaluarRespuesta(t, ahora);
+    const r = evaluarRespuesta(t, ahora, sla, porVencerPct);
     return (
       <tr key={t.id}>
         <td className="mono">
@@ -265,6 +267,8 @@ export default async function Tickets({
         <TableroTickets
           tickets={filtrados}
           ahora={ahora}
+          sla={sla}
+          porVencerPct={porVencerPct}
           hrefLista={hrefVista("lista")}
           hayFiltro={hayFiltro}
           hrefLimpiar={hrefVista("tablero")}

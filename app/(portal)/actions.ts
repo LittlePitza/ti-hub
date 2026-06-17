@@ -5,7 +5,7 @@ import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getSupabasePortal } from "@/lib/supabase";
-import { COOKIE_PORTAL, CATEGORIAS_PORTAL, correoValido, getCorreoPortal } from "@/lib/portal";
+import { COOKIE_PORTAL, CATEGORIAS_PORTAL, correoValido, normalizarCorreo, getCorreoPortal } from "@/lib/portal";
 import { getConfigCorreo, avisaNuevo, enviarNuevoTicket } from "@/lib/correo";
 import { MAX_ADJUNTOS, esImagenValida, type Adjunto } from "@/lib/adjuntos";
 
@@ -17,7 +17,7 @@ const OPCIONES_COOKIE = {
 };
 
 export async function entrarPortal(formData: FormData) {
-  const correo = ((formData.get("correo") as string) ?? "").trim().toLowerCase();
+  const correo = normalizarCorreo((formData.get("correo") as string) ?? "");
   if (!correoValido(correo)) redirect("/?error=correo");
   const jar = await cookies();
   jar.set(COOKIE_PORTAL, correo, { ...OPCIONES_COOKIE, maxAge: 60 * 60 * 24 * 180 });

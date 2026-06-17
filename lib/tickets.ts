@@ -64,12 +64,25 @@ export const ORDEN_PRIORIDAD: Record<string, number> = { critica: 0, alta: 1, me
 
 // SLA por prioridad, en horas de reloj. `respuesta` = tiempo objetivo para el primer
 // contacto de TI; `resolucion` = tiempo objetivo para dejar el ticket resuelto.
-export const SLA: Record<Prioridad, { respuesta: number; resolucion: number }> = {
+// Basado en ITIL 4 para mesa de ayuda interna en empresa manufacturera (turnos continuos):
+//   Crítica (sistema caído/producción detenida): respuesta ≤ 30 min, resolución ≤ 4 h
+//   Alta (impacta a un usuario completamente): respuesta ≤ 2 h, resolución ≤ 8 h
+//   Media (impacta parcialmente): respuesta ≤ 8 h, resolución ≤ 48 h
+//   Baja (consulta o mejora): respuesta ≤ 24 h, resolución ≤ 96 h
+// Estos valores son los predeterminados; se sobreescriben desde /ti/correo (config_correo).
+export type SlaTabla = Record<Prioridad, { respuesta: number; resolucion: number }>;
+
+export const SLA_DEFAULTS: SlaTabla = {
   critica: { respuesta: 1, resolucion: 4 },
   alta: { respuesta: 4, resolucion: 24 },
   media: { respuesta: 8, resolucion: 48 },
   baja: { respuesta: 24, resolucion: 96 },
 };
+
+export const SLA_POR_VENCER_PCT_DEFAULT = 80;
+
+// Mantener `SLA` para compatibilidad con referencias directas existentes.
+export const SLA = SLA_DEFAULTS;
 
 export function metaEstado(valor: string) {
   return ESTADOS_TICKET.find((e) => e.valor === valor) ?? ESTADOS_TICKET[0];
@@ -93,13 +106,19 @@ export interface TicketParaSla {
 
 const MS_HORA = 3_600_000;
 
-function objetivos(prioridad: string) {
-  return SLA[(prioridad as Prioridad)] ?? SLA.media;
+function objetivos(prioridad: string, sla: SlaTabla) {
+  return sla[(prioridad as Prioridad)] ?? sla.media;
 }
 
 // Evalúa el tiempo de primera respuesta contra el SLA.
-export function evaluarRespuesta(t: TicketParaSla, ahora: number = Date.now()) {
-  const objetivoMs = objetivos(t.prioridad).respuesta * MS_HORA;
+// `sla` y `porVencerPct` se leen de config_correo; si no se pasan, usan los predeterminados.
+export function evaluarRespuesta(
+  t: TicketParaSla,
+  ahora: number = Date.now(),
+  sla: SlaTabla = SLA_DEFAULTS,
+  porVencerPct: number = SLA_POR_VENCER_PCT_DEFAULT,
+) {
+  const objetivoMs = objetivos(t.prioridad, sla).respuesta * MS_HORA;
   const creado = new Date(t.created_at).getTime();
 
   if (t.primera_respuesta_at) {
@@ -113,13 +132,18 @@ export function evaluarRespuesta(t: TicketParaSla, ahora: number = Date.now()) {
   const ms = ahora - creado;
   let semaforo: SemaforoSla = "en_tiempo";
   if (ms > objetivoMs) semaforo = "incumplido";
-  else if (ms > objetivoMs * 0.8) semaforo = "por_vencer";
+  else if (ms > objetivoMs * (porVencerPct / 100)) semaforo = "por_vencer";
   return { ms, objetivoMs, semaforo, pendiente: true };
 }
 
 // Evalúa el tiempo de resolución contra el SLA.
-export function evaluarResolucion(t: TicketParaSla, ahora: number = Date.now()) {
-  const objetivoMs = objetivos(t.prioridad).resolucion * MS_HORA;
+export function evaluarResolucion(
+  t: TicketParaSla,
+  ahora: number = Date.now(),
+  sla: SlaTabla = SLA_DEFAULTS,
+  porVencerPct: number = SLA_POR_VENCER_PCT_DEFAULT,
+) {
+  const objetivoMs = objetivos(t.prioridad, sla).resolucion * MS_HORA;
   const creado = new Date(t.created_at).getTime();
 
   if (t.resuelto_at) {
@@ -135,7 +159,7 @@ export function evaluarResolucion(t: TicketParaSla, ahora: number = Date.now()) 
   const ms = ahora - creado;
   let semaforo: SemaforoSla = "en_tiempo";
   if (ms > objetivoMs) semaforo = "incumplido";
-  else if (ms > objetivoMs * 0.8) semaforo = "por_vencer";
+  else if (ms > objetivoMs * (porVencerPct / 100)) semaforo = "por_vencer";
   return { ms, objetivoMs, semaforo, pendiente: true };
 }
 

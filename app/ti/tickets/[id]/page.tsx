@@ -7,15 +7,13 @@ import {
   ESTADOS_SELECCIONABLES,
   PRIORIDADES,
   CATEGORIAS_TK,
-  SLA,
   metaEstado,
   evaluarRespuesta,
   evaluarResolucion,
-  type Prioridad,
 } from "@/lib/tickets";
 import { correoValido } from "@/lib/portal";
 import type { Adjunto } from "@/lib/adjuntos";
-import { getConfigCorreo, correoOperativo } from "@/lib/correo";
+import { getConfigCorreo, correoOperativo, resolverSla } from "@/lib/correo";
 import Insignia from "@/components/Insignia";
 import PildoraSla from "@/components/PildoraSla";
 import SinConexion from "@/components/SinConexion";
@@ -87,9 +85,11 @@ export default async function DetalleTicket({
   ).filter((f): f is { url: string; nombre: string } => f !== null);
 
   const ahora = Date.now();
-  const resp = evaluarRespuesta(t, ahora);
-  const reso = evaluarResolucion(t, ahora);
-  const objetivo = SLA[(t.prioridad as Prioridad)] ?? SLA.media;
+  const config = await getConfigCorreo(sb);
+  const { sla, porVencerPct } = resolverSla(config);
+  const resp = evaluarRespuesta(t, ahora, sla, porVencerPct);
+  const reso = evaluarResolucion(t, ahora, sla, porVencerPct);
+  const objetivo = sla[t.prioridad as keyof typeof sla] ?? sla.media;
   const finRef = t.resuelto_at ? new Date(t.resuelto_at).getTime() : ahora;
   const tiempoAbierto = finRef - new Date(t.created_at).getTime();
   const meta = metaEstado(t.estado);
@@ -97,7 +97,6 @@ export default async function DetalleTicket({
 
   // Notificación por correo: opcional (casilla) y solo posible si el servicio está
   // operativo y el solicitante tiene correo. La precarga sale de la config del panel.
-  const config = await getConfigCorreo(sb);
   const operativo = correoOperativo(config);
   const emailDestino = correoValido(t.solicitante_email ?? "") ? (t.solicitante_email as string) : null;
   const puedeNotificar = Boolean(operativo && emailDestino);

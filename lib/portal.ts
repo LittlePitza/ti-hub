@@ -5,10 +5,23 @@ import { cookies } from "next/headers";
 // correo y el portal le muestra sus equipos y sus tickets.
 export const COOKIE_PORTAL = "portal_correo";
 
+// Dominio de correo de la empresa. Como todos los empleados son @plasticospimsa.com,
+// el portal solo pide el usuario y completa el dominio (ver normalizarCorreo).
+export const DOMINIO_CORREO = "plasticospimsa.com";
+
 const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function correoValido(correo: string): boolean {
   return RE_CORREO.test(correo);
+}
+
+// Normaliza lo que el empleado escribe a un correo completo: con "@" se respeta tal
+// cual (correo completo u otro dominio); si solo trae el usuario, se le agrega el
+// dominio de PIMSA. Vacío => "".
+export function normalizarCorreo(bruto: string): string {
+  const limpio = bruto.trim().toLowerCase();
+  if (!limpio) return "";
+  return limpio.includes("@") ? limpio : `${limpio}@${DOMINIO_CORREO}`;
 }
 
 export async function getCorreoPortal(): Promise<string | null> {
