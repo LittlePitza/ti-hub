@@ -49,6 +49,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Todo excepto estáticos de Next y archivos públicos (íconos, imágenes).
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // Solo el panel y su puerta de acceso: el portal del empleado (/) es público y no
+  // necesita pasar por aquí. Antes el middleware corría en todas las rutas y solo
+  // retornaba temprano; acotar el matcher evita invocarlo en el tráfico del portal.
+  matcher: ["/ti/:path*", "/login"],
 };

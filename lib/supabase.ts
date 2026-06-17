@@ -29,11 +29,13 @@ export async function getSupabase(): Promise<SupabaseClient | null> {
 
 // Para server actions: regresa el cliente solo si hay un usuario autenticado.
 // Evita que las actions (endpoints POST públicos) se invoquen sin sesión.
+// Usa getClaims() (verifica el JWT localmente con la llave asimétrica del proyecto,
+// sin viaje de red al servidor de Auth) en vez de getUser() (que siempre llama por red).
 export async function getSupabaseAutenticado(): Promise<SupabaseClient | null> {
   const sb = await getSupabase();
   if (!sb) return null;
-  const { data: { user } } = await sb.auth.getUser();
-  return user ? sb : null;
+  const { data } = await sb.auth.getClaims();
+  return data?.claims?.sub ? sb : null;
 }
 
 // Cliente con service role key para el portal del empleado (sin Supabase Auth).
