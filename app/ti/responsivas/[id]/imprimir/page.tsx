@@ -78,7 +78,7 @@ export default async function ImprimirResponsiva({
     ["Puesto", r.empleado_puesto ?? ""],
     ["Área / Departamento", r.empleado_departamento ?? ""],
     ["Correo institucional", r.empleado_correo ?? ""],
-    [esDevolucion ? "Fecha de devolución" : "Fecha de entrega", fechaCorta(r.fecha_generada)],
+    [esDevolucion ? "Fecha de devolución" : "Fecha de entrega", fechaCorta(r.fecha_entrega ?? r.fecha_generada)],
   ];
 
   // Identificación del activo. El nombre siempre sale; el resto de campos sólo

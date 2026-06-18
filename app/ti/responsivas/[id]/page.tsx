@@ -145,6 +145,10 @@ export default async function DetalleResponsiva({
 
         <div className="campos">
           <div className="campo">
+            <label htmlFor="fecha_entrega">{r.plantilla === "devolucion" ? "Fecha de devolución" : "Fecha de entrega"}</label>
+            <input id="fecha_entrega" name="fecha_entrega" type="date" defaultValue={r.fecha_entrega ?? r.fecha_generada} />
+          </div>
+          <div className="campo">
             <label htmlFor="estado_fisico">Estado físico</label>
             <select id="estado_fisico" name="estado_fisico" defaultValue={datos.estado_fisico ?? ESTADOS_FISICOS[1]}>
               {ESTADOS_FISICOS.map((e) => <option key={e} value={e}>{e}</option>)}

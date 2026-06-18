@@ -197,6 +197,7 @@ create table if not exists responsivas (
   archivo_url text,   -- ruta del escaneo firmado en el bucket 'responsivas' de Storage
   archivo_nombre text,
   fecha_generada date not null default current_date,
+  fecha_entrega date,  -- fecha real de entrega/devolución (editable); si null, cae a fecha_generada
   fecha_firmada date,
   notas text,
   created_at timestamptz not null default now()
@@ -246,6 +247,7 @@ alter table equipos add column if not exists categoria text not null default 'co
 alter table equipos add column if not exists telefono text;
 alter table equipos add column if not exists accesos jsonb not null default '{}'::jsonb;
 alter table plantillas_responsiva add column if not exists campos_equipo jsonb;
+alter table responsivas add column if not exists fecha_entrega date;
 alter table equipos drop constraint if exists equipos_tipo_check;
 alter table equipos add constraint equipos_tipo_check
   check (tipo in ('laptop','desktop','monitor','impresora','red','servidor','perifericos','otro',

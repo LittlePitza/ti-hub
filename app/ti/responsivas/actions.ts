@@ -94,8 +94,9 @@ export async function editarResponsiva(formData: FormData) {
     estado_fisico: (formData.get("estado_fisico") as string) ?? "",
   };
   const notas = ((formData.get("notas") as string) ?? "").trim() || null;
+  const fechaEntrega = ((formData.get("fecha_entrega") as string) ?? "").trim() || null;
 
-  await sb.from("responsivas").update({ datos, notas }).eq("id", id);
+  await sb.from("responsivas").update({ datos, notas, fecha_entrega: fechaEntrega }).eq("id", id);
   refrescar(id);
 }
 
