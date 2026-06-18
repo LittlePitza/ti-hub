@@ -5,7 +5,7 @@ import { Signika } from "next/font/google";
 import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folioResponsiva } from "@/lib/format";
 import { categoriaInv } from "@/lib/inventario";
-import { fusionarPlantilla, type DatosResponsiva } from "@/lib/responsivas";
+import { fusionarPlantilla, CAMPOS_EQUIPO_TODOS, type DatosResponsiva } from "@/lib/responsivas";
 import BotonImprimir from "@/components/BotonImprimir";
 
 export const dynamic = "force-dynamic";
@@ -81,19 +81,19 @@ export default async function ImprimirResponsiva({
     [esDevolucion ? "Fecha de devolución" : "Fecha de entrega", fechaCorta(r.fecha_generada)],
   ];
 
-  // Identificación del activo (etiquetas según categoría del inventario)
+  // Identificación del activo. El nombre siempre sale; el resto de campos sólo
+  // si la categoría los usa Y la plantilla los tiene marcados como visibles.
+  const visibles = new Set(pl.camposEquipo ?? CAMPOS_EQUIPO_TODOS);
   const paresActivo: [string, string][] = [
     [esDevolucion ? "Activo" : c.nombre.label, r.equipo_nombre ?? ""],
   ];
-  if (c.marca) paresActivo.push([c.marca.label, eq?.marca ?? ""]);
-  if (c.modelo) paresActivo.push([c.modelo.label, eq?.modelo ?? ""]);
-  if (c.num_serie) paresActivo.push([c.num_serie.label, eq?.num_serie ?? ""]);
-  if (c.telefono) paresActivo.push([c.telefono.label, eq?.telefono ?? ""]);
-  if (c.ubicacion) paresActivo.push(["Ubicación", eq?.ubicacion ?? ""]);
-  if (c.fechas) {
-    paresActivo.push(["Fecha de compra", fechaCorta(eq?.fecha_compra)]);
-    paresActivo.push([c.garantiaLabel, fechaCorta(eq?.garantia_hasta)]);
-  }
+  if (c.marca && visibles.has("marca")) paresActivo.push([c.marca.label, eq?.marca ?? ""]);
+  if (c.modelo && visibles.has("modelo")) paresActivo.push([c.modelo.label, eq?.modelo ?? ""]);
+  if (c.num_serie && visibles.has("num_serie")) paresActivo.push([c.num_serie.label, eq?.num_serie ?? ""]);
+  if (c.telefono && visibles.has("telefono")) paresActivo.push([c.telefono.label, eq?.telefono ?? ""]);
+  if (c.ubicacion && visibles.has("ubicacion")) paresActivo.push(["Ubicación", eq?.ubicacion ?? ""]);
+  if (c.fechas && visibles.has("fecha_compra")) paresActivo.push(["Fecha de compra", fechaCorta(eq?.fecha_compra)]);
+  if (c.fechas && visibles.has("garantia_hasta")) paresActivo.push([c.garantiaLabel, fechaCorta(eq?.garantia_hasta)]);
 
   return (
     <div className={`responsiva-doc ${signika.className}`}>

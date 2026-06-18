@@ -47,6 +47,10 @@ create table if not exists equipos (
   fecha_compra date,
   garantia_hasta date,
   notas text,
+  -- credenciales y accesos del equipo (RustDesk, admin local y otros).
+  -- forma: { rustdesk:{id,pass}, admin:{usuario,pass}, extra:[{etiqueta,usuario,secreto}] }
+  -- SOLO panel de TI: nunca seleccionar esta columna desde el portal del empleado.
+  accesos jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 
@@ -215,6 +219,7 @@ create table if not exists plantillas_responsiva (
   firmas jsonb not null default '[]'::jsonb,     -- [{ nombre, rol }]
   aviso text,                        -- texto del recuadro de aviso
   iso text,                          -- pie con controles ISO
+  campos_equipo jsonb,               -- ["marca","modelo",...]; null = mostrar todos
   version text not null default '1.0',
   updated_at timestamptz not null default now()
 );
@@ -239,6 +244,8 @@ alter table tickets add column if not exists equipo_id uuid references equipos(i
 alter table equipos add column if not exists categoria text not null default 'computo'
   check (categoria in ('computo','celular','linea','software'));
 alter table equipos add column if not exists telefono text;
+alter table equipos add column if not exists accesos jsonb not null default '{}'::jsonb;
+alter table plantillas_responsiva add column if not exists campos_equipo jsonb;
 alter table equipos drop constraint if exists equipos_tipo_check;
 alter table equipos add constraint equipos_tipo_check
   check (tipo in ('laptop','desktop','monitor','impresora','red','servidor','perifericos','otro',

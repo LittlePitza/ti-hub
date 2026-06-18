@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
-import { PLANTILLAS_LISTA, fusionarPlantilla, type Plantilla } from "@/lib/responsivas";
+import { PLANTILLAS_LISTA, fusionarPlantilla, CAMPOS_EQUIPO_RESP, CAMPOS_EQUIPO_TODOS, type Plantilla } from "@/lib/responsivas";
 import SinConexion from "@/components/SinConexion";
 import BotonEnviar from "@/components/BotonEnviar";
 import { guardarPlantilla, restablecerPlantilla } from "./actions";
@@ -31,6 +31,7 @@ export default async function Plantillas() {
         {PLANTILLAS_LISTA.map((clave) => {
           const override = porClave.get(clave);
           const pl: Plantilla = fusionarPlantilla(clave, override);
+          const camposVisibles = new Set<string>(pl.camposEquipo ?? CAMPOS_EQUIPO_TODOS);
           const clausulasTexto = pl.clausulas.map((c) => `${c.titulo} | ${c.texto}`).join("\n");
           const firmasTexto = pl.firmas.map((f) => `${f.titulo} | ${f.nota}`).join("\n");
           return (
@@ -64,6 +65,20 @@ export default async function Plantillas() {
                     <label htmlFor={`${clave}-seguridad`}>Configuración / verificación (una por línea)</label>
                     <textarea id={`${clave}-seguridad`} name="seguridad" defaultValue={pl.seguridad.join("\n")} />
                   </div>
+                  <fieldset className="grupo-chequeos campo ancho">
+                    <legend>Datos del equipo en el documento</legend>
+                    <div className="chequeos">
+                      {CAMPOS_EQUIPO_RESP.map((campo) => (
+                        <label key={campo.clave} className="chequeo">
+                          <input type="checkbox" name="campos_equipo" value={campo.clave} defaultChecked={camposVisibles.has(campo.clave)} />
+                          <span>{campo.etiqueta}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <p className="suave" style={{ fontSize: 12, margin: "6px 2px 0" }}>
+                      Algunos campos solo aparecen si el equipo los tiene (p. ej. teléfono solo en celulares y líneas).
+                    </p>
+                  </fieldset>
                   <div className="campo ancho">
                     <label htmlFor={`${clave}-clausulas`}>Cláusulas · formato «Título | texto», una por línea</label>
                     <textarea id={`${clave}-clausulas`} name="clausulas" defaultValue={clausulasTexto} style={{ minHeight: 140 }} />

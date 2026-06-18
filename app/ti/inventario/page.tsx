@@ -6,6 +6,7 @@ import { ESTADOS_RESP, plantillaDefault, type EstadoResponsiva } from "@/lib/res
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
 import BotonEnviar from "@/components/BotonEnviar";
+import AccesosEquipo from "@/components/AccesosEquipo";
 import { crearEquipo, asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
 import { generarResponsivaEquipo } from "../responsivas/actions";
 
@@ -54,7 +55,7 @@ export default async function Inventario({
 
   const [equiposQ, empleadosQ, respQ] = await Promise.all([
     sb.from("equipos")
-      .select("id, categoria, nombre, tipo, marca, modelo, num_serie, telefono, asignado_a, asignado_email, ubicacion, estado, fecha_compra, garantia_hasta, notas, created_at")
+      .select("id, categoria, nombre, tipo, marca, modelo, num_serie, telefono, asignado_a, asignado_email, ubicacion, estado, fecha_compra, garantia_hasta, notas, accesos, created_at")
       .order("created_at", { ascending: false }),
     sb.from("empleados").select("nombre, correo").eq("estado", "activo").order("nombre"),
     sb.from("responsivas").select("id, equipo_id, plantilla, num, estado, archivo_url").order("created_at", { ascending: false }),
@@ -242,6 +243,7 @@ export default async function Inventario({
               <textarea id="eq-notas" name="notas" placeholder="Detalles, accesorios incluidos, historial…" />
             </div>
           </div>
+          <AccesosEquipo />
           <p className="alta-nota suave">Si lo asignas a un empleado, se generará su responsiva en automático.</p>
           <BotonEnviar className="boton" ocupado="Guardando…">Guardar {cat.singular}</BotonEnviar>
         </form>
@@ -393,6 +395,7 @@ export default async function Inventario({
                           )}
                           <label className="mini-label">Notas</label>
                           <textarea name="notas" defaultValue={e.notas ?? ""} rows={2} />
+                          <AccesosEquipo valor={e.accesos} />
                           <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar cambios</BotonEnviar>
                         </form>
 

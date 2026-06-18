@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
-import { categoriaInv } from "@/lib/inventario";
+import { categoriaInv, sanitizarAccesos } from "@/lib/inventario";
 import { generarResponsiva, sincronizarResponsivasEquipo } from "@/app/ti/responsivas/actions";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -49,6 +49,7 @@ export async function crearEquipo(formData: FormData) {
     fecha_compra: v("fecha_compra"),
     garantia_hasta: v("garantia_hasta"),
     notas: v("notas"),
+    accesos: sanitizarAccesos(formData.get("accesos")),
   }).select("id").single();
   refrescar(cat.valor);
 
@@ -95,6 +96,7 @@ export async function editarEquipo(formData: FormData) {
     fecha_compra: v("fecha_compra"),
     garantia_hasta: v("garantia_hasta"),
     notas: v("notas"),
+    accesos: sanitizarAccesos(formData.get("accesos")),
   }).eq("id", id);
   refrescar(cat.valor);
 

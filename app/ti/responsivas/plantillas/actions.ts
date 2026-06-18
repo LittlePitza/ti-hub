@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAutenticado } from "@/lib/supabase";
-import { plantillaDefault } from "@/lib/responsivas";
+import { plantillaDefault, CAMPOS_EQUIPO_TODOS } from "@/lib/responsivas";
 
 // Convierte un textarea (una opción por línea) en arreglo limpio.
 function lineas(v: FormDataEntryValue | null): string[] {
@@ -28,6 +28,11 @@ export async function guardarPlantilla(formData: FormData) {
   const clave = formData.get("clave") as string;
   const base = plantillaDefault(clave);
 
+  const camposEquipo = formData
+    .getAll("campos_equipo")
+    .map(String)
+    .filter((v) => (CAMPOS_EQUIPO_TODOS as string[]).includes(v));
+
   await sb.from("plantillas_responsiva").upsert({
     clave,
     nombre: base.nombre,
@@ -41,6 +46,7 @@ export async function guardarPlantilla(formData: FormData) {
     seguridad: lineas(formData.get("seguridad")),
     clausulas: paresLinea(formData.get("clausulas"), ["titulo", "texto"]),
     firmas: paresLinea(formData.get("firmas"), ["titulo", "nota"]),
+    campos_equipo: camposEquipo,
     updated_at: new Date().toISOString(),
   });
 

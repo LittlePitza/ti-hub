@@ -90,3 +90,65 @@ export const CATEGORIAS_INV: {
 export function categoriaInv(valor: string | undefined): (typeof CATEGORIAS_INV)[number] {
   return CATEGORIAS_INV.find((c) => c.valor === valor) ?? CATEGORIAS_INV[0];
 }
+
+// ============================================================
+// Credenciales y accesos del equipo (RustDesk, admin local y otros).
+// Se guardan en la columna jsonb `equipos.accesos`. SOLO panel de TI.
+// ============================================================
+
+export type AccesoExtra = { etiqueta: string; usuario: string; secreto: string };
+
+export interface AccesosInv {
+  rustdesk: { id: string; pass: string };
+  admin: { usuario: string; pass: string };
+  extra: AccesoExtra[];
+}
+
+export const ACCESOS_VACIO: AccesosInv = {
+  rustdesk: { id: "", pass: "" },
+  admin: { usuario: "", pass: "" },
+  extra: [],
+};
+
+const MAX_LARGO = 200; // por campo
+const MAX_EXTRA = 30; // filas de "otros accesos"
+
+function texto(v: unknown): string {
+  return typeof v === "string" ? v.trim().slice(0, MAX_LARGO) : "";
+}
+
+// Normaliza lo que llega del formulario (string JSON u objeto) a la forma
+// conocida: recorta strings, descarta filas extra vacías y limita cantidades.
+export function sanitizarAccesos(raw: unknown): AccesosInv {
+  let obj: Record<string, unknown> = {};
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") obj = parsed as Record<string, unknown>;
+    } catch {
+      // entrada inválida → accesos vacíos
+    }
+  } else if (raw && typeof raw === "object") {
+    obj = raw as Record<string, unknown>;
+  }
+
+  const rd = (obj.rustdesk ?? {}) as Record<string, unknown>;
+  const ad = (obj.admin ?? {}) as Record<string, unknown>;
+  const extraRaw = Array.isArray(obj.extra) ? obj.extra : [];
+
+  const extra: AccesoExtra[] = [];
+  for (const fila of extraRaw) {
+    if (extra.length >= MAX_EXTRA) break;
+    const f = (fila ?? {}) as Record<string, unknown>;
+    const etiqueta = texto(f.etiqueta);
+    const usuario = texto(f.usuario);
+    const secreto = texto(f.secreto);
+    if (etiqueta || usuario || secreto) extra.push({ etiqueta, usuario, secreto });
+  }
+
+  return {
+    rustdesk: { id: texto(rd.id), pass: texto(rd.pass) },
+    admin: { usuario: texto(ad.usuario), pass: texto(ad.pass) },
+    extra,
+  };
+}

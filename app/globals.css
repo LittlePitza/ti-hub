@@ -2910,6 +2910,51 @@ td .editar { position: relative; }
 .inv-gestionar-asignar select { width: 100%; }
 .inv-gestionar-eliminar { text-align: center; }
 
+/* Credenciales y accesos del equipo (RustDesk, admin local y otros). Solo TI.
+   Se monta en el popover de "Gestionar" (≈320px) y en el alta (ancho completo):
+   por eso todo apila en una columna y los secretos envuelven sus botones. */
+.accesos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  margin-top: 2px;
+  border-top: 1px solid var(--linea);
+}
+.accesos-titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--petroleo);
+}
+[data-theme="dark"] .accesos-titulo { color: var(--tinta); }
+.acceso-grupo { display: flex; flex-direction: column; gap: 6px; }
+.acceso-etiqueta {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+.acceso-par { display: grid; gap: 8px; }
+.campo-secreto { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.campo-secreto input { flex: 1 1 150px; min-width: 0; }
+.campo-secreto .boton-texto { font-size: 12px; }
+.acceso-vacio { margin: 0; font-size: 12.5px; }
+.acceso-extra { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.acceso-fila {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--linea);
+  border-radius: 7px;
+  background: var(--papel);
+}
+.acceso-quitar { justify-self: end; color: var(--critico); }
+.acceso-agregar { align-self: flex-start; }
+
 /* Móvil: la tabla se vuelve tarjetas (una por equipo) sin duplicar markup. */
 @media (max-width: 720px) {
   .inv-tabla,

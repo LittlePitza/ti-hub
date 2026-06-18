@@ -43,7 +43,24 @@ export interface Plantilla {
   firmas: FirmaPlantilla[];
   aviso: string;
   iso: string;
+  // Campos del equipo que se imprimen en el documento. undefined = todos
+  // (comportamiento base); TI lo configura por plantilla desde el panel.
+  camposEquipo?: CampoEquipoResp[];
 }
+
+// Campos del equipo que pueden mostrarse/ocultarse en la responsiva (el nombre
+// del activo siempre sale). El catálogo cubre todo lo que la impresión pinta.
+export const CAMPOS_EQUIPO_RESP = [
+  { clave: "marca", etiqueta: "Marca / compañía" },
+  { clave: "modelo", etiqueta: "Modelo / plan" },
+  { clave: "num_serie", etiqueta: "N.º de serie / IMEI / clave" },
+  { clave: "telefono", etiqueta: "Teléfono / línea" },
+  { clave: "ubicacion", etiqueta: "Ubicación" },
+  { clave: "fecha_compra", etiqueta: "Fecha de compra" },
+  { clave: "garantia_hasta", etiqueta: "Garantía / vencimiento" },
+] as const;
+export type CampoEquipoResp = (typeof CAMPOS_EQUIPO_RESP)[number]["clave"];
+export const CAMPOS_EQUIPO_TODOS: CampoEquipoResp[] = CAMPOS_EQUIPO_RESP.map((c) => c.clave);
 
 // Snapshot congelado que guarda cada responsiva en la columna `datos`.
 export interface DatosResponsiva {
@@ -430,11 +447,17 @@ export function plantillaDefault(clave: string): Plantilla {
 // Mezcla el override de la BD (parcial) sobre el contenido base en código.
 export function fusionarPlantilla(
   clave: string,
-  override: Partial<Plantilla> | null | undefined,
+  override: (Partial<Plantilla> & { campos_equipo?: unknown }) | null | undefined,
 ): Plantilla {
   const base = plantillaDefault(clave);
   if (!override) return base;
-  return { ...base, ...limpiar(override) };
+  const merged = { ...base, ...limpiar(override) };
+  // La columna de la BD es snake_case y no coincide con el campo camelCase;
+  // las demás columnas sí coinciden por nombre, así que solo esta se mapea.
+  if (Array.isArray(override.campos_equipo)) {
+    merged.camposEquipo = override.campos_equipo as CampoEquipoResp[];
+  }
+  return merged;
 }
 
 function limpiar<T extends object>(obj: T): Partial<T> {
