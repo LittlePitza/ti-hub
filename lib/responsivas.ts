@@ -64,6 +64,33 @@ export interface DatosResponsiva {
   estado_fisico: string;
 }
 
+// Construye el snapshot del equipo (lo que se congela en `datos.equipo`) a
+// partir de una fila de `equipos`. Lo usan tanto la generación inicial como la
+// re-sincronización desde inventario.
+export function snapshotEquipo(eq: {
+  categoria?: string | null;
+  tipo?: string | null;
+  marca?: string | null;
+  modelo?: string | null;
+  num_serie?: string | null;
+  telefono?: string | null;
+  ubicacion?: string | null;
+  fecha_compra?: string | null;
+  garantia_hasta?: string | null;
+}): DatosResponsiva["equipo"] {
+  return {
+    categoria: (eq.categoria ?? "computo") as CategoriaInv,
+    tipo: eq.tipo ?? "laptop",
+    marca: eq.marca ?? null,
+    modelo: eq.modelo ?? null,
+    num_serie: eq.num_serie ?? null,
+    telefono: eq.telefono ?? null,
+    ubicacion: eq.ubicacion ?? null,
+    fecha_compra: eq.fecha_compra ?? null,
+    garantia_hasta: eq.garantia_hasta ?? null,
+  };
+}
+
 export const ESTADOS_FISICOS = [
   "Nuevo",
   "Usado — buen estado",

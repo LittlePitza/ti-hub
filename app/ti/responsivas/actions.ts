@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
-import { plantillaDeEquipo, type DatosResponsiva } from "@/lib/responsivas";
+import { plantillaDeEquipo, snapshotEquipo, type DatosResponsiva } from "@/lib/responsivas";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 function refrescar(id?: string) {
   revalidatePath("/ti/responsivas");
@@ -41,17 +42,7 @@ export async function generarResponsiva(equipoId: string, correo: string): Promi
     .maybeSingle();
 
   const datos: DatosResponsiva = {
-    equipo: {
-      categoria: eq.categoria ?? "computo",
-      tipo: eq.tipo ?? "laptop",
-      marca: eq.marca ?? null,
-      modelo: eq.modelo ?? null,
-      num_serie: eq.num_serie ?? null,
-      telefono: eq.telefono ?? null,
-      ubicacion: eq.ubicacion ?? null,
-      fecha_compra: eq.fecha_compra ?? null,
-      garantia_hasta: eq.garantia_hasta ?? null,
-    },
+    equipo: snapshotEquipo(eq),
     accesorios: [],
     seguridad: [],
     observaciones: "",
@@ -105,6 +96,55 @@ export async function editarResponsiva(formData: FormData) {
   const notas = ((formData.get("notas") as string) ?? "").trim() || null;
 
   await sb.from("responsivas").update({ datos, notas }).eq("id", id);
+  refrescar(id);
+}
+
+// Re-lee el equipo del inventario y refresca el snapshot (`datos.equipo` +
+// `equipo_nombre`) de las responsivas NO firmadas (borrador/pendiente_firma)
+// ligadas a él. Conserva accesorios/seguridad/observaciones/estado_fisico.
+// Lo invoca inventario al editar un equipo; las firmadas no se tocan (integridad
+// legal: solo se refrescan a mano con `actualizarDesdeInventario`).
+export async function sincronizarResponsivasEquipo(sb: SupabaseClient, equipoId: string) {
+  if (!equipoId) return;
+  const { data: eq } = await sb.from("equipos").select("*").eq("id", equipoId).maybeSingle();
+  if (!eq) return;
+
+  const { data: resps } = await sb
+    .from("responsivas")
+    .select("id, datos")
+    .eq("equipo_id", equipoId)
+    .in("estado", ["borrador", "pendiente_firma"]);
+  if (!resps?.length) return;
+
+  const equipo = snapshotEquipo(eq);
+  for (const r of resps) {
+    const datos = { ...(r.datos ?? {}), equipo };
+    await sb.from("responsivas").update({ datos, equipo_nombre: eq.nombre }).eq("id", r.id);
+    refrescar(r.id);
+  }
+}
+
+// Botón "Actualizar desde inventario" en la responsiva: re-lee el equipo
+// vinculado y refresca su snapshot, sin importar el estado. Si el equipo ya no
+// existe (equipo_id nulo), no hace nada.
+export async function actualizarDesdeInventario(formData: FormData) {
+  const sb = await getSupabaseAutenticado();
+  if (!sb) return;
+  const id = formData.get("id") as string;
+  if (!id) return;
+
+  const { data: r } = await sb
+    .from("responsivas")
+    .select("equipo_id, datos")
+    .eq("id", id)
+    .maybeSingle();
+  if (!r?.equipo_id) return;
+
+  const { data: eq } = await sb.from("equipos").select("*").eq("id", r.equipo_id).maybeSingle();
+  if (!eq) return;
+
+  const datos = { ...(r.datos ?? {}), equipo: snapshotEquipo(eq) };
+  await sb.from("responsivas").update({ datos, equipo_nombre: eq.nombre }).eq("id", id);
   refrescar(id);
 }
 

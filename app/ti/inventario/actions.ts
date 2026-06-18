@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
 import { categoriaInv } from "@/lib/inventario";
-import { generarResponsiva } from "@/app/ti/responsivas/actions";
+import { generarResponsiva, sincronizarResponsivasEquipo } from "@/app/ti/responsivas/actions";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 function refrescar(cat: string) {
@@ -97,6 +97,9 @@ export async function editarEquipo(formData: FormData) {
     notas: v("notas"),
   }).eq("id", id);
   refrescar(cat.valor);
+
+  // Refresca el snapshot de las responsivas no firmadas de este equipo.
+  await sincronizarResponsivasEquipo(sb, id);
 }
 
 // Asignar a un empleado o liberar (correo vacío => libre).

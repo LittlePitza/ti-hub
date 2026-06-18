@@ -14,7 +14,7 @@ import {
 } from "@/lib/responsivas";
 import SinConexion from "@/components/SinConexion";
 import BotonEnviar from "@/components/BotonEnviar";
-import { editarResponsiva, subirFirmada, cambiarEstadoResponsiva } from "../actions";
+import { editarResponsiva, subirFirmada, cambiarEstadoResponsiva, actualizarDesdeInventario } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +99,15 @@ export default async function DetalleResponsiva({
             <div className="mono">{fechaCorta(r.fecha_generada)}</div>
           </div>
         </div>
+        {r.equipo_id ? (
+          <form action={actualizarDesdeInventario} className="fila-acciones" style={{ marginTop: 14 }}>
+            <input type="hidden" name="id" value={r.id} />
+            <BotonEnviar className="boton secundario" ocupado="Actualizando…">Actualizar desde inventario</BotonEnviar>
+            <span className="suave" style={{ fontSize: 12.5 }}>Re-lee los datos actuales del equipo en el inventario.</span>
+          </form>
+        ) : (
+          <p className="suave" style={{ fontSize: 12.5, marginTop: 14 }}>El equipo ya no existe en el inventario; no se puede actualizar.</p>
+        )}
       </div>
 
       {/* Editor de datos del documento */}

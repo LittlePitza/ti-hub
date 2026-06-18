@@ -3054,6 +3054,10 @@ details.alta .formulario {
   color: var(--doc-texto);
   font-size: 12px;
   line-height: 1.45;
+  /* Conserva los fondos (casillas marcadas, avisos, encabezado) al imprimir /
+     guardar como PDF: los navegadores los eliminan por defecto. */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 .responsiva-doc .barra-print {
   display: flex;
