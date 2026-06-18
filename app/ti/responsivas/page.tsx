@@ -18,9 +18,9 @@ export const dynamic = "force-dynamic";
 export default async function Responsivas({
   searchParams,
 }: {
-  searchParams: Promise<{ estado?: string }>;
+  searchParams: Promise<{ estado?: string; q?: string }>;
 }) {
-  const { estado: filtro } = await searchParams;
+  const { estado: filtro, q = "" } = await searchParams;
   const sb = await getSupabase();
   const head = (
     <div className="pagina-head">
@@ -35,30 +35,69 @@ export default async function Responsivas({
 
   const { data } = await sb.from("responsivas").select("*").order("created_at", { ascending: false });
   const todas = data ?? [];
-  const lista = filtro ? todas.filter((r) => r.estado === filtro) : todas;
+
+  // Búsqueda por texto primero; los tabs de estado y sus conteos se calculan
+  // sobre el resultado, así los números siempre cuadran con lo que se ve.
+  const texto = q.trim().toLowerCase();
+  const conTexto = texto
+    ? todas.filter((r) => {
+        const pl = plantillaDefault(r.plantilla);
+        const folio = folioResponsiva(pl.prefijoFolio, r.num);
+        return [folio, r.equipo_nombre, r.empleado_nombre, r.empleado_correo, pl.nombre]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(texto);
+      })
+    : todas;
+  const lista = filtro ? conTexto.filter((r) => r.estado === filtro) : conTexto;
+
+  // Conserva la búsqueda al cambiar de tab de estado.
+  const qs = texto ? `&q=${encodeURIComponent(q.trim())}` : "";
+  const hrefTab = (e?: EstadoResponsiva) =>
+    e ? `/ti/responsivas?estado=${e}${qs}` : `/ti/responsivas${qs ? `?${qs.slice(1)}` : ""}`;
 
   return (
     <>
       {head}
 
       <nav className="tabs" aria-label="Filtrar por estado">
-        <Link href="/ti/responsivas" className={`tab ${!filtro ? "activo" : ""}`}>
-          Todas <span className="tab-num">{todas.length}</span>
+        <Link href={hrefTab()} className={`tab ${!filtro ? "activo" : ""}`}>
+          Todas <span className="tab-num">{conTexto.length}</span>
         </Link>
         {ESTADOS_RESP_LISTA.map((e) => {
-          const n = todas.filter((r) => r.estado === e).length;
+          const n = conTexto.filter((r) => r.estado === e).length;
           return (
-            <Link key={e} href={`/ti/responsivas?estado=${e}`} className={`tab ${filtro === e ? "activo" : ""}`}>
+            <Link key={e} href={hrefTab(e)} className={`tab ${filtro === e ? "activo" : ""}`}>
               {ESTADOS_RESP[e].texto} <span className="tab-num">{n}</span>
             </Link>
           );
         })}
       </nav>
 
+      <div className="toolbar">
+        <form className="filtros" method="get">
+          {filtro ? <input type="hidden" name="estado" value={filtro} /> : null}
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="Buscar por folio, equipo o resguardante…"
+            aria-label="Buscar responsivas"
+          />
+          <button className="boton secundario" type="submit">Buscar</button>
+          {(texto || filtro) && <Link href="/ti/responsivas" className="boton-texto">Limpiar</Link>}
+        </form>
+      </div>
+
       {lista.length === 0 ? (
         <div className="vacio">
-          <strong>Sin responsivas {filtro ? `en «${ESTADOS_RESP[filtro as EstadoResponsiva]?.texto}»` : "todavía"}</strong>
-          Se generan en automático al asignar un equipo a un empleado desde <Link href="/ti/inventario" style={{ textDecoration: "underline" }}>Inventario</Link>.
+          <strong>{texto ? "Sin coincidencias" : `Sin responsivas ${filtro ? `en «${ESTADOS_RESP[filtro as EstadoResponsiva]?.texto}»` : "todavía"}`}</strong>
+          {texto ? (
+            "Ajusta la búsqueda o limpia los filtros."
+          ) : (
+            <>Se generan en automático al asignar un equipo a un empleado desde <Link href="/ti/inventario" style={{ textDecoration: "underline" }}>Inventario</Link>.</>
+          )}
         </div>
       ) : (
         <table className="tabla">
