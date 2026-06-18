@@ -228,6 +228,8 @@ export default async function Empleados({
                   </td>
                   <td data-label="Estado"><Insignia valor={p.estado} /></td>
                   <td data-label="" className="inv-acciones-celda">
+                    <div className="fila-acciones">
+                    <Link href={`/ti/empleados/${p.id}/firma`} className="boton secundario mini">Firma</Link>
                     <ModalGestionar
                       titulo={p.nombre}
                       subtitulo={p.puesto || p.departamento || p.correo}
@@ -275,6 +277,7 @@ export default async function Empleados({
                         </BotonEnviar>
                       </form>
                     </ModalGestionar>
+                    </div>
                   </td>
                 </tr>
               );
