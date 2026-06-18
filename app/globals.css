@@ -2887,23 +2887,108 @@ td .editar { position: relative; }
 /* Cajón "Gestionar": popover anclado a la celda (igual patrón que .panel-editar),
    con los tres bloques de acción apilados y separados con aire. */
 .inv-acciones-celda { white-space: nowrap; }
-.inv-gestionar {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 6px);
-  z-index: 30;
-  width: 320px;
-  max-width: 84vw;
-  white-space: normal;
+
+/* Gestionar un equipo: tarjeta modal estilo Notion (<dialog> nativo) con dos
+   tamaños — "compacta" (peek con resumen + acción rápida) y "expandida" (editor
+   completo). El botón de modo en el encabezado alterna y el ancho se transforma. */
+.modal-gestionar {
+  margin: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-height: 88vh;
+  color: var(--tinta);
+  overflow: visible;
+  transition: width 0.18s ease;
+}
+.modal-gestionar.compacta { width: min(440px, 92vw); }
+.modal-gestionar.expandida { width: min(760px, 94vw); }
+.modal-gestionar[open] { animation: modal-gestionar-aparece 0.15s ease-out; }
+@keyframes modal-gestionar-aparece {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-gestionar { transition: none; }
+  .modal-gestionar[open] { animation: none; }
+}
+.modal-gestionar::backdrop {
+  background: rgba(12, 14, 18, 0.5);
+  backdrop-filter: blur(2px);
+}
+.modal-gestionar-card {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  max-height: 88vh;
   background: var(--superficie);
   border: 1px solid var(--linea-fuerte);
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+  white-space: normal;
 }
+.modal-gestionar-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--linea);
+}
+.modal-gestionar-modo,
+.modal-gestionar-x {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--tinta-suave);
+  border-radius: 6px;
+}
+.modal-gestionar-x { font-size: 15px; line-height: 1; }
+.modal-gestionar-modo:hover,
+.modal-gestionar-x:hover { background: var(--hover); color: var(--tinta); }
+.modal-gestionar-titulo { flex: 1; min-width: 0; }
+.modal-gestionar-titulo h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.modal-gestionar-titulo .suave { display: block; font-size: 12px; line-height: 1.3; }
+.modal-gestionar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 18px 18px;
+  overflow-y: auto;
+}
+/* Resumen de la vista compacta: cuadrícula de datos clave. */
+.modal-datos {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px 16px;
+}
+.modal-datos > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.modal-datos dt {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+.modal-datos dd { margin: 0; font-size: 13.5px; overflow-wrap: anywhere; }
+.modal-expandir { justify-content: center; gap: 8px; }
+/* Alternancia entre los dos tamaños (el otro bloque se oculta, no se desmonta). */
+.modal-gestionar.compacta .modal-editor { display: none; }
+.modal-gestionar.expandida .modal-resumen,
+.modal-gestionar.expandida .modal-expandir { display: none; }
 .inv-gestionar-asignar,
 .inv-gestionar-eliminar { padding-top: 12px; border-top: 1px solid var(--linea); }
 .inv-gestionar-asignar { display: flex; flex-direction: column; gap: 6px; }
@@ -2994,16 +3079,8 @@ td .editar { position: relative; }
   .inv-tabla td:first-child::before,
   .inv-tabla td.inv-acciones-celda::before { display: none; }
   .inv-tabla td.inv-acciones-celda { padding-top: 12px; }
-  .inv-tabla .editar { width: 100%; }
-  .inv-tabla .editar > summary { width: 100%; text-align: center; }
-  /* En tarjeta el cajón fluye en bloque, no como popover absoluto. */
-  .inv-gestionar {
-    position: static;
-    width: 100%;
-    max-width: none;
-    margin-top: 10px;
-    box-shadow: none;
-  }
+  /* El botón que abre la tarjeta ocupa todo el ancho de la fila-tarjeta. */
+  .inv-tabla td.inv-acciones-celda > button { width: 100%; }
 }
 
 /* Alta de equipo colapsable (<details>) */

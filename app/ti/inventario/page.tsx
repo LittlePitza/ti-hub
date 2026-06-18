@@ -7,6 +7,7 @@ import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
 import BotonEnviar from "@/components/BotonEnviar";
 import AccesosEquipo from "@/components/AccesosEquipo";
+import ModalGestionar from "@/components/ModalGestionar";
 import { crearEquipo, asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
 import { generarResponsivaEquipo } from "../responsivas/actions";
 
@@ -353,9 +354,29 @@ export default async function Inventario({
                   )}
                   <td data-label="Estado"><Insignia valor={e.estado} /></td>
                   <td data-label="" className="inv-acciones-celda">
-                    <details className="plegable interno editar">
-                      <summary className="boton secundario mini">Gestionar</summary>
-                      <div className="inv-gestionar">
+                    <ModalGestionar
+                      titulo={e.nombre}
+                      subtitulo={[e.marca, e.modelo].filter(Boolean).join(" ") || e.tipo}
+                      resumen={
+                        <>
+                          <dl className="modal-datos">
+                            {c.num_serie && (<div><dt>{c.num_serie.label}</dt><dd className="mono">{e.num_serie ?? "—"}</dd></div>)}
+                            {c.telefono && (<div><dt>{c.telefono.label}</dt><dd className="mono">{e.telefono ?? "—"}</dd></div>)}
+                            {c.ubicacion && (<div><dt>Ubicación</dt><dd>{e.ubicacion ?? "—"}</dd></div>)}
+                            <div><dt>Asignado a</dt><dd>{e.asignado_a ?? "Libre"}</dd></div>
+                            <div><dt>Estado</dt><dd><Insignia valor={e.estado} /></dd></div>
+                            {c.fechas && (<div><dt>{c.garantiaLabel}</dt><dd className="mono">{fechaCorta(e.garantia_hasta)}</dd></div>)}
+                          </dl>
+                          <form action={asignarEquipo} className="inv-gestionar-asignar">
+                            <input type="hidden" name="id" value={e.id} />
+                            <input type="hidden" name="categoria" value={cat.valor} />
+                            <label className="mini-label">Asignar / liberar</label>
+                            {selectorEmpleado("empleado", e.asignado_email ?? "")}
+                            <BotonEnviar className="boton secundario mini" ocupado="…">Aplicar</BotonEnviar>
+                          </form>
+                        </>
+                      }
+                    >
                         {/* Editar: todos los campos. El hidden conserva la asignación actual
                             (editarEquipo desasigna si no recibe `empleado`). */}
                         <form action={editarEquipo} className="bloque-form">
@@ -399,15 +420,6 @@ export default async function Inventario({
                           <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar cambios</BotonEnviar>
                         </form>
 
-                        {/* Asignar / liberar: vía asignarEquipo (genera la responsiva). */}
-                        <form action={asignarEquipo} className="inv-gestionar-asignar">
-                          <input type="hidden" name="id" value={e.id} />
-                          <input type="hidden" name="categoria" value={cat.valor} />
-                          <label className="mini-label">Asignar / liberar</label>
-                          {selectorEmpleado("empleado", e.asignado_email ?? "")}
-                          <BotonEnviar className="boton secundario mini" ocupado="…">Aplicar</BotonEnviar>
-                        </form>
-
                         <form action={eliminarEquipo} className="inv-gestionar-eliminar">
                           <input type="hidden" name="id" value={e.id} />
                           <input type="hidden" name="categoria" value={cat.valor} />
@@ -415,8 +427,7 @@ export default async function Inventario({
                             Eliminar {cat.singular}
                           </BotonEnviar>
                         </form>
-                      </div>
-                    </details>
+                    </ModalGestionar>
                   </td>
                 </tr>
               );
