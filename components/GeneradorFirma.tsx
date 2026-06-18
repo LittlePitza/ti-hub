@@ -91,7 +91,6 @@ export default function GeneradorFirma({ initial, logoUrl }: { initial: DatosFir
           {campo("departamento", "Departamento")}
           {campo("correo", "Correo")}
           {campo("extension", "Extensión")}
-          {campo("telefono", "Teléfono conmutador", false, "(81) 0000 0000")}
           {campo("web", "Sitio web")}
           {campo("direccion", "Dirección", true)}
           {campo("eslogan", "Eslogan", true)}

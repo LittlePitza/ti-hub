@@ -31,6 +31,10 @@ export type ConfigCorreo = {
   remitente: string | null;
   remitente_nombre: string;
   sitio_url: string | null;
+  // Valores por defecto de la firma de correo de empleados (null = usar constante).
+  firma_web: string | null;
+  firma_direccion: string | null;
+  firma_eslogan: string | null;
   notif_respuesta_def: boolean;
   notif_estado_def: boolean;
   notif_nuevo: boolean;

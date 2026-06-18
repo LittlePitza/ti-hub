@@ -9,19 +9,16 @@ export type DatosFirma = {
   departamento: string;
   correo: string;
   extension: string;
-  telefono: string;
   web: string;
   direccion: string;
   eslogan: string;
 };
 
-// Valores de empresa por defecto (editables antes de generar).
+// Valores de empresa por defecto (editables y configurables en el panel).
 export const EMPRESA_DEFAULT = {
-  nombre: "Plásticos PIMSA",
   web: "plasticospimsa.com",
   direccion: "Santa Catarina, N.L.",
-  eslogan: "Reciclaje y economía circular",
-  telefono: "",
+  eslogan: "Más que reciclaje, una visión al futuro",
 };
 
 const AZUL = "#294466";
@@ -48,11 +45,7 @@ export function firmaCorreoHtml(d: DatosFirma, logoUrl: string): string {
   const filas: string[] = [];
   const correo = d.correo.trim();
   if (correo) filas.push(`<a href="mailto:${e(correo)}" style="color:${AZUL};text-decoration:none;">${e(correo)}</a>`);
-  const telExt = [
-    d.telefono.trim() ? `Tel. ${e(d.telefono.trim())}` : "",
-    d.extension.trim() ? `Ext. ${e(d.extension.trim())}` : "",
-  ].filter(Boolean).join(" &middot; ");
-  if (telExt) filas.push(telExt);
+  if (d.extension.trim()) filas.push(`Ext. ${e(d.extension.trim())}`);
   if (w.txt) filas.push(`<a href="${e(w.href)}" style="color:${VERDE};text-decoration:none;">${e(w.txt)}</a>`);
   if (d.direccion.trim()) filas.push(e(d.direccion.trim()));
   const contacto = filas.map((f) => `<span style="display:block;">${f}</span>`).join("");
@@ -83,10 +76,8 @@ export function documentoFirma(fragmento: string): string {
 // Versión en texto plano (para el portapapeles y clientes sin HTML).
 export function firmaTextoPlano(d: DatosFirma): string {
   const sub = [d.puesto, d.departamento].map((s) => s.trim()).filter(Boolean).join(" · ");
-  const tel = [d.telefono.trim() && `Tel. ${d.telefono.trim()}`, d.extension.trim() && `Ext. ${d.extension.trim()}`]
-    .filter(Boolean)
-    .join(" · ");
-  return [d.nombre.trim(), sub, "Plásticos PIMSA", d.correo.trim(), tel, d.web.trim(), d.direccion.trim(), d.eslogan.trim()]
+  const ext = d.extension.trim() ? `Ext. ${d.extension.trim()}` : "";
+  return [d.nombre.trim(), sub, "Plásticos PIMSA", d.correo.trim(), ext, d.web.trim(), d.direccion.trim(), d.eslogan.trim()]
     .filter(Boolean)
     .join("\n");
 }

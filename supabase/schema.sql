@@ -164,6 +164,10 @@ El equipo de TI respondió a tu reporte {{folio}} · {{titulo}}:
   cuerpo_estado text not null default 'Hola {{nombre}},
 
 El estado de tu reporte {{folio}} · {{titulo}} cambió a: {{estado}}.',
+  -- Valores por defecto de la firma de correo de empleados (editables en el panel).
+  firma_web text,
+  firma_direccion text,
+  firma_eslogan text,
   updated_at timestamptz not null default now()
 );
 insert into config_correo (id) values (1) on conflict (id) do nothing;
@@ -281,6 +285,10 @@ alter table config_correo add column if not exists azure_client_id text;
 alter table config_correo add column if not exists azure_client_secret text;
 alter table config_correo add column if not exists oauth_refresh_token text;
 alter table config_correo add column if not exists oauth_cuenta text;
+-- Valores por defecto de la firma de correo de empleados.
+alter table config_correo add column if not exists firma_web text;
+alter table config_correo add column if not exists firma_direccion text;
+alter table config_correo add column if not exists firma_eslogan text;
 -- Aviso interno a TI al entrar un ticket nuevo desde el portal (destinatarios configurables).
 alter table config_correo add column if not exists notif_nuevo boolean not null default true;
 alter table config_correo add column if not exists notif_nuevo_destinos text;

@@ -1,12 +1,34 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
 
 function refrescar() {
   revalidatePath("/ti/empleados");
   revalidatePath("/ti/inventario");
   revalidatePath("/ti");
+}
+
+// Guarda los valores por defecto de la firma de correo (sitio web, dirección y
+// eslogan) en la fila única config_correo. Aplican a todas las firmas que se
+// generen después. `id` es el empleado desde cuya página se editó (para volver).
+export async function guardarAjustesFirma(formData: FormData) {
+  const sb = await getSupabaseAutenticado();
+  if (!sb) return;
+  const v = (k: string) => (formData.get(k) as string)?.trim() || null;
+  await sb.from("config_correo").update({
+    firma_web: v("firma_web"),
+    firma_direccion: v("firma_direccion"),
+    firma_eslogan: v("firma_eslogan"),
+    updated_at: new Date().toISOString(),
+  }).eq("id", 1);
+  const id = formData.get("id") as string;
+  revalidatePath("/ti/empleados");
+  if (id) {
+    revalidatePath(`/ti/empleados/${id}/firma`);
+    redirect(`/ti/empleados/${id}/firma?ajustes=1`);
+  }
 }
 
 export async function crearEmpleado(formData: FormData) {
