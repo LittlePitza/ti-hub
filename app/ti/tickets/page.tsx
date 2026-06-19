@@ -8,7 +8,6 @@ import {
   ESTADOS_CERRADOS,
   ESTADOS_ARCHIVADOS,
   PRIORIDADES,
-  CATEGORIAS_TK,
   ORDEN_PRIORIDAD,
   evaluarRespuesta,
 } from "@/lib/tickets";
@@ -18,7 +17,8 @@ import PildoraSla from "@/components/PildoraSla";
 import SinConexion from "@/components/SinConexion";
 import BotonEnviar from "@/components/BotonEnviar";
 import TableroTickets from "@/components/TableroTickets";
-import { crearTicket, cambiarEstadoTicket } from "./actions";
+import ModalCrearTicket from "@/components/ModalCrearTicket";
+import { cambiarEstadoTicket } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -30,19 +30,21 @@ export default async function Tickets({
   const { q = "", estado = "", prioridad = "", vista = "tablero" } = await searchParams;
   const esLista = vista === "lista";
   const sb = await getSupabase();
-  const head = (
+  const head = (accion?: React.ReactNode) => (
     <div className="pagina-head">
       <div>
         <h1 className="pagina-titulo">Tickets</h1>
         <p className="pagina-desc">Bandeja de soporte · prioriza, mueve y vigila los tiempos de respuesta</p>
       </div>
+      {accion}
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  if (!sb) return <>{head()}<SinConexion /></>;
 
-  const [{ data }, configCorreo] = await Promise.all([
+  const [{ data }, configCorreo, { data: empleados }] = await Promise.all([
     sb.from("tickets").select("*, equipos(nombre)").order("created_at", { ascending: false }),
     getConfigCorreo(sb),
+    sb.from("empleados").select("nombre, correo, departamento").eq("estado", "activo").order("nombre"),
   ]);
   const lista = data ?? [];
   const { sla, porVencerPct } = resolverSla(configCorreo);
@@ -138,44 +140,7 @@ export default async function Tickets({
 
   return (
     <>
-      {head}
-
-      <details className="plegable">
-        <summary>Levantar ticket</summary>
-        <form className="formulario plano" action={crearTicket}>
-          <div className="campos">
-            <div className="campo ancho">
-              <label htmlFor="tk-titulo">Asunto</label>
-              <input id="tk-titulo" name="titulo" required placeholder="No imprime desde piso 2" />
-            </div>
-            <div className="campo">
-              <label htmlFor="tk-solicitante">Solicitante</label>
-              <input id="tk-solicitante" name="solicitante" required placeholder="Nombre (área)" />
-            </div>
-            <div className="campo">
-              <label htmlFor="tk-categoria">Categoría</label>
-              <select id="tk-categoria" name="categoria" defaultValue="hardware">
-                {CATEGORIAS_TK.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="campo">
-              <label htmlFor="tk-prioridad">Prioridad</label>
-              <select id="tk-prioridad" name="prioridad" defaultValue="media">
-                {PRIORIDADES.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <div className="campo">
-              <label htmlFor="tk-asignado">Asignado a</label>
-              <input id="tk-asignado" name="asignado_a" placeholder="Lalo" />
-            </div>
-            <div className="campo ancho">
-              <label htmlFor="tk-desc">Descripción</label>
-              <textarea id="tk-desc" name="descripcion" placeholder="Qué pasa, desde cuándo, qué se ha intentado…" />
-            </div>
-          </div>
-          <BotonEnviar className="boton" ocupado="Creando…">Crear ticket</BotonEnviar>
-        </form>
-      </details>
+      {head(<ModalCrearTicket empleados={empleados ?? []} />)}
 
       <div className="toolbar">
         <form className="filtros" method="get">

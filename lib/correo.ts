@@ -367,6 +367,21 @@ export function enviarNuevoTicket(
   });
 }
 
+// Aviso al solicitante cuando TI le abre un ticket a su nombre desde el panel.
+// Mensaje fijo (no usa plantilla de config_correo) con el CTA por defecto al portal.
+export function enviarTicketCreado(
+  c: ConfigCorreo,
+  sb: SupabaseClient,
+  d: { para: string; num: number; titulo: string; nombre: string },
+): Promise<Resultado> {
+  const cuerpo =
+    `Hola ${d.nombre},\n\n` +
+    `El equipo de TI abrió un ticket de soporte a tu nombre:\n` +
+    `${folio(d.num)} — ${d.titulo}\n\n` +
+    `Puedes seguir su avance desde el portal de soporte. Te avisaremos cuando haya novedades.`;
+  return enviar(c, sb, { para: d.para, asunto: `Ticket abierto a tu nombre · ${folio(d.num)}`, cuerpo });
+}
+
 export function enviarPrueba(c: ConfigCorreo, sb: SupabaseClient, para: string): Promise<Resultado> {
   return enviar(c, sb, {
     para,

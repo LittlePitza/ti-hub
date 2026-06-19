@@ -13,7 +13,7 @@ import {
   type EstadoTicket,
 } from "@/lib/tickets";
 import { ESTADO_PORTAL, correoValido, nombreDeCorreo } from "@/lib/portal";
-import { getConfigCorreo, correoOperativo, enviarRespuesta, enviarEstado } from "@/lib/correo";
+import { getConfigCorreo, correoOperativo, enviarRespuesta, enviarEstado, enviarTicketCreado } from "@/lib/correo";
 import { recomprimirArchivado } from "@/lib/imagen";
 import type { Adjunto } from "@/lib/adjuntos";
 
@@ -87,9 +87,18 @@ async function nombreParaCorreo(sb: SupabaseClient, correo: string): Promise<str
   return data?.nombre?.split(" ")[0] || nombreDeCorreo(correo);
 }
 
-export async function crearTicket(formData: FormData) {
+// Estado que `crearTicket` devuelve a useActionState en el modal del panel: el modal
+// se cierra y limpia cuando `ok`, o muestra `error` si faltó algo o falló la inserción.
+export type EstadoCrear = { ok: true } | { ok: false; error: string } | null;
+
+export async function crearTicket(_prev: EstadoCrear, formData: FormData): Promise<EstadoCrear> {
   const sb = await getSupabaseAutenticado();
-  if (!sb) return;
+  if (!sb) return { ok: false, error: "Sesión expirada. Vuelve a iniciar sesión." };
+
+  const titulo = limpiar(formData, "titulo");
+  const solicitante = limpiar(formData, "solicitante");
+  if (!titulo) return { ok: false, error: "Falta el asunto del ticket." };
+  if (!solicitante) return { ok: false, error: "Indica quién es el solicitante." };
 
   const categoria = CATEGORIAS_TK.includes(limpiar(formData, "categoria") as never)
     ? limpiar(formData, "categoria")
@@ -98,29 +107,58 @@ export async function crearTicket(formData: FormData) {
     ? limpiar(formData, "prioridad")
     : "media";
 
-  const { data } = await sb
+  // El correo del solicitante liga el ticket a su portal y habilita los avisos; se
+  // guarda solo si tiene forma válida (de lo contrario queda NULL).
+  const correoBruto = (limpiar(formData, "solicitante_email") ?? "").toLowerCase();
+  const solicitanteEmail = correoValido(correoBruto) ? correoBruto : null;
+
+  const { data, error } = await sb
     .from("tickets")
     .insert({
-      titulo: limpiar(formData, "titulo"),
+      titulo,
       descripcion: limpiar(formData, "descripcion"),
-      solicitante: limpiar(formData, "solicitante"),
+      solicitante,
+      solicitante_email: solicitanteEmail,
       categoria,
       prioridad,
       asignado_a: limpiar(formData, "asignado_a"),
     })
-    .select("id")
+    .select("id, num")
     .single();
 
-  if (data) {
-    await registrarEvento(sb, {
-      ticket_id: data.id,
-      tipo: "sistema",
-      autor: await autorActual(sb),
-      cuerpo: "Ticket creado",
-      estado_nuevo: "abierto",
+  if (error || !data) return { ok: false, error: "No se pudo crear el ticket. Intenta de nuevo." };
+
+  await registrarEvento(sb, {
+    ticket_id: data.id,
+    tipo: "sistema",
+    autor: await autorActual(sb),
+    cuerpo: "Ticket creado",
+    estado_nuevo: "abierto",
+  });
+
+  // Aviso al solicitante: solo si TI marcó la casilla y hay correo válido. Se difiere
+  // con after() para que el modal cierre de inmediato sin esperar al envío.
+  if (formData.get("notificar") === "on" && solicitanteEmail) {
+    const num = data.num;
+    after(async () => {
+      try {
+        const c = await getConfigCorreo(sb);
+        if (correoOperativo(c)) {
+          await enviarTicketCreado(c, sb, {
+            para: solicitanteEmail,
+            num,
+            titulo,
+            nombre: await nombreParaCorreo(sb, solicitanteEmail),
+          });
+        }
+      } catch (e) {
+        console.error("[tickets] correo de ticket creado falló:", e);
+      }
     });
   }
-  refrescar(data?.id);
+
+  refrescar(data.id);
+  return { ok: true };
 }
 
 // Edición completa de los campos del ticket (desde la página de detalle).
