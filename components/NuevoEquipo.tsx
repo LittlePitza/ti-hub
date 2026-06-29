@@ -1,10 +1,11 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
-import { CATEGORIAS_INV, categoriaInv, type CategoriaInv } from "@/lib/inventario";
+import { CATEGORIAS_INV, categoriaInv, type CategoriaInv, type CampoInv } from "@/lib/inventario";
 import { crearEquipo, type EstadoCrearEquipo } from "@/app/ti/inventario/actions";
 import BotonEnviar from "@/components/BotonEnviar";
 import AccesosEquipo from "@/components/AccesosEquipo";
+import CamposExtra from "@/components/CamposExtra";
 
 // "Registrar equipo" abre una tarjeta modal (mismo <dialog> nativo y estilo que
 // ModalCrearTicket) con el alta del inventario. Arriba, un control segmentado por
@@ -164,9 +165,11 @@ function CamposEquipo({
 export default function NuevoEquipo({
   empleados,
   categoriaInicial,
+  camposPorCategoria,
 }: {
   empleados: Empleado[];
   categoriaInicial: CategoriaInv;
+  camposPorCategoria: Record<string, CampoInv[]>;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -238,6 +241,7 @@ export default function NuevoEquipo({
               <input type="hidden" name="categoria" value={categoria} />
               <CamposEquipo key={categoria} cat={cat} empleados={empleados} />
               <AccesosEquipo />
+              <CamposExtra key={`extra-${categoria}`} definiciones={camposPorCategoria[categoria] ?? []} />
               <p className="alta-nota suave">Si lo asignas a un empleado, se generará su responsiva en automático.</p>
               {estado?.ok === false ? <p className="combo-error">{estado.error}</p> : null}
               <BotonEnviar className="boton" ocupado="Guardando…">Guardar {cat.singular}</BotonEnviar>

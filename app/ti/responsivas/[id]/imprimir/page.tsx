@@ -5,7 +5,7 @@ import { Signika } from "next/font/google";
 import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folioResponsiva } from "@/lib/format";
 import { categoriaInv } from "@/lib/inventario";
-import { fusionarPlantilla, CAMPOS_EQUIPO_TODOS, type DatosResponsiva } from "@/lib/responsivas";
+import { fusionarPlantilla, CAMPOS_EQUIPO_TODOS, type DatosResponsiva, type PersonaResp } from "@/lib/responsivas";
 import BotonImprimir from "@/components/BotonImprimir";
 
 export const dynamic = "force-dynamic";
@@ -66,6 +66,7 @@ export default async function ImprimirResponsiva({
   const overrideQ = await sb.from("plantillas_responsiva").select("*").eq("clave", r.plantilla).maybeSingle();
   const pl = fusionarPlantilla(r.plantilla, overrideQ.data);
   const datos = (r.datos ?? {}) as DatosResponsiva;
+  const personas = (r.personas ?? []) as PersonaResp[];
   const eq = datos.equipo;
   const folio = folioResponsiva(pl.prefijoFolio, r.num);
   const anio = new Date().getFullYear();
@@ -129,6 +130,22 @@ export default async function ImprimirResponsiva({
           <FilasDatos pares={paresColab} />
         </section>
 
+        {personas.length > 0 && (
+          <section className="seccion">
+            <h2>Personas adicionales del resguardo</h2>
+            <table className="datos">
+              <tbody>
+                {personas.map((p, i) => (
+                  <tr key={i}>
+                    <th>{p.rol || "Persona"}</th>
+                    <td>{[p.nombre, p.puesto, p.departamento].filter(Boolean).join(" · ") || " "}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
+
         <section className="seccion">
           <h2>2. Identificación del activo (ISO/IEC 27001:2022 — A.5.9)</h2>
           <FilasDatos pares={paresActivo} />
@@ -188,6 +205,20 @@ export default async function ImprimirResponsiva({
               </div>
             ))}
           </div>
+
+          {/* Un renglón de firma por persona adicional: su nombre impreso sobre
+              la línea (para que firme encima) y el rol debajo. */}
+          {personas.length > 0 && (
+            <div className="firmas firmas-personas">
+              {personas.map((p, i) => (
+                <div className="firma" key={i}>
+                  <div className="firma-nombre-print">{p.nombre}</div>
+                  <div className="linea" />
+                  <div className="rol">{p.rol || "Nombre y firma"}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <footer className="pie">

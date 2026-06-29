@@ -51,7 +51,31 @@ create table if not exists equipos (
   -- forma: { rustdesk:{id,pass}, admin:{usuario,pass}, extra:[{etiqueta,usuario,secreto}] }
   -- SOLO panel de TI: nunca seleccionar esta columna desde el portal del empleado.
   accesos jsonb not null default '{}'::jsonb,
+  -- valores de los campos personalizados por categoría (ver tabla campos_inventario).
+  -- forma: { [clave]: valor }. SOLO panel de TI: no seleccionar desde el portal.
+  extras jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
+);
+
+-- ---------- CAMPOS PERSONALIZADOS DEL INVENTARIO ----------
+-- Definiciones editables desde /ti/inventario/configuracion: TI agrega campos
+-- nuevos por categoría sin tocar código. Los valores capturados viven en
+-- equipos.extras ({ [clave]: valor }); aquí solo está el catálogo de campos.
+create table if not exists campos_inventario (
+  id uuid primary key default gen_random_uuid(),
+  categoria text not null
+    check (categoria in ('computo','celular','linea','software')),
+  clave text not null,                 -- slug estable; key dentro de equipos.extras
+  etiqueta text not null,              -- lo que ve TI ("N° de serie")
+  tipo text not null default 'texto'
+    check (tipo in ('texto','numero','fecha','opciones','booleano')),
+  opciones jsonb not null default '[]'::jsonb,  -- para tipo 'opciones': ["A","B"]
+  placeholder text,
+  requerido boolean not null default false,
+  orden int not null default 0,
+  activo boolean not null default true,
+  created_at timestamptz not null default now(),
+  unique (categoria, clave)
 );
 
 -- ---------- MANTENIMIENTOS ----------
@@ -188,11 +212,14 @@ create table if not exists responsivas (
   num serial,
   equipo_id uuid references equipos(id) on delete set null,
   plantilla text not null default 'laptop',
-  -- snapshot del empleado (resguardante)
+  -- snapshot del empleado (resguardante principal)
   empleado_correo text,
   empleado_nombre text,
   empleado_puesto text,
   empleado_departamento text,
+  -- personas adicionales del documento (co-resguardatarios, testigos, etc.), congeladas.
+  -- forma: [{ nombre, rol, puesto, departamento, correo, fuente:'empleado'|'manual' }]
+  personas jsonb not null default '[]'::jsonb,
   -- snapshot del equipo + datos editables del documento
   equipo_nombre text,
   datos jsonb not null default '{}'::jsonb, -- { equipo:{...}, accesorios:[], seguridad:[], observaciones, estado_fisico }
@@ -250,8 +277,10 @@ alter table equipos add column if not exists categoria text not null default 'co
   check (categoria in ('computo','celular','linea','software'));
 alter table equipos add column if not exists telefono text;
 alter table equipos add column if not exists accesos jsonb not null default '{}'::jsonb;
+alter table equipos add column if not exists extras jsonb not null default '{}'::jsonb;
 alter table plantillas_responsiva add column if not exists campos_equipo jsonb;
 alter table responsivas add column if not exists fecha_entrega date;
+alter table responsivas add column if not exists personas jsonb not null default '[]'::jsonb;
 alter table equipos drop constraint if exists equipos_tipo_check;
 alter table equipos add constraint equipos_tipo_check
   check (tipo in ('laptop','desktop','monitor','impresora','red','servidor','perifericos','otro',
@@ -329,6 +358,7 @@ alter table empleados enable row level security;
 alter table ticket_eventos enable row level security;
 alter table responsivas enable row level security;
 alter table plantillas_responsiva enable row level security;
+alter table campos_inventario enable row level security;
 
 -- Si vienes del esquema anterior (acceso abierto), estas líneas retiran esas políticas.
 drop policy if exists "acceso_total_equipos" on equipos;
@@ -352,6 +382,9 @@ create policy "responsivas_autenticados" on responsivas
   for all to authenticated using (true) with check (true);
 drop policy if exists "plantillas_autenticados" on plantillas_responsiva;
 create policy "plantillas_autenticados" on plantillas_responsiva
+  for all to authenticated using (true) with check (true);
+drop policy if exists "campos_inventario_autenticados" on campos_inventario;
+create policy "campos_inventario_autenticados" on campos_inventario
   for all to authenticated using (true) with check (true);
 
 -- ---------- STORAGE: bucket de responsivas firmadas ----------

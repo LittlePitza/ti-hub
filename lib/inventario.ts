@@ -152,3 +152,101 @@ export function sanitizarAccesos(raw: unknown): AccesosInv {
     extra,
   };
 }
+
+// ============================================================
+// Campos personalizados del inventario. Las DEFINICIONES viven en la tabla
+// `campos_inventario` (editables desde /ti/inventario/configuracion); los
+// VALORES por equipo se guardan en la columna jsonb `equipos.extras` como
+// { [clave]: valor }. Mismo patrón de saneado que `accesos`.
+// ============================================================
+
+export type TipoCampo = "texto" | "numero" | "fecha" | "opciones" | "booleano";
+
+export const TIPOS_CAMPO: { valor: TipoCampo; label: string }[] = [
+  { valor: "texto", label: "Texto" },
+  { valor: "numero", label: "Número" },
+  { valor: "fecha", label: "Fecha" },
+  { valor: "opciones", label: "Lista de opciones" },
+  { valor: "booleano", label: "Sí / No" },
+];
+
+export interface CampoInv {
+  id: string;
+  categoria: CategoriaInv;
+  clave: string;
+  etiqueta: string;
+  tipo: TipoCampo;
+  opciones: string[];
+  placeholder: string | null;
+  requerido: boolean;
+  orden: number;
+  activo: boolean;
+}
+
+export type ExtrasInv = Record<string, string>;
+
+// Mapea una fila cruda de `campos_inventario` al tipo de dominio.
+export function campoDeFila(f: Record<string, unknown>): CampoInv {
+  return {
+    id: String(f.id),
+    categoria: (f.categoria as CategoriaInv) ?? "computo",
+    clave: String(f.clave ?? ""),
+    etiqueta: String(f.etiqueta ?? ""),
+    tipo: (f.tipo as TipoCampo) ?? "texto",
+    opciones: Array.isArray(f.opciones) ? (f.opciones as unknown[]).map((o) => String(o)) : [],
+    placeholder: (f.placeholder as string | null) ?? null,
+    requerido: Boolean(f.requerido),
+    orden: Number(f.orden ?? 0),
+    activo: f.activo !== false,
+  };
+}
+
+// Deriva una clave estable (slug) desde la etiqueta: letras/números/_ sin acentos.
+export function slugCampo(etiqueta: string): string {
+  const base = etiqueta
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 40);
+  return base || "campo";
+}
+
+// Sanea los valores de campos personalizados contra sus definiciones: solo
+// conserva claves definidas, coacciona por tipo y descarta vacíos.
+export function sanitizarExtras(defs: CampoInv[], raw: unknown): ExtrasInv {
+  let obj: Record<string, unknown> = {};
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") obj = parsed as Record<string, unknown>;
+    } catch {
+      // entrada inválida → sin extras
+    }
+  } else if (raw && typeof raw === "object") {
+    obj = raw as Record<string, unknown>;
+  }
+
+  const out: ExtrasInv = {};
+  for (const def of defs) {
+    const v = obj[def.clave];
+    if (v === undefined || v === null) continue;
+    const s = String(v).trim();
+    if (!s) continue;
+    if (def.tipo === "numero") {
+      const n = Number(s);
+      if (Number.isFinite(n)) out[def.clave] = String(n);
+    } else if (def.tipo === "fecha") {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) out[def.clave] = s;
+    } else if (def.tipo === "booleano") {
+      if (s === "1" || s === "true" || s === "on") out[def.clave] = "1";
+    } else if (def.tipo === "opciones") {
+      if (def.opciones.includes(s)) out[def.clave] = s;
+    } else {
+      out[def.clave] = s.slice(0, MAX_LARGO);
+    }
+  }
+  return out;
+}

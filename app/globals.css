@@ -3440,9 +3440,17 @@ details.alta .formulario {
   text-align: center;
 }
 .responsiva-doc .firmas.dos { grid-template-columns: repeat(2, 1fr); }
+/* Firmas de personas adicionales: tantas como haya, ajustándose al ancho. */
+.responsiva-doc .firmas-personas {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 20px;
+}
 .responsiva-doc .firma .linea { border-top: 1px solid var(--doc-texto); margin: 38px 8px 5px; }
 .responsiva-doc .firma .nombre { font-weight: 600; font-size: 11px; }
 .responsiva-doc .firma .rol { font-size: 10px; color: var(--doc-tenue); }
+/* Nombre impreso encima de la línea (la persona firma sobre la línea). */
+.responsiva-doc .firma .firma-nombre-print { font-weight: 600; font-size: 11px; }
+.responsiva-doc .firmas-personas .firma .linea { margin-top: 18px; }
 .responsiva-doc .pie {
   margin-top: 18px;
   border-top: 1px solid var(--doc-borde);
@@ -3471,7 +3479,8 @@ details.alta .formulario {
   }
   .responsiva-doc .seccion,
   .responsiva-doc table,
-  .responsiva-doc .firmas { break-inside: avoid; }
+  .responsiva-doc .firmas,
+  .responsiva-doc .firmas-personas { break-inside: avoid; }
 }
 
 @media (max-width: 760px) {
@@ -3479,8 +3488,35 @@ details.alta .formulario {
   .responsiva-doc .encabezado { flex-direction: column; }
   .responsiva-doc .encabezado .logo,
   .responsiva-doc .encabezado .control { width: 100%; }
-  .responsiva-doc .firmas { grid-template-columns: 1fr; gap: 16px; }
+  .responsiva-doc .firmas,
+  .responsiva-doc .firmas-personas { grid-template-columns: 1fr; gap: 16px; }
 }
+
+/* ---------- Editor: personas adicionales de una responsiva (panel) ---------- */
+.personas-resp { margin-top: 4px; }
+.personas-resp-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tinta-suave);
+  margin-bottom: 4px;
+}
+.personas-resp-nota { font-size: 12.5px; margin: 0 0 12px; }
+.personas-vacio { font-size: 13px; margin: 2px 0 12px; }
+.personas-lista { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.persona-fila {
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--superficie-2, transparent);
+}
+.persona-fila-cuerpo { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+.persona-fila-cuerpo > .combo,
+.persona-fila-cuerpo > .combo-chip,
+.persona-fila-cuerpo > .persona-manual { flex: 2 1 220px; min-width: 0; }
+.persona-rol { flex: 1 1 160px; min-width: 0; }
+.persona-quitar { flex: 0 0 auto; align-self: center; }
 
 /* ============================================================
    Inventario · alta de equipos (tarjeta) y refinamientos de página
@@ -3535,3 +3571,33 @@ details.alta .formulario {
 @media (max-width: 560px) {
   .seg-categoria { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ---------- Campos personalizados: captura (alta/edición) ---------- */
+.campos-extra { margin-top: 4px; }
+.campos-extra-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tinta-suave);
+  margin-bottom: 10px;
+}
+/* Casilla en línea (checkbox + etiqueta) dentro de una cuadrícula .campos */
+.campo-check { flex-direction: row; align-items: center; gap: 8px; }
+.campo-check input[type="checkbox"] { width: auto; padding: 0; border-radius: 3px; }
+.campo-check span { font-size: 13.5px; font-weight: 400; color: var(--tinta); }
+
+/* ---------- Panel: configuración de campos del inventario ---------- */
+.config-inv { display: flex; flex-direction: column; gap: 28px; max-width: 880px; }
+.config-inv-cat-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--linea);
+}
+.config-inv-vacio { font-size: 13px; margin: 2px 2px 12px; }
+.config-inv-agregar { margin-top: 10px; }

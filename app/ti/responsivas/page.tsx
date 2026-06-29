@@ -129,6 +129,11 @@ export default async function Responsivas({
                   </td>
                   <td className="suave">
                     {r.empleado_nombre}
+                    {Array.isArray(r.personas) && r.personas.length > 0 && (
+                      <span className="insignia neutro" style={{ marginLeft: 6 }} title={`${r.personas.length} persona(s) adicional(es)`}>
+                        +{r.personas.length}
+                      </span>
+                    )}
                     <div style={{ fontSize: 12 }}>{r.empleado_correo}</div>
                   </td>
                   <td>

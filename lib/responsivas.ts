@@ -467,3 +467,76 @@ function limpiar<T extends object>(obj: T): Partial<T> {
   }
   return out;
 }
+
+// ============================================================
+// Personas adicionales del documento (co-resguardatarios, testigos, quien
+// autoriza…). El resguardatario PRINCIPAL vive en las columnas escalares
+// `empleado_*`; estas personas extra van en la columna jsonb `responsivas.personas`
+// como snapshot congelado (igual que el resto del documento). Se eligen del
+// catálogo de empleados o se capturan a mano. Mismo patrón de saneado que
+// `sanitizarAccesos` (lib/inventario.ts).
+// ============================================================
+
+export type PersonaResp = {
+  nombre: string;
+  rol: string;
+  puesto?: string;
+  departamento?: string;
+  correo?: string;
+  fuente: "empleado" | "manual";
+};
+
+// Roles sugeridos para el <datalist> del editor (el campo es libre).
+export const ROLES_RESP = [
+  "Resguardatario",
+  "Co-resguardatario",
+  "Entrega",
+  "Recibe",
+  "Autoriza",
+  "Testigo",
+  "Jefe inmediato",
+];
+
+const MAX_PERSONAS = 10;
+const MAX_TXT_PERSONA = 120;
+
+function txtPersona(v: unknown): string {
+  return typeof v === "string" ? v.trim().slice(0, MAX_TXT_PERSONA) : "";
+}
+
+// Normaliza lo que llega del formulario (string JSON u objeto) a PersonaResp[]:
+// recorta strings, descarta filas sin nombre, valida `fuente` y limita cantidad.
+export function sanitizarPersonas(raw: unknown): PersonaResp[] {
+  let arr: unknown[] = [];
+  if (typeof raw === "string" && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) arr = parsed;
+    } catch {
+      // entrada inválida → sin personas
+    }
+  } else if (Array.isArray(raw)) {
+    arr = raw;
+  }
+
+  const out: PersonaResp[] = [];
+  for (const fila of arr) {
+    if (out.length >= MAX_PERSONAS) break;
+    const f = (fila ?? {}) as Record<string, unknown>;
+    const nombre = txtPersona(f.nombre);
+    if (!nombre) continue; // sin nombre no hay persona
+    const persona: PersonaResp = {
+      nombre,
+      rol: txtPersona(f.rol),
+      fuente: f.fuente === "manual" ? "manual" : "empleado",
+    };
+    const puesto = txtPersona(f.puesto);
+    if (puesto) persona.puesto = puesto;
+    const departamento = txtPersona(f.departamento);
+    if (departamento) persona.departamento = departamento;
+    const correo = txtPersona(f.correo).toLowerCase();
+    if (correo) persona.correo = correo;
+    out.push(persona);
+  }
+  return out;
+}

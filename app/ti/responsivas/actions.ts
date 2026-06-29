@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
-import { plantillaDeEquipo, snapshotEquipo, type DatosResponsiva } from "@/lib/responsivas";
+import { plantillaDeEquipo, snapshotEquipo, sanitizarPersonas, type DatosResponsiva } from "@/lib/responsivas";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 function refrescar(id?: string) {
@@ -95,8 +95,9 @@ export async function editarResponsiva(formData: FormData) {
   };
   const notas = ((formData.get("notas") as string) ?? "").trim() || null;
   const fechaEntrega = ((formData.get("fecha_entrega") as string) ?? "").trim() || null;
+  const personas = sanitizarPersonas(formData.get("personas"));
 
-  await sb.from("responsivas").update({ datos, notas, fecha_entrega: fechaEntrega }).eq("id", id);
+  await sb.from("responsivas").update({ datos, notas, fecha_entrega: fechaEntrega, personas }).eq("id", id);
   refrescar(id);
 }
 

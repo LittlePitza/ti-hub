@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folioResponsiva } from "@/lib/format";
-import { CATEGORIAS_INV, categoriaInv } from "@/lib/inventario";
+import { CATEGORIAS_INV, categoriaInv, campoDeFila, type CampoInv, type ExtrasInv } from "@/lib/inventario";
 import { ESTADOS_RESP, plantillaDefault, type EstadoResponsiva } from "@/lib/responsivas";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
 import BotonEnviar from "@/components/BotonEnviar";
 import AccesosEquipo from "@/components/AccesosEquipo";
+import CamposExtra from "@/components/CamposExtra";
 import ModalGestionar from "@/components/ModalGestionar";
 import NuevoEquipo from "@/components/NuevoEquipo";
 import { asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
@@ -70,16 +71,26 @@ export default async function Inventario({
     );
   }
 
-  const [equiposQ, empleadosQ, respQ] = await Promise.all([
+  const [equiposQ, empleadosQ, respQ, camposQ] = await Promise.all([
     sb.from("equipos")
-      .select("id, categoria, nombre, tipo, marca, modelo, num_serie, telefono, asignado_a, asignado_email, ubicacion, estado, fecha_compra, garantia_hasta, notas, accesos, created_at")
+      .select("id, categoria, nombre, tipo, marca, modelo, num_serie, telefono, asignado_a, asignado_email, ubicacion, estado, fecha_compra, garantia_hasta, notas, accesos, extras, created_at")
       .order("created_at", { ascending: false }),
     sb.from("empleados").select("nombre, correo").eq("estado", "activo").order("nombre"),
     sb.from("responsivas").select("id, equipo_id, plantilla, num, estado, archivo_url").order("created_at", { ascending: false }),
+    sb.from("campos_inventario").select("*").eq("activo", true).order("orden"),
   ]);
   const todos = equiposQ.data ?? [];
   const empleados = empleadosQ.data ?? [];
   const responsivas = (respQ.data ?? []) as Resp[];
+
+  // Definiciones de campos personalizados agrupadas por categoría (para alta y edición).
+  const camposPorCategoria = {} as Record<string, CampoInv[]>;
+  for (const cat of CATEGORIAS_INV) camposPorCategoria[cat.valor] = [];
+  for (const fila of camposQ.data ?? []) {
+    const def = campoDeFila(fila);
+    (camposPorCategoria[def.categoria] ??= []).push(def);
+  }
+  const camposCat = camposPorCategoria[cat.valor] ?? [];
 
   // Responsiva más reciente por equipo (la lista ya viene de la más nueva a la más vieja).
   const respPorEquipo = new Map<string, Resp>();
@@ -131,7 +142,8 @@ export default async function Inventario({
       <div className="pagina-head">
         {titulo}
         <div className="pagina-head-acciones">
-          <NuevoEquipo empleados={empleados} categoriaInicial={cat.valor} />
+          <NuevoEquipo empleados={empleados} categoriaInicial={cat.valor} camposPorCategoria={camposPorCategoria} />
+          <Link href="/ti/inventario/configuracion" className="boton secundario">Configurar campos</Link>
           {responsivasLink}
         </div>
       </div>
@@ -308,6 +320,12 @@ export default async function Inventario({
                             <div><dt>Asignado a</dt><dd>{e.asignado_a ?? "Libre"}</dd></div>
                             <div><dt>Estado</dt><dd><Insignia valor={e.estado} /></dd></div>
                             {c.fechas && (<div><dt>{c.garantiaLabel}</dt><dd className="mono">{fechaCorta(e.garantia_hasta)}</dd></div>)}
+                            {camposCat.map((def) => {
+                              const val = (e.extras as ExtrasInv | null)?.[def.clave];
+                              if (!val) return null;
+                              const texto = def.tipo === "booleano" ? "Sí" : def.tipo === "fecha" ? fechaCorta(val) : val;
+                              return (<div key={def.clave}><dt>{def.etiqueta}</dt><dd className="mono">{texto}</dd></div>);
+                            })}
                           </dl>
                           <form action={asignarEquipo} className="inv-gestionar-asignar">
                             <input type="hidden" name="id" value={e.id} />
@@ -359,6 +377,7 @@ export default async function Inventario({
                           <label className="mini-label">Notas</label>
                           <textarea name="notas" defaultValue={e.notas ?? ""} rows={2} />
                           <AccesosEquipo valor={e.accesos} />
+                          <CamposExtra definiciones={camposCat} valor={(e.extras ?? {}) as ExtrasInv} />
                           <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar cambios</BotonEnviar>
                         </form>
 

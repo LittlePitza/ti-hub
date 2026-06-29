@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
-import { categoriaInv, sanitizarAccesos } from "@/lib/inventario";
+import { categoriaInv, sanitizarAccesos, sanitizarExtras, campoDeFila, type CampoInv } from "@/lib/inventario";
 import { generarResponsiva, sincronizarResponsivasEquipo } from "@/app/ti/responsivas/actions";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -12,6 +12,12 @@ function refrescar(cat: string) {
   revalidatePath(`/ti/empleados`);
   revalidatePath(`/ti`);
   return cat;
+}
+
+// Definiciones activas de campos personalizados de una categoría (para sanear extras).
+async function defsCategoria(sb: SupabaseClient, categoria: string): Promise<CampoInv[]> {
+  const { data } = await sb.from("campos_inventario").select("*").eq("categoria", categoria).eq("activo", true);
+  return (data ?? []).map(campoDeFila);
 }
 
 // El select de asignación manda el correo del empleado; el nombre se busca
@@ -64,6 +70,7 @@ export async function crearEquipo(
     garantia_hasta: v("garantia_hasta"),
     notas: v("notas"),
     accesos: sanitizarAccesos(formData.get("accesos")),
+    extras: sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras")),
   }).select("id").single();
   if (error) return { ok: false, error: "No se pudo guardar. Intenta de nuevo." };
   refrescar(cat.valor);
@@ -114,6 +121,7 @@ export async function editarEquipo(formData: FormData) {
     garantia_hasta: v("garantia_hasta"),
     notas: v("notas"),
     accesos: sanitizarAccesos(formData.get("accesos")),
+    extras: sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras")),
   }).eq("id", id);
   refrescar(cat.valor);
 

@@ -11,9 +11,11 @@ import {
   fusionarPlantilla,
   type DatosResponsiva,
   type EstadoResponsiva,
+  type PersonaResp,
 } from "@/lib/responsivas";
 import SinConexion from "@/components/SinConexion";
 import BotonEnviar from "@/components/BotonEnviar";
+import PersonasResponsiva from "@/components/PersonasResponsiva";
 import { editarResponsiva, subirFirmada, cambiarEstadoResponsiva, actualizarDesdeInventario } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +38,15 @@ export default async function DetalleResponsiva({
 
   const { data: r } = await sb.from("responsivas").select("*").eq("id", id).maybeSingle();
   if (!r) notFound();
+
+  // Catálogo para el selector de personas adicionales (combobox del editor).
+  const { data: empleadosData } = await sb
+    .from("empleados")
+    .select("nombre, correo, puesto, departamento")
+    .eq("estado", "activo")
+    .order("nombre");
+  const empleados = empleadosData ?? [];
+  const personas = (r.personas ?? []) as PersonaResp[];
 
   const overrideQ = await sb.from("plantillas_responsiva").select("*").eq("clave", r.plantilla).maybeSingle();
   const pl = fusionarPlantilla(r.plantilla, overrideQ.data);
@@ -163,6 +174,7 @@ export default async function DetalleResponsiva({
             <textarea id="notas" name="notas" defaultValue={r.notas ?? ""} placeholder="Notas de TI sobre esta responsiva" />
           </div>
         </div>
+        <PersonasResponsiva personas={personas} empleados={empleados} />
         <BotonEnviar className="boton" ocupado="Guardando…">Guardar cambios</BotonEnviar>
       </form>
 

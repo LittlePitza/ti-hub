@@ -12,6 +12,7 @@ next-env.d.ts
 .env*.local
 
 # Secretos y credenciales (nunca versionar)
+.mcp.json
 *.pem
 *.key
 *.p12
