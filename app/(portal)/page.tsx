@@ -213,45 +213,66 @@ export default async function Portal({
 }
 
 function Bienvenida({ conError }: { conError: boolean }) {
+  // Misma esencia que el login del panel y el Portal de Mantenimiento: fondo navy,
+  // card del logo + eyebrow, y una tarjeta blanca con el formulario. Se conserva
+  // el campo de correo fusionado, el botón Continuar y la nota "sin contraseñas".
   return (
-    <div className="portal-bienvenida">
-      <span className="logo-claro portal-bienvenida-logo">
-        <img src="/pimsa-logo.svg" alt="Plásticos PIMSA · más que reciclaje, una visión a futuro" />
-      </span>
-      <h1 className="portal-bienvenida-titulo">Soporte TI</h1>
-      <p className="portal-bienvenida-texto">
-        ¿Problemas con tu computadora, el correo o algún programa? Escribe tu correo
-        para reportarlo y dar seguimiento.
-      </p>
-      <form className="portal-form-correo" action={entrarPortal}>
-        {conError && <div className="login-error">Ese correo no se ve bien, revísalo.</div>}
-        <label htmlFor="bv-correo" className="portal-form-label">Tu correo de trabajo</label>
-        <div className="portal-correo-campo">
-          <input
-            id="bv-correo"
-            className="portal-correo-usuario"
-            type="text"
-            name="correo"
-            placeholder="nombre.apellido"
-            inputMode="email"
-            autoComplete="email"
-            autoCapitalize="off"
-            autoCorrect="off"
-            spellCheck={false}
-            aria-describedby="bv-dominio"
-            required
-            autoFocus
-          />
-          <span id="bv-dominio" className="portal-correo-dominio">@{DOMINIO_CORREO}</span>
+    <div className="portal-acceso">
+      <div className="login-col">
+        <div className="login-marca">
+          <span className="login-logo-card">
+            <span className="logo-claro">
+              <img src="/pimsa-logo.svg" alt="Plásticos PIMSA · más que reciclaje, una visión a futuro" />
+            </span>
+          </span>
+          <p className="eyebrow login-eyebrow">Plásticos PIMSA</p>
         </div>
-        <BotonEnviar className="portal-boton" ocupado="Un momento…">
-          Continuar
-          <IconoFlecha />
-        </BotonEnviar>
-      </form>
-      <p className="portal-nota">
-        Sin contraseñas: tu correo solo se usa para mostrarte tus equipos y tus reportes.
-      </p>
+
+        <form className="login-caja" action={entrarPortal}>
+          <div className="login-caja-titulo">
+            <h1>Soporte TI</h1>
+            <p className="login-desc">
+              ¿Problemas con tu computadora, el correo o algún programa? Escribe tu correo
+              para reportarlo y dar seguimiento.
+            </p>
+          </div>
+
+          {conError && <div className="login-error">Ese correo no se ve bien, revísalo.</div>}
+
+          <div className="campo">
+            <label htmlFor="bv-correo" className="portal-form-label">Tu correo de trabajo</label>
+            <div className="portal-correo-campo">
+              <input
+                id="bv-correo"
+                className="portal-correo-usuario"
+                type="text"
+                name="correo"
+                placeholder="nombre.apellido"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="off"
+                autoCorrect="off"
+                spellCheck={false}
+                aria-describedby="bv-dominio"
+                required
+                autoFocus
+              />
+              <span id="bv-dominio" className="portal-correo-dominio">@{DOMINIO_CORREO}</span>
+            </div>
+          </div>
+
+          <BotonEnviar className="portal-boton press" ocupado="Un momento…">
+            Continuar
+            <IconoFlecha />
+          </BotonEnviar>
+
+          <p className="portal-nota">
+            Sin contraseñas: tu correo solo se usa para mostrarte tus equipos y tus reportes.
+          </p>
+        </form>
+
+        <p className="login-pie">Soporte TI · Plásticos PIMSA</p>
+      </div>
     </div>
   );
 }
