@@ -548,8 +548,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .campo input, .campo select, .campo textarea {
   border: 1px solid var(--linea-fuerte);
   border-radius: var(--radio-campo);
-  padding: 9px 12px;
-  font-size: 14px;
+  padding: 10px 12px;
+  /* 16px es el mínimo que evita el auto-zoom de iOS al enfocar un campo. */
+  font-size: 16px;
   background: var(--superficie);
   transition: border-color 120ms ease;
 }
@@ -934,16 +935,20 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   border-color: var(--pimsa-azul);
   box-shadow: 0 0 0 3px var(--petroleo-tenue);
 }
-.portal-correo-usuario {
+/* Selector con `.portal-correo-campo` para ganarle en especificidad a
+   `.campo input` (que si no, le impone borde, radio, padding y 14px → zoom iOS). */
+.portal-correo-campo .portal-correo-usuario {
   flex: 1 1 auto;
   min-width: 0;                /* permite encoger en móvil sin desbordar el segmento */
   padding: 14px 14px;
   font-size: 16px;             /* evita el zoom automático de iOS */
   border: none;
+  border-radius: 0;
   background: transparent;
+  color: var(--tinta);
 }
-.portal-correo-usuario:focus { outline: none; }
-.portal-correo-usuario::placeholder { color: var(--tinta-suave); opacity: 0.75; }
+.portal-correo-campo .portal-correo-usuario:focus { outline: none; border: none; box-shadow: none; }
+.portal-correo-campo .portal-correo-usuario::placeholder { color: var(--tinta-suave); opacity: 0.75; }
 .portal-correo-dominio {
   display: inline-flex;
   align-items: center;
@@ -955,6 +960,43 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   border-left: 1.5px solid var(--linea-fuerte);
   white-space: nowrap;
   user-select: none;
+}
+/* En pantallas angostas "@plasticospimsa.com" no cabe junto al usuario sin
+   recortar el placeholder "nombre.apellido". Se apila: el input ocupa todo el
+   ancho (con su propio borde/anillo) y el dominio pasa a una pista debajo. */
+@media (max-width: 480px) {
+  .portal-correo-campo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+    border: none;
+    background: transparent;
+    overflow: visible;
+  }
+  .portal-correo-campo:focus-within { box-shadow: none; }
+  .portal-correo-campo .portal-correo-usuario {
+    padding: 13px 14px;
+    border: 1.5px solid var(--linea-fuerte);
+    border-radius: 12px;
+    background: var(--superficie);
+  }
+  .portal-correo-campo:focus-within .portal-correo-usuario {
+    border-color: var(--pimsa-azul);
+    box-shadow: 0 0 0 3px var(--petroleo-tenue);
+  }
+  .portal-correo-dominio {
+    padding: 0 2px;
+    background: transparent;
+    border-left: none;
+    font-size: 12.5px;
+    color: var(--tinta-suave);
+    font-weight: 500;
+  }
+  .portal-correo-dominio::before {
+    content: "Le agregamos ";
+    color: var(--tinta-suave);
+    font-weight: 400;
+  }
 }
 
 .portal-boton {
