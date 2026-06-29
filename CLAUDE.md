@@ -69,7 +69,8 @@ Antes de crear clases nuevas, reusar las semánticas ya definidas en `globals.cs
 Empresa: **Plásticos PIMSA** (NO usar "Plásticos Industriales de Monterrey" — no son de Monterrey). Tono industrial, sustentable, economía circular.
 
 - **Colores** (ya remapeados a tokens en `globals.css`): azul marino corporativo `#294466`, verde PIMSA `#7F9D41`, verde claro `#B0CD75`, azul profundo `#064D79`. Existen constantes `--pimsa-azul`, `--pimsa-verde`, `--pimsa-verde-claro`, `--pimsa-azul-profundo` para superficies grandes y botones.
-- **Tipografía:** el panel de TI usa Geist; el portal del empleado usa **Signika** (`next/font/google`).
+- **Tipografía:** **Poppins** (`next/font/google`) en toda la app — familia visual compartida con el Portal de Mantenimiento de PIMSA. Se carga una sola vez en `app/layout.tsx` (variable `--font-poppins`) y la heredan tanto el panel de TI como el portal del empleado.
+- **Lenguaje visual compartido:** ti-hub replica el look del Portal de Mantenimiento — chrome **navy `#15273a`** (sidebar/login), fondo **mist `#f2f4f7`**, superficies planas flotantes (sin gradientes) con esquinas generosas (`--radio-campo: 12px`, `--radio-tarjeta: 16px`, `--radio-pastilla`) y sombras suaves (`--sombra-tarjeta`/`--sombra-pop`). Utilidades `.press` (feedback táctil) y `.eyebrow` (labels en mayúsculas). Se conserva el toggle claro/oscuro.
 - **Logo:** `public/pimsa-logo.svg` (completo), `public/pimsa-isotipo.svg` (solo olas, para encabezados compactos), `app/icon.svg` (favicon). El azul del logo se pierde en modo oscuro: envolver siempre el `<img>` en `<span className="logo-claro">`.
 
 ## Hoja de ruta

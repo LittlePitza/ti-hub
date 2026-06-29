@@ -1,21 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Signika, Signika_Negative } from "next/font/google";
 import TemaToggle from "@/components/TemaToggle";
-
-// Tipografía de la marca PIMSA: par display + cuerpo (el panel de TI conserva Geist).
-// Signika Negative es la cara de títulos de la identidad oficial; aquí en peso
-// ligero a gran tamaño da una voz calmada para quien llega con un problema.
-const signika = Signika({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-portal",
-});
-const signikaDisplay = Signika_Negative({
-  subsets: ["latin"],
-  weight: ["300", "400", "600", "700"],
-  variable: "--font-portal-display",
-});
 
 export const metadata: Metadata = {
   title: "Soporte TI · Plásticos PIMSA",
@@ -24,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className={`portal-shell ${signika.variable} ${signikaDisplay.variable}`}>
+    <div className="portal-shell">
       <header className="portal-header">
         <div className="portal-header-inner">
           <Link href="/" className="portal-marca">

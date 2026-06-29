@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { Poppins } from "next/font/google";
 import "./globals.css";
+
+// Tipografía única de la familia PIMSA (igual que el Portal de Mantenimiento).
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "TI Hub",
@@ -10,8 +17,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbfbfa" },
-    { media: "(prefers-color-scheme: dark)", color: "#111215" },
+    { media: "(prefers-color-scheme: light)", color: "#f2f4f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e1820" },
   ],
 };
 
@@ -20,10 +27,10 @@ const scriptTema = `(function(){try{var t=localStorage.getItem("tema");if(t!=="d
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${GeistSans.variable} ${GeistMono.variable}`} suppressHydrationWarning>
-      <body style={{ fontFamily: "var(--font-geist-sans)" }}>
+    <html lang="es" className={poppins.variable} suppressHydrationWarning>
+      <body style={{ fontFamily: "var(--font-poppins)" }}>
         <script dangerouslySetInnerHTML={{ __html: scriptTema }} />
-        <style>{`:root { --font-mono: var(--font-geist-mono); }`}</style>
+        <style>{`:root { --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }`}</style>
         {children}
       </body>
     </html>

@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Signika } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folioResponsiva } from "@/lib/format";
 import { categoriaInv } from "@/lib/inventario";
@@ -10,8 +10,8 @@ import BotonImprimir from "@/components/BotonImprimir";
 
 export const dynamic = "force-dynamic";
 
-// Tipografía de la marca PIMSA (igual que el portal del empleado).
-const signika = Signika({ subsets: ["latin"], weight: ["300", "400", "600", "700"] });
+// Tipografía de la marca PIMSA (igual que el resto de la app).
+const signika = Poppins({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });
 
 const RAZON_SOCIAL = "Plásticos PIMSA";
 
