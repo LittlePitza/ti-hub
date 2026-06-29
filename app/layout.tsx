@@ -16,6 +16,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // Al exportar un objeto `viewport`, Next.js reemplaza el meta por defecto:
+  // hay que declarar width/initial-scale explícitamente o el móvil cae al
+  // ancho de respaldo (~980px) y todo se desborda a la derecha.
+  width: "device-width",
+  initialScale: 1,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f2f4f7" },
     { media: "(prefers-color-scheme: dark)", color: "#0e1820" },

@@ -280,6 +280,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .portal-acceso {
   min-height: 100dvh;
   display: grid;
+  /* La pista debe seguir el ancho disponible, no el max-content de la tarjeta:
+     sin esto el track crece al texto más largo y desborda a la derecha en móvil. */
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   padding: 40px 20px;
   background: var(--papel);
