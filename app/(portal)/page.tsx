@@ -222,7 +222,7 @@ function Bienvenida({ conError }: { conError: boolean }) {
         <div className="login-marca">
           <span className="login-logo-card">
             <span className="logo-claro">
-              <img src="/pimsa-logo.svg" alt="Plásticos PIMSA · más que reciclaje, una visión a futuro" />
+              <img src="/pimsa-logo.png" alt="Plásticos PIMSA · más que reciclaje, una visión a futuro" />
             </span>
           </span>
           <p className="eyebrow login-eyebrow">Plásticos PIMSA</p>

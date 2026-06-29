@@ -107,7 +107,7 @@ export default async function ImprimirResponsiva({
         <header className="encabezado">
           <div className="logo">
             <span className="logo-claro">
-              <img src="/pimsa-logo.svg" alt="Plásticos PIMSA" />
+              <img src="/pimsa-logo.png" alt="Plásticos PIMSA" />
             </span>
             <div className="sub">{RAZON_SOCIAL}</div>
           </div>
