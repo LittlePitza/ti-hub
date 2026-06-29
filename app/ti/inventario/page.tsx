@@ -8,7 +8,8 @@ import SinConexion from "@/components/SinConexion";
 import BotonEnviar from "@/components/BotonEnviar";
 import AccesosEquipo from "@/components/AccesosEquipo";
 import ModalGestionar from "@/components/ModalGestionar";
-import { crearEquipo, asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
+import NuevoEquipo from "@/components/NuevoEquipo";
+import { asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
 import { generarResponsivaEquipo } from "../responsivas/actions";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,14 @@ const ETIQUETA_ESTADO: Record<string, string> = {
   en_reparacion: "En reparación",
   almacen: "Almacén",
   baja: "Baja",
+};
+
+// Tipo representativo de cada categoría para el glifo de su pestaña.
+const TIPO_REP: Record<string, string> = {
+  computo: "laptop",
+  celular: "celular",
+  linea: "linea",
+  software: "software",
 };
 
 // Días para considerar una garantía "por vencer" (resaltado sutil en la tabla).
@@ -43,16 +52,23 @@ export default async function Inventario({
   const c = cat.campos;
 
   const sb = await getSupabase();
-  const head = (
-    <div className="pagina-head">
-      <div>
-        <h1 className="pagina-titulo">Inventario</h1>
-        <p className="pagina-desc">Cómputo, celulares, líneas telefónicas y software</p>
-      </div>
-      <Link href="/ti/responsivas" className="boton secundario">Responsivas</Link>
+  const titulo = (
+    <div>
+      <h1 className="pagina-titulo">Inventario</h1>
+      <p className="pagina-desc">Cómputo, celulares, tablets, líneas telefónicas y software</p>
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  const responsivasLink = (
+    <Link href="/ti/responsivas" className="boton secundario">Responsivas</Link>
+  );
+  if (!sb) {
+    return (
+      <>
+        <div className="pagina-head">{titulo}{responsivasLink}</div>
+        <SinConexion />
+      </>
+    );
+  }
 
   const [equiposQ, empleadosQ, respQ] = await Promise.all([
     sb.from("equipos")
@@ -112,7 +128,13 @@ export default async function Inventario({
 
   return (
     <>
-      {head}
+      <div className="pagina-head">
+        {titulo}
+        <div className="pagina-head-acciones">
+          <NuevoEquipo empleados={empleados} categoriaInicial={cat.valor} />
+          {responsivasLink}
+        </div>
+      </div>
 
       {respAviso && (
         <div className="banner-exito" style={{ marginBottom: 20 }}>
@@ -139,6 +161,7 @@ export default async function Inventario({
               href={`/ti/inventario?cat=${t.valor}`}
               className={`tab ${t.valor === cat.valor ? "activo" : ""}`}
             >
+              <IconoTipo tipo={TIPO_REP[t.valor]} className="tab-glifo" size={16} />
               {t.etiqueta} <span className="tab-num">{n}</span>
             </Link>
           );
@@ -168,87 +191,6 @@ export default async function Inventario({
           <div className="metrica-label">Resguardos pendientes</div>
         </div>
       </div>
-
-      {/* Registrar: colapsado para que la lista sea la protagonista. */}
-      <details className="plegable">
-        <summary>Registrar {cat.singular}</summary>
-        <form className="formulario plano" action={crearEquipo}>
-          <input type="hidden" name="categoria" value={cat.valor} />
-          <div className="campos">
-            <div className="campo">
-              <label htmlFor="eq-nombre">{c.nombre.label}</label>
-              <input id="eq-nombre" name="nombre" placeholder={c.nombre.placeholder} required={cat.valor !== "linea"} />
-            </div>
-            {cat.tipos.length > 1 && (
-              <div className="campo">
-                <label htmlFor="eq-tipo">Tipo</label>
-                <select id="eq-tipo" name="tipo" defaultValue={cat.tipos[0]}>
-                  {cat.tipos.map((t) => <option key={t} value={t}>{t.replace("_", " ")}</option>)}
-                </select>
-              </div>
-            )}
-            {c.marca && (
-              <div className="campo">
-                <label htmlFor="eq-marca">{c.marca.label}</label>
-                <input id="eq-marca" name="marca" placeholder={c.marca.placeholder} />
-              </div>
-            )}
-            {c.modelo && (
-              <div className="campo">
-                <label htmlFor="eq-modelo">{c.modelo.label}</label>
-                <input id="eq-modelo" name="modelo" placeholder={c.modelo.placeholder} />
-              </div>
-            )}
-            {c.num_serie && (
-              <div className="campo">
-                <label htmlFor="eq-serie">{c.num_serie.label}</label>
-                <input id="eq-serie" name="num_serie" placeholder={c.num_serie.placeholder} />
-              </div>
-            )}
-            {c.telefono && (
-              <div className="campo">
-                <label htmlFor="eq-telefono">{c.telefono.label}</label>
-                <input id="eq-telefono" name="telefono" placeholder={c.telefono.placeholder} required={cat.valor === "linea"} />
-              </div>
-            )}
-            <div className="campo">
-              <label htmlFor="eq-empleado">Asignar a</label>
-              {selectorEmpleado("empleado")}
-            </div>
-            {c.ubicacion && (
-              <div className="campo">
-                <label htmlFor="eq-ubicacion">Ubicación</label>
-                <input id="eq-ubicacion" name="ubicacion" placeholder="Planta · Oficina" />
-              </div>
-            )}
-            <div className="campo">
-              <label htmlFor="eq-estado">Estado</label>
-              <select id="eq-estado" name="estado" defaultValue="activo">
-                {ESTADOS.map((e) => <option key={e} value={e}>{ETIQUETA_ESTADO[e]}</option>)}
-              </select>
-            </div>
-            {c.fechas && (
-              <>
-                <div className="campo">
-                  <label htmlFor="eq-compra">Fecha de compra</label>
-                  <input id="eq-compra" name="fecha_compra" type="date" />
-                </div>
-                <div className="campo">
-                  <label htmlFor="eq-garantia">{c.garantiaLabel}</label>
-                  <input id="eq-garantia" name="garantia_hasta" type="date" />
-                </div>
-              </>
-            )}
-            <div className="campo ancho">
-              <label htmlFor="eq-notas">Notas</label>
-              <textarea id="eq-notas" name="notas" placeholder="Detalles, accesorios incluidos, historial…" />
-            </div>
-          </div>
-          <AccesosEquipo />
-          <p className="alta-nota suave">Si lo asignas a un empleado, se generará su responsiva en automático.</p>
-          <BotonEnviar className="boton" ocupado="Guardando…">Guardar {cat.singular}</BotonEnviar>
-        </form>
-      </details>
 
       {/* Búsqueda y filtros (server, por URL). */}
       <div className="toolbar">
@@ -445,7 +387,17 @@ function iniciales(s: string): string {
 }
 
 // Icono de línea por tipo de equipo (estático, fuera del render por fila).
-function IconoTipo({ tipo }: { tipo: string | null }) {
+// Se reusa en la tabla (className por defecto) y en las pestañas (className
+// "tab-glifo", que hereda el color de la pestaña) variando tamaño.
+function IconoTipo({
+  tipo,
+  className = "inv-tipo-icono",
+  size = 20,
+}: {
+  tipo: string | null;
+  className?: string;
+  size?: number;
+}) {
   const props = {
     viewBox: "0 0 24 24",
     fill: "none",
@@ -483,5 +435,5 @@ function IconoTipo({ tipo }: { tipo: string | null }) {
         return <><path d="m21 8-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /></>;
     }
   })();
-  return <svg className="inv-tipo-icono" width="20" height="20" {...props}>{path}</svg>;
+  return <svg className={className} width={size} height={size} {...props}>{path}</svg>;
 }

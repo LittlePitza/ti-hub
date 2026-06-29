@@ -22,9 +22,16 @@ async function datosAsignacion(sb: SupabaseClient, correo: string | null) {
   return { asignado_a: data?.nombre ?? correo, asignado_email: correo };
 }
 
-export async function crearEquipo(formData: FormData) {
+// Resultado del alta para useActionState: la tarjeta lo lee para cerrar al éxito
+// o mostrar el motivo si algo falla (misma forma que crearTicket en tickets).
+export type EstadoCrearEquipo = { ok: true } | { ok: false; error: string } | null;
+
+export async function crearEquipo(
+  _prev: EstadoCrearEquipo,
+  formData: FormData,
+): Promise<EstadoCrearEquipo> {
   const sb = await getSupabaseAutenticado();
-  if (!sb) return;
+  if (!sb) return { ok: false, error: "Sesión no válida. Vuelve a iniciar sesión." };
   const v = (k: string) => (formData.get(k) as string)?.trim() || null;
 
   const cat = categoriaInv(v("categoria") ?? undefined);
@@ -32,10 +39,17 @@ export async function crearEquipo(formData: FormData) {
   const telefono = v("telefono");
   // Las líneas pueden no llevar etiqueta: el número hace de nombre.
   const nombre = v("nombre") ?? (telefono ? `Línea ${telefono}` : null);
-  if (!nombre) return;
+  if (!nombre) {
+    return {
+      ok: false,
+      error: cat.valor === "linea"
+        ? "Escribe el número de la línea."
+        : `Escribe un nombre o etiqueta para ${cat.singular === "equipo" ? "el equipo" : "la " + cat.singular}.`,
+    };
+  }
 
   const correo = v("empleado")?.toLowerCase() ?? null;
-  const { data: creado } = await sb.from("equipos").insert({
+  const { data: creado, error } = await sb.from("equipos").insert({
     nombre,
     categoria: cat.valor,
     tipo,
@@ -51,13 +65,16 @@ export async function crearEquipo(formData: FormData) {
     notas: v("notas"),
     accesos: sanitizarAccesos(formData.get("accesos")),
   }).select("id").single();
+  if (error) return { ok: false, error: "No se pudo guardar. Intenta de nuevo." };
   refrescar(cat.valor);
 
-  // Si nace asignado, generamos su responsiva y vamos al aviso con enlace.
+  // Si nace asignado, generamos su responsiva y vamos al aviso con enlace
+  // (el redirect navega y desmonta la tarjeta).
   if (correo && creado?.id) {
     const respId = await generarResponsiva(creado.id, correo);
     if (respId) redirect(`/ti/inventario?cat=${cat.valor}&resguardo=${respId}`);
   }
+  return { ok: true };
 }
 
 export async function cambiarEstadoEquipo(formData: FormData) {

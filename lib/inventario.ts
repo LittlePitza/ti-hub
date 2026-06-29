@@ -39,7 +39,7 @@ export const CATEGORIAS_INV: {
   },
   {
     valor: "celular",
-    etiqueta: "Celulares",
+    etiqueta: "Celulares y tablets",
     singular: "celular",
     tipos: ["celular", "tablet"],
     campos: {

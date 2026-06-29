@@ -3481,3 +3481,57 @@ details.alta .formulario {
   .responsiva-doc .encabezado .control { width: 100%; }
   .responsiva-doc .firmas { grid-template-columns: 1fr; gap: 16px; }
 }
+
+/* ============================================================
+   Inventario · alta de equipos (tarjeta) y refinamientos de página
+   ============================================================ */
+
+/* Acciones del encabezado: alta + responsivas, alineadas a la derecha. */
+.pagina-head-acciones { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* Glifo de categoría en las pestañas (hereda el color de la pestaña, a
+   diferencia de .inv-tipo-icono que fija su propio color). */
+.tab-glifo { flex-shrink: 0; opacity: 0.85; }
+.tab.activo .tab-glifo { opacity: 1; }
+
+/* Tarjeta de alta: reusa el chrome de .modal-gestionar; solo ajusta el ancho
+   (sobreescribe a .modal-crear, definida antes en el archivo). */
+.modal-nuevo-equipo { width: min(720px, 94vw); }
+
+/* Control segmentado de categoría: la firma de la tarjeta. Cada segmento apila
+   glifo de dispositivo + etiqueta; el activo se marca con el verde PIMSA. */
+.seg-categoria {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.seg-cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 13px 8px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 10px;
+  background: var(--superficie);
+  color: var(--tinta-suave);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+.seg-cat:hover { border-color: var(--pimsa-verde-claro); color: var(--tinta); }
+.seg-cat:focus-visible { outline: 2px solid var(--pimsa-azul); outline-offset: 2px; }
+.seg-cat.activo {
+  border-color: var(--pimsa-verde);
+  background: var(--ok-tenue);
+  color: var(--ok);
+}
+.seg-cat-glifo { display: inline-flex; }
+.seg-cat-label { font-size: 12px; font-weight: 500; line-height: 1.25; }
+
+@media (prefers-reduced-motion: reduce) {
+  .seg-cat { transition: none; }
+}
+@media (max-width: 560px) {
+  .seg-categoria { grid-template-columns: repeat(2, 1fr); }
+}
