@@ -84,15 +84,15 @@ correo de un compañero podría ver sus reportes (portal interno, fricción cero
 
 ---
 
-## Fase 4 — Proveedores, contratos y alertas 🟡
+## Fase 4 — Proveedores, contratos y alertas ✅
 
 **Objetivo:** no perder renovaciones ni garantías.
 
-- [ ] 🟡 Nueva tabla `proveedores`: nombre, servicio, contacto, teléfono, correo, costo, periodicidad, fecha de renovación.
-- [ ] 🟡 Pre-cargar Microsoft (licencias M365) e ISP (internet).
-- [ ] 🟢 **Alertas en dashboard**: contratos por renovar (próximos 30/60 días) y **garantías de equipos por vencer** (ya tenemos `garantia_hasta`).
+- [x] 🟡 Nueva tabla `proveedores`: nombre, servicio, contacto, teléfono, correo, costo, periodicidad, próximo pago. **Hecho:** catálogo en `/ti/facturas/proveedores` + módulo de **facturas** (`/ti/facturas`, tabla `facturas` con adjuntos PDF/XML en Storage) con agenda de pagos a 90 días que combina facturas capturadas y vencimientos recurrentes proyectados desde `proximo_pago` (`lib/facturas.ts`).
+- [x] 🟡 ~~Pre-cargar Microsoft (licencias M365) e ISP (internet)~~ → decidido sin seed: TI los captura desde el panel.
+- [x] 🟢 **Alertas en dashboard**: pagos próximos/vencidos y pendiente del mes en el resumen; **garantías de equipos por vencer** (panel "Garantías · 90 días").
 
-**Cambios de esquema:** tabla `proveedores` (+ opcional `contratos`).
+**Cambios de esquema (hechos):** tablas `proveedores` y `facturas` + bucket de Storage `facturas`.
 
 ---
 
@@ -113,7 +113,7 @@ correo de un compañero podría ver sus reportes (portal interno, fricción cero
 | 1 | Reemplazar seed por datos PIMSA |
 | 2 | ✅ `tickets.solicitante_email`, `tickets.equipo_id`, `equipos.asignado_email` (portal vía service role, sin políticas `anon`); ✅ estados ampliados + `asignado_email`, `primera_respuesta_at`, `resuelto_at` (SLA) |
 | 3 | Tabla `empleados`; FK `equipos.asignado_a` y `tickets` → `empleados` |
-| 4 | Tabla `proveedores` (y/o `contratos`) |
+| 4 | ✅ Tablas `proveedores` y `facturas` + bucket de Storage `facturas` |
 | 5 | Bucket de Storage para adjuntos; ✅ tabla `ticket_eventos` (bitácora/comentarios) |
 
 ## Decisiones abiertas (para resolver con el usuario)
@@ -131,4 +131,4 @@ correo de un compañero podría ver sus reportes (portal interno, fricción cero
 La 1 es rápida y de alto impacto visual (se ve PIMSA). La 2 es el objetivo central (portal del empleado). La 3 habilita a la 4. La 5 es pulido.
 
 ---
-_Última actualización: 2026-06-13_
+_Última actualización: 2026-07-02_
