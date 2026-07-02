@@ -256,6 +256,54 @@ create table if not exists plantillas_responsiva (
   updated_at timestamptz not null default now()
 );
 
+-- ---------- PROVEEDORES ----------
+-- Servicios recurrentes del departamento (internet, licencias, telefonía).
+-- `proximo_pago` es el ancla del calendario: lib/facturas.ts proyecta los
+-- vencimientos futuros a partir de esa fecha según `periodicidad` (no se
+-- materializan filas). Al registrar el pago desde el panel, la action crea la
+-- factura correspondiente y avanza `proximo_pago` al siguiente periodo.
+create table if not exists proveedores (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  servicio text,                 -- qué provee: "Internet dedicado", "Microsoft 365"
+  contacto text,
+  telefono text,
+  correo text,
+  costo numeric(12,2),           -- costo por periodo; null = variable
+  moneda text not null default 'MXN' check (moneda in ('MXN','USD')),
+  periodicidad text not null default 'mensual'
+    check (periodicidad in ('mensual','bimestral','trimestral','semestral','anual','unico')),
+  proximo_pago date,             -- siguiente vencimiento; null = sin calendario
+  activo boolean not null default true,
+  notas text,
+  created_at timestamptz not null default now()
+);
+
+-- ---------- FACTURAS ----------
+-- Facturas y pagos del departamento (se administran desde /ti/facturas).
+-- `vencida` NO se guarda: se deriva en la UI (pendiente + fecha_vencimiento < hoy),
+-- así ningún proceso tiene que mover estados. Adjuntos PDF/XML en el bucket
+-- 'facturas': [{path,nombre,tipo}]. Folio interno = 'FAC-' + num (lib/format.ts).
+create table if not exists facturas (
+  id uuid primary key default gen_random_uuid(),
+  num serial,
+  proveedor_id uuid references proveedores(id) on delete set null,
+  concepto text not null,
+  folio_proveedor text,          -- folio/serie que trae la factura del proveedor
+  uuid_cfdi text,                -- folio fiscal del CFDI (opcional)
+  monto numeric(12,2) not null default 0,
+  moneda text not null default 'MXN' check (moneda in ('MXN','USD')),
+  fecha_emision date,
+  fecha_vencimiento date not null,
+  fecha_pago date,               -- se sella al marcar pagada
+  metodo_pago text,              -- transferencia, tarjeta, domiciliado…
+  estado text not null default 'pendiente'
+    check (estado in ('pendiente','pagada','cancelada')),
+  adjuntos jsonb not null default '[]'::jsonb,
+  notas text,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_tickets_estado on tickets(estado);
 create index if not exists idx_tickets_asignado_email on tickets(asignado_email);
 create index if not exists idx_ticket_eventos_ticket on ticket_eventos(ticket_id, created_at);
@@ -267,6 +315,10 @@ create index if not exists idx_tickets_equipo on tickets(equipo_id);
 create index if not exists idx_mantenimientos_equipo on mantenimientos(equipo_id);
 create index if not exists idx_responsivas_equipo on responsivas(equipo_id);
 create index if not exists idx_responsivas_estado on responsivas(estado);
+create index if not exists idx_facturas_estado on facturas(estado);
+create index if not exists idx_facturas_vencimiento on facturas(fecha_vencimiento);
+create index if not exists idx_facturas_proveedor on facturas(proveedor_id);
+create index if not exists idx_proveedores_activo on proveedores(activo);
 
 -- ---------- MIGRACIÓN (bases creadas antes) ----------
 -- `create table if not exists` no agrega columnas a tablas existentes; estas líneas sí.
@@ -359,6 +411,8 @@ alter table ticket_eventos enable row level security;
 alter table responsivas enable row level security;
 alter table plantillas_responsiva enable row level security;
 alter table campos_inventario enable row level security;
+alter table proveedores enable row level security;
+alter table facturas enable row level security;
 
 -- Si vienes del esquema anterior (acceso abierto), estas líneas retiran esas políticas.
 drop policy if exists "acceso_total_equipos" on equipos;
@@ -385,6 +439,12 @@ create policy "plantillas_autenticados" on plantillas_responsiva
   for all to authenticated using (true) with check (true);
 drop policy if exists "campos_inventario_autenticados" on campos_inventario;
 create policy "campos_inventario_autenticados" on campos_inventario
+  for all to authenticated using (true) with check (true);
+drop policy if exists "proveedores_autenticados" on proveedores;
+create policy "proveedores_autenticados" on proveedores
+  for all to authenticated using (true) with check (true);
+drop policy if exists "facturas_autenticados" on facturas;
+create policy "facturas_autenticados" on facturas
   for all to authenticated using (true) with check (true);
 
 -- ---------- STORAGE: bucket de responsivas firmadas ----------
@@ -413,6 +473,19 @@ create policy "tickets_storage_rw" on storage.objects
   for all to authenticated
   using (bucket_id = 'tickets')
   with check (bucket_id = 'tickets');
+
+-- ---------- STORAGE: bucket de facturas (PDF/XML) ----------
+-- Archivos de cada factura (PDF y XML del CFDI). Privado: solo el panel de TI
+-- (usuarios autenticados) sube y descarga; el portal del empleado no lo toca.
+insert into storage.buckets (id, name, public)
+  values ('facturas', 'facturas', false)
+  on conflict (id) do nothing;
+
+drop policy if exists "facturas_storage_rw" on storage.objects;
+create policy "facturas_storage_rw" on storage.objects
+  for all to authenticated
+  using (bucket_id = 'facturas')
+  with check (bucket_id = 'facturas');
 
 -- ---------- DATOS DE EJEMPLO ----------
 -- Solo para instalaciones nuevas: NO re-ejecutar esta sección sobre una base con datos
