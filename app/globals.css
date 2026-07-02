@@ -3409,7 +3409,8 @@ details.alta .formulario {
   --doc-acento-2: var(--pimsa-azul-profundo);
   --doc-texto: #1c2733;
   --doc-tenue: #5a6b7b;
-  --doc-borde: #c4cdd6;
+  --doc-borde: #d7dde3;
+  --doc-linea: #e9edf1;
   --doc-seccion: #eef2f7;
   --doc-aviso: #f6f3e7;
   color: var(--doc-texto);
@@ -3440,24 +3441,21 @@ details.alta .formulario {
 }
 .responsiva-doc .encabezado {
   display: flex;
-  align-items: stretch;
-  border: 1px solid var(--doc-borde);
-  border-radius: 6px;
-  overflow: hidden;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--doc-acento);
   margin-bottom: 14px;
 }
 .responsiva-doc .encabezado .logo {
-  width: 27%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  gap: 6px;
-  padding: 10px;
-  border-right: 1px solid var(--doc-borde);
+  align-items: flex-start;
+  text-align: left;
+  gap: 4px;
+  flex-shrink: 0;
 }
-.responsiva-doc .encabezado .logo img { max-width: 130px; height: auto; display: block; }
+.responsiva-doc .encabezado .logo img { max-width: 120px; height: auto; display: block; }
 .responsiva-doc .encabezado .logo .sub { font-size: 9px; color: var(--doc-tenue); }
 .responsiva-doc .encabezado .titulo {
   flex: 1;
@@ -3466,32 +3464,30 @@ details.alta .formulario {
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 8px 12px;
-  background: var(--doc-acento);
-  color: #fff;
 }
 .responsiva-doc .encabezado .titulo h1 {
   font-size: 15px;
   margin: 0;
+  color: var(--doc-acento);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-weight: 600;
+  font-weight: 700;
 }
-.responsiva-doc .encabezado .titulo .tipo { font-size: 12.5px; font-weight: 600; margin-top: 3px; }
+.responsiva-doc .encabezado .titulo .tipo { font-size: 12px; font-weight: 500; margin-top: 3px; color: var(--doc-tenue); }
 .responsiva-doc .encabezado .control {
-  width: 28%;
+  flex-shrink: 0;
   font-size: 9px;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto auto;
+  gap: 1px 10px;
+  align-content: center;
 }
 .responsiva-doc .encabezado .control span {
-  border-bottom: 1px solid var(--doc-borde);
-  padding: 3px 6px;
+  padding: 1px 0;
   display: flex;
   align-items: center;
 }
-.responsiva-doc .encabezado .control .et { background: var(--doc-seccion); font-weight: 600; color: var(--doc-tenue); }
-.responsiva-doc .encabezado .control span:nth-last-child(-n + 2) { border-bottom: none; }
+.responsiva-doc .encabezado .control .et { font-weight: 600; color: var(--doc-tenue); text-transform: uppercase; letter-spacing: 0.3px; }
 
 .responsiva-doc .folio {
   text-align: right;
@@ -3502,31 +3498,32 @@ details.alta .formulario {
 }
 .responsiva-doc .folio span { font-family: var(--font-mono); }
 
-.responsiva-doc .seccion { margin-bottom: 12px; }
+.responsiva-doc .seccion { margin-bottom: 13px; }
 .responsiva-doc .seccion > h2 {
-  font-size: 11px;
+  font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #fff;
-  background: var(--doc-acento-2);
-  padding: 4px 8px;
+  letter-spacing: 0.6px;
+  color: var(--doc-acento);
+  background: transparent;
+  padding: 0 0 3px;
   margin: 0 0 6px;
-  border-radius: 3px;
-  font-weight: 600;
+  border-bottom: 1.5px solid var(--doc-acento);
+  font-weight: 700;
 }
 .responsiva-doc table.datos { width: 100%; border-collapse: collapse; }
 .responsiva-doc table.datos th,
 .responsiva-doc table.datos td {
-  border: 1px solid var(--doc-borde);
-  padding: 5px 7px;
+  border: none;
+  border-bottom: 1px solid var(--doc-linea);
+  padding: 4px 6px;
   text-align: left;
   vertical-align: middle;
 }
 .responsiva-doc table.datos th {
-  background: var(--doc-seccion);
+  background: transparent;
   font-weight: 600;
   color: var(--doc-tenue);
-  width: 22%;
+  width: 20%;
   white-space: nowrap;
 }
 .responsiva-doc .casillas { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 4px 2px; }
@@ -3594,10 +3591,15 @@ details.alta .formulario {
 .responsiva-doc .pie b { color: var(--doc-tenue); }
 
 /* Impresión: solo la hoja, sin panel ni controles */
+@page {
+  size: letter;
+  margin: 14mm 14mm;
+}
 @media print {
   .sidebar, .no-print { display: none !important; }
   .shell { display: block; }
   .contenido { padding: 0 !important; max-width: none !important; }
+  .responsiva-doc { font-size: 11.5px; }
   .responsiva-doc .hoja {
     width: auto;
     border: none;
@@ -3606,10 +3608,17 @@ details.alta .formulario {
     padding: 0;
     margin: 0;
   }
+  /* Cortes de página limpios: nada de partir una sección, tabla, bloque de
+     casillas o la fila de firmas a la mitad; el título se queda con su tabla. */
   .responsiva-doc .seccion,
+  .responsiva-doc .casillas,
   .responsiva-doc table,
+  .responsiva-doc table tr,
   .responsiva-doc .firmas,
   .responsiva-doc .firmas-personas { break-inside: avoid; }
+  .responsiva-doc .seccion > h2,
+  .responsiva-doc .encabezado { break-after: avoid; }
+  .responsiva-doc .firma { break-inside: avoid; }
 }
 
 @media (max-width: 760px) {
