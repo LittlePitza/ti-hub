@@ -210,10 +210,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   color: rgba(255, 255, 255, 0.74);
   font-size: 14px;
   white-space: nowrap;
-  transition: background 120ms ease, color 120ms ease;
+  transition: background 120ms ease, color 120ms ease, transform 120ms ease;
 }
-.rail-link svg { width: 17px; height: 17px; flex-shrink: 0; opacity: 0.82; }
+.rail-link svg { width: 17px; height: 17px; flex-shrink: 0; opacity: 0.82; transition: transform 120ms ease, opacity 120ms ease; }
 .rail-link:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.rail-link:hover svg { opacity: 1; transform: scale(1.08); }
+.rail-link:active { transform: scale(0.98); transition-duration: 60ms; }
 .rail-link.activo { background: rgba(127, 157, 65, 0.2); color: #fff; font-weight: 500; }
 .rail-link.activo svg { opacity: 1; color: var(--pimsa-verde-claro); }
 .rail-link.activo::before {
@@ -349,9 +351,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   border-radius: var(--radio);
   background: transparent;
   color: var(--tinta-suave);
-  transition: background 120ms ease, color 120ms ease;
+  transition: background 120ms ease, color 120ms ease, transform 120ms ease;
 }
-.tema-toggle:hover { background: var(--neutro-tenue); color: var(--tinta); }
+.tema-toggle:hover { background: var(--neutro-tenue); color: var(--tinta); transform: rotate(12deg); }
+.tema-toggle:active { transform: rotate(12deg) scale(0.92); transition-duration: 60ms; }
 .tema-toggle .icono-sol { display: none; }
 [data-theme="dark"] .tema-toggle .icono-sol { display: block; }
 [data-theme="dark"] .tema-toggle .icono-luna { display: none; }
@@ -441,14 +444,31 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   font-weight: 600;
   transition: background 120ms ease, border-color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
 }
-.boton:hover { background: var(--petroleo-fuerte); border-color: var(--petroleo-fuerte); }
-.boton:active { transform: scale(0.97); }
+/* Micro-interacción: al pasar el cursor el botón se levanta 1px con una sombra
+   corta; al presionar baja de inmediato (60ms) para que el clic se sienta al
+   instante. Solo transform/sombra: corre en el compositor y no retrasa nada. */
+.boton:hover {
+  background: var(--petroleo-fuerte);
+  border-color: var(--petroleo-fuerte);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+}
+.boton:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+  transition-duration: 60ms;
+}
+.boton:disabled { transform: none; box-shadow: none; }
 .boton.secundario {
   background: var(--superficie);
   color: var(--tinta);
   border-color: var(--linea-fuerte);
 }
-.boton.secundario:hover { background: var(--neutro-tenue); }
+.boton.secundario:hover {
+  background: var(--neutro-tenue);
+  border-color: var(--linea-fuerte);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
 .boton.mini { padding: 5px 11px; font-size: 12.5px; border-radius: var(--radio); }
 
 /* Estado "ocupado": mientras corre la Server Action el botón se deshabilita
@@ -1809,7 +1829,9 @@ a.ticket-card:hover .ticket-card-ver svg { transform: translateX(3px); }
   align-items: center;
   gap: 8px;
   user-select: none;
+  transition: background 120ms ease;
 }
+.plegable > summary:hover { background: var(--hover); }
 .plegable > summary::-webkit-details-marker { display: none; }
 .plegable > summary::before {
   content: "+";
@@ -1817,7 +1839,9 @@ a.ticket-card:hover .ticket-card-ver svg { transform: translateX(3px); }
   font-size: 16px;
   line-height: 1;
   color: var(--tinta-suave);
+  transition: transform 160ms ease;
 }
+.plegable > summary:hover::before { transform: scale(1.15); }
 .plegable[open] > summary::before { content: "−"; }
 .plegable[open] > summary { border-bottom: 1px solid var(--linea); }
 .plegable > .formulario,
@@ -2975,9 +2999,10 @@ td .editar { position: relative; }
   padding: 3px 9px;
   border-radius: 99px;
   white-space: nowrap;
-  transition: opacity 120ms ease;
+  transition: opacity 120ms ease, transform 120ms ease;
 }
-.resguardo-chip:hover { opacity: 0.78; }
+.resguardo-chip:hover { opacity: 0.78; transform: translateY(-1px); }
+.resguardo-chip:active { transform: scale(0.96); transition-duration: 60ms; }
 .resguardo-chip .punto { width: 6px; height: 6px; border-radius: 99px; background: currentColor; }
 .resguardo-chip.ok      { background: var(--ok-tenue);       color: var(--ok); }
 .resguardo-chip.aviso   { background: var(--aviso-tenue);    color: var(--aviso); }
@@ -3820,4 +3845,21 @@ details.alta .formulario {
 }
 @media (prefers-reduced-motion: reduce) {
   .caja-barra-fill { transition: none; }
+}
+
+/* ---------- Micro-interacciones: apagado por accesibilidad ----------
+   Quien pide "reducir movimiento" en su sistema recibe los mismos botones
+   sin levantamientos ni escalados; el cambio de color se mantiene. */
+@media (prefers-reduced-motion: reduce) {
+  .boton, .press, .rail-link, .rail-link svg, .tema-toggle,
+  .plegable > summary::before, .resguardo-chip,
+  .portal-boton svg, .portal-hero-cta svg, .seg-enviar svg {
+    transition: none;
+  }
+  .boton:hover, .boton:active, .press:active, .rail-link:hover svg, .rail-link:active,
+  .tema-toggle:hover, .tema-toggle:active, .resguardo-chip:hover, .resguardo-chip:active,
+  .plegable > summary:hover::before,
+  .portal-boton:hover svg, .portal-hero-cta:hover svg, .seg-enviar:hover svg {
+    transform: none;
+  }
 }
