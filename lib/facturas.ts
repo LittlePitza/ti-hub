@@ -10,6 +10,8 @@
 // Toda la aritmética de fechas trabaja sobre strings YYYY-MM-DD en UTC para no
 // depender de la zona horaria del servidor.
 
+import { moneda } from "./format";
+
 export type EstadoFactura = "pendiente" | "pagada" | "cancelada";
 export type Periodicidad = "mensual" | "bimestral" | "trimestral" | "semestral" | "anual" | "unico";
 export type Moneda = "MXN" | "USD";
@@ -180,6 +182,14 @@ export function agruparPorMes(vs: Vencimiento[]): {
     for (const v of items) if (v.monto !== null) total[v.moneda] += v.monto;
     return { clave, etiqueta: etiqueta[0].toUpperCase() + etiqueta.slice(1), total, items };
   });
+}
+
+// Pinta un total {MXN, USD} omitiendo la divisa en cero: "$1,200.00 + US$99.00".
+export function montos(total: Record<Moneda, number>): string {
+  const partes: string[] = [];
+  if (total.MXN > 0 || total.USD === 0) partes.push(moneda(total.MXN));
+  if (total.USD > 0) partes.push(moneda(total.USD, "USD"));
+  return partes.join(" + ");
 }
 
 // Monto que vence dentro del mes en curso (incluye lo ya vencido de meses

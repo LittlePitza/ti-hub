@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, folio, duracionPartes } from "@/lib/format";
+import { fechaCorta, folio, duracionPartes, moneda } from "@/lib/format";
 import { ESTADOS_ACTIVOS, evaluarRespuesta, evaluarResolucion } from "@/lib/tickets";
+import { calendarioPagos, pendienteDelMes, montos, hoyISO } from "@/lib/facturas";
 import { getConfigCorreo, resolverSla } from "@/lib/correo";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
@@ -68,7 +69,7 @@ export default async function Resumen() {
   const en14 = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
   const en90 = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
 
-  const [equiposQ, ticketsQ, mantosQ, respQ, configCorreo] = await Promise.all([
+  const [equiposQ, ticketsQ, mantosQ, respQ, configCorreo, facturasQ, provsQ] = await Promise.all([
     sb.from("equipos").select("nombre, tipo, estado, garantia_hasta"),
     sb.from("tickets")
       .select("id, num, titulo, solicitante, estado, prioridad, asignado_a, created_at, primera_respuesta_at, resuelto_at")
@@ -80,12 +81,25 @@ export default async function Resumen() {
       .order("fecha_programada", { ascending: true }),
     sb.from("responsivas").select("estado").in("estado", ["borrador", "pendiente_firma"]),
     getConfigCorreo(sb),
+    sb
+      .from("facturas")
+      .select("id, num, concepto, monto, moneda, estado, fecha_vencimiento, proveedor_id")
+      .eq("estado", "pendiente"),
+    sb
+      .from("proveedores")
+      .select("id, nombre, servicio, costo, moneda, periodicidad, proximo_pago, activo")
+      .eq("activo", true),
   ]);
 
   const equipos = equiposQ.data ?? [];
   const tickets = ticketsQ.data ?? [];
   const mantos = mantosQ.data ?? [];
   const respPendientes = (respQ.data ?? []).length;
+
+  // Calendario de pagos (facturas pendientes + recurrencias): siguientes 60 días.
+  const pagos = calendarioPagos(facturasQ.data ?? [], provsQ.data ?? [], hoyISO(), 60);
+  const pagosProximos = pagos.slice(0, 5);
+  const pendienteMes = pendienteDelMes(pagos, hoyISO());
 
   // Métricas
   const enReparacion = equipos.filter((e) => e.estado === "en_reparacion").length;
@@ -223,9 +237,9 @@ export default async function Resumen() {
         </div>
       </section>
 
-      {/* Contexto operativo: activos físicos y trabajo programado */}
+      {/* Contexto operativo: activos físicos, trabajo programado y pagos */}
       <section className="banda-operativa">
-        <h2 className="banda-titulo">Inventario y mantenimiento</h2>
+        <h2 className="banda-titulo">Inventario, mantenimiento y pagos</h2>
         <div className="metricas">
           <div className="metrica">
             <div className="metrica-valor">{equipos.length}</div>
@@ -246,6 +260,10 @@ export default async function Resumen() {
           <div className="metrica">
             <div className={`metrica-valor ${respPendientes > 0 ? "alerta" : ""}`}>{respPendientes}</div>
             <div className="metrica-label">Responsivas sin firmar</div>
+          </div>
+          <div className="metrica">
+            <div className="metrica-valor">{montos(pendienteMes)}</div>
+            <div className="metrica-label">Pagos pendientes del mes</div>
           </div>
         </div>
       </section>
@@ -330,6 +348,35 @@ export default async function Resumen() {
                     </div>
                   );
                 })
+              )}
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-cab">
+              <span className="panel-cab-titulo">Pagos próximos</span>
+              <Link href="/ti/facturas">Ver todos</Link>
+            </div>
+            <div className="panel-cuerpo">
+              {pagosProximos.length === 0 ? (
+                <div className="panel-vacio">Sin pagos en los próximos 60 días.</div>
+              ) : (
+                pagosProximos.map((v, i) => (
+                  <div className="fila-compacta" key={`${v.refId}-${v.fecha}-${i}`}>
+                    <div className="fila-compacta-main">
+                      <div className="fila-compacta-titulo">{v.titulo}</div>
+                      <div className="fila-compacta-sub">
+                        <span>{v.origen === "factura" ? "factura" : "recurrente"}</span>
+                        <span>·</span>
+                        <span>{v.monto === null ? "monto variable" : moneda(v.monto, v.moneda)}</span>
+                      </div>
+                    </div>
+                    <div className="fila-compacta-fin">
+                      <div className={`fila-compacta-fecha ${v.vencido ? "fecha-vencida" : ""}`}>{fechaCorta(v.fecha)}</div>
+                      {v.vencido && <div className="fecha-vencida" style={{ fontSize: 11 }}>vencido</div>}
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           </div>

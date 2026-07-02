@@ -8,6 +8,7 @@ import {
   calendarioPagos,
   agruparPorMes,
   pendienteDelMes,
+  montos,
   type Moneda,
 } from "@/lib/facturas";
 import type { Adjunto } from "@/lib/adjuntos";
@@ -25,14 +26,6 @@ import {
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Facturas" };
-
-// Pinta un total {MXN, USD} omitiendo la divisa en cero: "$1,200.00 + US$99.00".
-function montos(total: Record<Moneda, number>): string {
-  const partes: string[] = [];
-  if (total.MXN > 0 || total.USD === 0) partes.push(moneda(total.MXN));
-  if (total.USD > 0) partes.push(moneda(total.USD, "USD"));
-  return partes.join(" + ");
-}
 
 export default async function Facturas() {
   const sb = await getSupabase();
