@@ -36,12 +36,16 @@ export async function responderTicketPortal(formData: FormData) {
     .maybeSingle();
   const autor = empleado?.nombre || nombreDeCorreo(correo);
 
-  await sb.from("ticket_eventos").insert({
+  const { error } = await sb.from("ticket_eventos").insert({
     ticket_id: id,
     tipo: "mensaje_cliente",
     autor,
     cuerpo,
   });
+  if (error) {
+    console.error("[portal] responder reporte:", error.message);
+    redirect(`/reporte/${id}`);
+  }
 
   // Reabrir si estaba archivado/resuelto: el cliente sigue necesitando ayuda.
   if (ESTADOS_RESUELTOS.includes(t.estado as never)) {

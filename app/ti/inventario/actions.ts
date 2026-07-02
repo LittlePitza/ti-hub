@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
+import { lector } from "@/lib/form";
 import { categoriaInv, sanitizarAccesos, sanitizarExtras, campoDeFila, type CampoInv } from "@/lib/inventario";
 import { generarResponsiva, sincronizarResponsivasEquipo } from "@/app/ti/responsivas/actions";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -38,7 +39,7 @@ export async function crearEquipo(
 ): Promise<EstadoCrearEquipo> {
   const sb = await getSupabaseAutenticado();
   if (!sb) return { ok: false, error: "Sesión no válida. Vuelve a iniciar sesión." };
-  const v = (k: string) => (formData.get(k) as string)?.trim() || null;
+  const v = lector(formData);
 
   const cat = categoriaInv(v("categoria") ?? undefined);
   const tipo = cat.tipos.includes(v("tipo") ?? "") ? v("tipo") : cat.tipos[0];
@@ -87,9 +88,13 @@ export async function crearEquipo(
 export async function cambiarEstadoEquipo(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  await sb.from("equipos")
+  const { error } = await sb.from("equipos")
     .update({ estado: formData.get("estado") as string })
     .eq("id", formData.get("id") as string);
+  if (error) {
+    console.error("[inventario] cambiar estado:", error.message);
+    return;
+  }
   refrescar((formData.get("categoria") as string) ?? "computo");
 }
 
@@ -97,7 +102,7 @@ export async function cambiarEstadoEquipo(formData: FormData) {
 export async function editarEquipo(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  const v = (k: string) => (formData.get(k) as string)?.trim() || null;
+  const v = lector(formData);
   const id = formData.get("id") as string;
   if (!id) return;
 
@@ -107,7 +112,7 @@ export async function editarEquipo(formData: FormData) {
   const nombre = v("nombre") ?? (telefono ? `Línea ${telefono}` : null);
   if (!nombre) return;
 
-  await sb.from("equipos").update({
+  const { error } = await sb.from("equipos").update({
     nombre,
     tipo,
     marca: v("marca"),
@@ -123,6 +128,10 @@ export async function editarEquipo(formData: FormData) {
     accesos: sanitizarAccesos(formData.get("accesos")),
     extras: sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras")),
   }).eq("id", id);
+  if (error) {
+    console.error("[inventario] editar:", error.message);
+    return;
+  }
   refrescar(cat.valor);
 
   // Refresca el snapshot de las responsivas no firmadas de este equipo.
@@ -136,7 +145,11 @@ export async function asignarEquipo(formData: FormData) {
   const id = formData.get("id") as string;
   const cat = (formData.get("categoria") as string) ?? "computo";
   const correo = ((formData.get("empleado") as string) ?? "").trim().toLowerCase() || null;
-  await sb.from("equipos").update(await datosAsignacion(sb, correo)).eq("id", id);
+  const { error } = await sb.from("equipos").update(await datosAsignacion(sb, correo)).eq("id", id);
+  if (error) {
+    console.error("[inventario] asignar:", error.message);
+    return;
+  }
   refrescar(cat);
 
   // Al asignar a un empleado se genera (o reutiliza) su responsiva y se
@@ -150,6 +163,10 @@ export async function asignarEquipo(formData: FormData) {
 export async function eliminarEquipo(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  await sb.from("equipos").delete().eq("id", formData.get("id") as string);
+  const { error } = await sb.from("equipos").delete().eq("id", formData.get("id") as string);
+  if (error) {
+    console.error("[inventario] eliminar:", error.message);
+    return;
+  }
   refrescar((formData.get("categoria") as string) ?? "computo");
 }

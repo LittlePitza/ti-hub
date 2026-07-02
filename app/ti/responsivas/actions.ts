@@ -49,7 +49,7 @@ export async function generarResponsiva(equipoId: string, correo: string): Promi
     estado_fisico: "Usado — buen estado",
   };
 
-  const { data: nueva } = await sb
+  const { data: nueva, error } = await sb
     .from("responsivas")
     .insert({
       equipo_id: equipoId,
@@ -63,6 +63,10 @@ export async function generarResponsiva(equipoId: string, correo: string): Promi
     })
     .select("id")
     .single();
+  if (error) {
+    console.error("[responsivas] generar:", error.message);
+    return null;
+  }
 
   refrescar(nueva?.id);
   return nueva?.id ?? null;
@@ -97,7 +101,11 @@ export async function editarResponsiva(formData: FormData) {
   const fechaEntrega = ((formData.get("fecha_entrega") as string) ?? "").trim() || null;
   const personas = sanitizarPersonas(formData.get("personas"));
 
-  await sb.from("responsivas").update({ datos, notas, fecha_entrega: fechaEntrega, personas }).eq("id", id);
+  const { error } = await sb.from("responsivas").update({ datos, notas, fecha_entrega: fechaEntrega, personas }).eq("id", id);
+  if (error) {
+    console.error("[responsivas] editar:", error.message);
+    return;
+  }
   refrescar(id);
 }
 
@@ -121,7 +129,11 @@ export async function sincronizarResponsivasEquipo(sb: SupabaseClient, equipoId:
   const equipo = snapshotEquipo(eq);
   for (const r of resps) {
     const datos = { ...(r.datos ?? {}), equipo };
-    await sb.from("responsivas").update({ datos, equipo_nombre: eq.nombre }).eq("id", r.id);
+    const { error } = await sb.from("responsivas").update({ datos, equipo_nombre: eq.nombre }).eq("id", r.id);
+    if (error) {
+      console.error("[responsivas] sincronizar snapshot:", error.message);
+      continue;
+    }
     refrescar(r.id);
   }
 }
@@ -146,7 +158,11 @@ export async function actualizarDesdeInventario(formData: FormData) {
   if (!eq) return;
 
   const datos = { ...(r.datos ?? {}), equipo: snapshotEquipo(eq) };
-  await sb.from("responsivas").update({ datos, equipo_nombre: eq.nombre }).eq("id", id);
+  const { error } = await sb.from("responsivas").update({ datos, equipo_nombre: eq.nombre }).eq("id", id);
+  if (error) {
+    console.error("[responsivas] actualizar desde inventario:", error.message);
+    return;
+  }
   refrescar(id);
 }
 
@@ -164,9 +180,12 @@ export async function subirFirmada(formData: FormData) {
   const { error } = await sb.storage
     .from("responsivas")
     .upload(path, buffer, { contentType: file.type || "application/octet-stream", upsert: true });
-  if (error) return;
+  if (error) {
+    console.error("[responsivas] subir firmada (storage):", error.message);
+    return;
+  }
 
-  await sb
+  const { error: errFila } = await sb
     .from("responsivas")
     .update({
       archivo_url: path,
@@ -175,6 +194,10 @@ export async function subirFirmada(formData: FormData) {
       fecha_firmada: new Date().toISOString().slice(0, 10),
     })
     .eq("id", id);
+  if (errFila) {
+    console.error("[responsivas] subir firmada:", errFila.message);
+    return;
+  }
   refrescar(id);
 }
 
@@ -185,7 +208,11 @@ export async function cambiarEstadoResponsiva(formData: FormData) {
   const estado = formData.get("estado") as string;
   const update: Record<string, unknown> = { estado };
   if (estado === "firmada") update.fecha_firmada = new Date().toISOString().slice(0, 10);
-  await sb.from("responsivas").update(update).eq("id", id);
+  const { error } = await sb.from("responsivas").update(update).eq("id", id);
+  if (error) {
+    console.error("[responsivas] cambiar estado:", error.message);
+    return;
+  }
   refrescar(id);
 }
 
@@ -195,6 +222,10 @@ export async function eliminarResponsiva(formData: FormData) {
   const id = formData.get("id") as string;
   const archivo = formData.get("archivo_url") as string | null;
   if (archivo) await sb.storage.from("responsivas").remove([archivo]);
-  await sb.from("responsivas").delete().eq("id", id);
+  const { error } = await sb.from("responsivas").delete().eq("id", id);
+  if (error) {
+    console.error("[responsivas] eliminar:", error.message);
+    return;
+  }
   refrescar();
 }

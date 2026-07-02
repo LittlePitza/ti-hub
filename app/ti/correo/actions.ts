@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
+import { lector } from "@/lib/form";
 import {
   getConfigCorreo,
   enviarPrueba,
@@ -26,7 +27,7 @@ export async function guardarConfigCorreo(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
 
-  const txt = (k: string) => (formData.get(k) as string)?.trim() || null;
+  const txt = lector(formData);
   const activado = (k: string) => formData.get(k) === "on";
   const metodoRaw = (formData.get("metodo") as string) ?? "smtp_basico";
   const metodo = METODOS.includes(metodoRaw as MetodoCorreo) ? metodoRaw : "smtp_basico";
@@ -84,7 +85,11 @@ export async function guardarConfigCorreo(formData: FormData) {
   const secret = (formData.get("azure_client_secret") as string) ?? "";
   if (secret.length > 0) patch.azure_client_secret = secret;
 
-  await sb.from("config_correo").update(patch).eq("id", 1);
+  const { error } = await sb.from("config_correo").update(patch).eq("id", 1);
+  if (error) {
+    console.error("[correo] guardar configuración:", error.message);
+    redirect("/ti/correo?guardado=0");
+  }
   revalidatePath("/ti/correo");
   revalidatePath("/ti/tickets");
   redirect("/ti/correo?guardado=1");
@@ -117,7 +122,11 @@ export async function conectarMicrosoft() {
 export async function desconectarMicrosoft() {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  await sb.from("config_correo").update({ oauth_refresh_token: null, oauth_cuenta: null }).eq("id", 1);
+  const { error } = await sb.from("config_correo").update({ oauth_refresh_token: null, oauth_cuenta: null }).eq("id", 1);
+  if (error) {
+    console.error("[correo] desconectar Microsoft:", error.message);
+    return;
+  }
   revalidatePath("/ti/correo");
   redirect("/ti/correo?desconectado=1");
 }

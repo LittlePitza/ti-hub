@@ -45,7 +45,7 @@ export async function crearCampo(formData: FormData) {
   let i = 2;
   while (usadas.has(clave)) clave = `${base}_${i++}`;
 
-  await sb.from("campos_inventario").insert({
+  const { error } = await sb.from("campos_inventario").insert({
     categoria: categoria as CategoriaInv,
     clave,
     etiqueta: etiqueta.slice(0, 60),
@@ -56,6 +56,10 @@ export async function crearCampo(formData: FormData) {
     orden: Number(formData.get("orden")) || 0,
     activo: true,
   });
+  if (error) {
+    console.error("[campos_inventario] crear:", error.message);
+    return;
+  }
   refrescar();
 }
 
@@ -69,7 +73,7 @@ export async function editarCampo(formData: FormData) {
   const tipo = tipoValido(formData.get("tipo") as string);
 
   // La `clave` no se edita: mantiene el vínculo con los valores ya guardados.
-  await sb
+  const { error } = await sb
     .from("campos_inventario")
     .update({
       etiqueta: etiqueta.slice(0, 60),
@@ -81,12 +85,20 @@ export async function editarCampo(formData: FormData) {
       activo: formData.get("activo") === "on",
     })
     .eq("id", id);
+  if (error) {
+    console.error("[campos_inventario] editar:", error.message);
+    return;
+  }
   refrescar();
 }
 
 export async function eliminarCampo(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  await sb.from("campos_inventario").delete().eq("id", formData.get("id") as string);
+  const { error } = await sb.from("campos_inventario").delete().eq("id", formData.get("id") as string);
+  if (error) {
+    console.error("[campos_inventario] eliminar:", error.message);
+    return;
+  }
   refrescar();
 }

@@ -33,7 +33,7 @@ export async function guardarPlantilla(formData: FormData) {
     .map(String)
     .filter((v) => (CAMPOS_EQUIPO_TODOS as string[]).includes(v));
 
-  await sb.from("plantillas_responsiva").upsert({
+  const { error } = await sb.from("plantillas_responsiva").upsert({
     clave,
     nombre: base.nombre,
     prefijo_folio: base.prefijoFolio,
@@ -49,6 +49,10 @@ export async function guardarPlantilla(formData: FormData) {
     campos_equipo: camposEquipo,
     updated_at: new Date().toISOString(),
   });
+  if (error) {
+    console.error("[plantillas] guardar:", error.message);
+    return;
+  }
 
   revalidatePath("/ti/responsivas/plantillas");
   revalidatePath("/ti/responsivas");
@@ -58,7 +62,11 @@ export async function guardarPlantilla(formData: FormData) {
 export async function restablecerPlantilla(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  await sb.from("plantillas_responsiva").delete().eq("clave", formData.get("clave") as string);
+  const { error } = await sb.from("plantillas_responsiva").delete().eq("clave", formData.get("clave") as string);
+  if (error) {
+    console.error("[plantillas] restablecer:", error.message);
+    return;
+  }
   revalidatePath("/ti/responsivas/plantillas");
   revalidatePath("/ti/responsivas");
 }

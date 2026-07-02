@@ -40,7 +40,8 @@ async function registrarEvento(
     estado_nuevo?: string | null;
   },
 ) {
-  await sb.from("ticket_eventos").insert(evento);
+  const { error } = await sb.from("ticket_eventos").insert(evento);
+  if (error) console.error("[tickets] registrar evento:", error.message);
 }
 
 const limpiar = (formData: FormData, k: string) =>
@@ -177,7 +178,7 @@ export async function editarTicket(formData: FormData) {
     ? limpiar(formData, "prioridad")
     : "media";
 
-  await sb
+  const { error } = await sb
     .from("tickets")
     .update({
       titulo,
@@ -189,6 +190,10 @@ export async function editarTicket(formData: FormData) {
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);
+  if (error) {
+    console.error("[tickets] editar:", error.message);
+    return;
+  }
 
   await registrarEvento(sb, {
     ticket_id: id,
@@ -230,7 +235,11 @@ export async function cambiarEstadoTicket(formData: FormData) {
     patch.resuelto_at = null;
   }
 
-  await sb.from("tickets").update(patch).eq("id", id);
+  const { error } = await sb.from("tickets").update(patch).eq("id", id);
+  if (error) {
+    console.error("[tickets] cambiar estado:", error.message);
+    return;
+  }
   await registrarEvento(sb, {
     ticket_id: id,
     tipo: "estado",
@@ -267,10 +276,14 @@ export async function asignarTicket(formData: FormData) {
   if (!id) return;
   const asignado = limpiar(formData, "asignado_a");
 
-  await sb
+  const { error } = await sb
     .from("tickets")
     .update({ asignado_a: asignado, updated_at: new Date().toISOString() })
     .eq("id", id);
+  if (error) {
+    console.error("[tickets] asignar:", error.message);
+    return;
+  }
   await registrarEvento(sb, {
     ticket_id: id,
     tipo: "asignacion",
@@ -369,7 +382,11 @@ export async function responderCliente(formData: FormData) {
 export async function eliminarTicket(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  await sb.from("tickets").delete().eq("id", formData.get("id") as string);
+  const { error } = await sb.from("tickets").delete().eq("id", formData.get("id") as string);
+  if (error) {
+    console.error("[tickets] eliminar:", error.message);
+    return;
+  }
   refrescar();
   // Si se elimina desde la página de detalle, esa ruta deja de existir.
   if (formData.get("desde") === "detalle") redirect("/ti/tickets");

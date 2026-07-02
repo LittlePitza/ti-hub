@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getSupabasePortal } from "@/lib/supabase";
+import { lector } from "@/lib/form";
 import { COOKIE_PORTAL, CATEGORIAS_PORTAL, correoValido, normalizarCorreo, getCorreoPortal } from "@/lib/portal";
 import { getConfigCorreo, avisaNuevo, enviarNuevoTicket } from "@/lib/correo";
 import { MAX_ADJUNTOS, esImagenValida, type Adjunto } from "@/lib/adjuntos";
@@ -51,10 +52,14 @@ export async function archivarReportePortal(formData: FormData) {
   if (!t || t.estado === "archivado") redirect("/");
 
   const ahora = new Date().toISOString();
-  await sb
+  const { error } = await sb
     .from("tickets")
     .update({ estado: "archivado", resuelto_at: t.resuelto_at ?? ahora, updated_at: ahora })
     .eq("id", id);
+  if (error) {
+    console.error("[portal] archivar reporte:", error.message);
+    redirect("/");
+  }
   await sb.from("ticket_eventos").insert({
     ticket_id: id,
     tipo: "estado",
@@ -86,10 +91,14 @@ export async function reactivarReportePortal(formData: FormData) {
     .maybeSingle();
   if (!t || t.estado !== "archivado") redirect("/");
 
-  await sb
+  const { error } = await sb
     .from("tickets")
     .update({ estado: "reabierto", resuelto_at: null, updated_at: new Date().toISOString() })
     .eq("id", id);
+  if (error) {
+    console.error("[portal] reactivar reporte:", error.message);
+    redirect("/");
+  }
   await sb.from("ticket_eventos").insert({
     ticket_id: id,
     tipo: "estado",
@@ -117,7 +126,7 @@ export async function crearTicketPortal(formData: FormData) {
   const sb = getSupabasePortal();
   if (!sb) redirect("/?error=config");
 
-  const v = (k: string) => (formData.get(k) as string)?.trim() || null;
+  const v = lector(formData);
   const titulo = v("titulo");
   if (!titulo) redirect("/nuevo?error=resumen");
   const categoria = CATEGORIAS_PORTAL.some((c) => c.valor === v("categoria"))
