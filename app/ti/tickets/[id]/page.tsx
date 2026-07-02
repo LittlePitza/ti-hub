@@ -59,18 +59,13 @@ export default async function DetalleTicket({
     );
   }
 
-  const { data: t } = await sb
-    .from("tickets")
-    .select("*, equipos(nombre)")
-    .eq("id", id)
-    .maybeSingle();
+  // Ticket, bitácora y configuración no dependen entre sí: una sola ronda a la BD.
+  const [{ data: t }, { data: eventosData }, config] = await Promise.all([
+    sb.from("tickets").select("*, equipos(nombre)").eq("id", id).maybeSingle(),
+    sb.from("ticket_eventos").select("*").eq("ticket_id", id).order("created_at", { ascending: false }),
+    getConfigCorreo(sb),
+  ]);
   if (!t) notFound();
-
-  const { data: eventosData } = await sb
-    .from("ticket_eventos")
-    .select("*")
-    .eq("ticket_id", id)
-    .order("created_at", { ascending: false });
   const eventos = eventosData ?? [];
 
   // Fotos que adjuntó el solicitante al reportar: bucket privado, URLs firmadas.
@@ -85,7 +80,6 @@ export default async function DetalleTicket({
   ).filter((f): f is { url: string; nombre: string } => f !== null);
 
   const ahora = Date.now();
-  const config = await getConfigCorreo(sb);
   const { sla, porVencerPct } = resolverSla(config);
   const resp = evaluarRespuesta(t, ahora, sla, porVencerPct);
   const reso = evaluarResolucion(t, ahora, sla, porVencerPct);

@@ -33,7 +33,12 @@ export default async function Responsivas({
   );
   if (!sb) return <>{head}<SinConexion /></>;
 
-  const { data } = await sb.from("responsivas").select("*").order("created_at", { ascending: false });
+  // Solo las columnas que pinta la lista: el snapshot `datos` (jsonb pesado)
+  // únicamente lo usa la página de detalle.
+  const { data } = await sb
+    .from("responsivas")
+    .select("id, num, plantilla, estado, archivo_url, equipo_nombre, empleado_nombre, empleado_correo, personas, fecha_generada")
+    .order("created_at", { ascending: false });
   const todas = data ?? [];
 
   // Búsqueda por texto primero; los tabs de estado y sus conteos se calculan

@@ -42,11 +42,15 @@ export default async function Tickets({
   if (!sb) return <>{head()}<SinConexion /></>;
 
   const [{ data }, configCorreo, { data: empleados }] = await Promise.all([
-    sb.from("tickets").select("*, equipos(nombre)").order("created_at", { ascending: false }),
+    // Solo lo que pintan lista y tablero: los `adjuntos` (jsonb) viven en el detalle.
+    sb.from("tickets")
+      .select("id, num, titulo, descripcion, solicitante, categoria, prioridad, estado, asignado_a, created_at, primera_respuesta_at, resuelto_at, equipos(nombre)")
+      .order("created_at", { ascending: false }),
     getConfigCorreo(sb),
     sb.from("empleados").select("nombre, correo, departamento").eq("estado", "activo").order("nombre"),
   ]);
-  const lista = data ?? [];
+  // El join `equipos(nombre)` se infiere como arreglo; en la práctica es un objeto.
+  const lista: any[] = data ?? [];
   const { sla, porVencerPct } = resolverSla(configCorreo);
 
   const hayFiltro = Boolean(q || estado || prioridad);
