@@ -32,7 +32,10 @@ const GRUPOS: { titulo: string; items: { href: string; label: string; icono: Rea
   },
   {
     titulo: "Finanzas",
-    items: [{ href: "/ti/facturas", label: "Facturas", icono: <IcoFacturas /> }],
+    items: [
+      { href: "/ti/facturas", label: "Facturas", icono: <IcoFacturas /> },
+      { href: "/ti/caja", label: "Caja chica", icono: <IcoCaja /> },
+    ],
   },
   {
     titulo: "Sistema",
@@ -169,6 +172,15 @@ function IcoFacturas() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M6 3h12a1 1 0 0 1 1 1v17l-3-2-3 2-3-2-3 2V4a1 1 0 0 1 1-1z" />
       <path d="M12 6.5v1M12 14.5v1M14 8.5a2 2 0 0 0-2-1c-1.1 0-2 .7-2 1.75S10.9 11 12 11s2 .7 2 1.75-0.9 1.75-2 1.75a2 2 0 0 1-2-1" />
+    </svg>
+  );
+}
+function IcoCaja() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 9h16a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8a1 1 0 0 1 1-1z" />
+      <path d="M6 9V6.5A1.5 1.5 0 0 1 7.5 5h9A1.5 1.5 0 0 1 18 6.5V9" />
+      <path d="M14 14.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
     </svg>
   );
 }

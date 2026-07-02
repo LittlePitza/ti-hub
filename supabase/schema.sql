@@ -304,6 +304,23 @@ create table if not exists facturas (
   created_at timestamptz not null default now()
 );
 
+-- ---------- CAJA CHICA ----------
+-- Fondo fijo del departamento (se administra desde /ti/caja). El límite del
+-- fondo vive en config_correo.caja_limite (fila única de configuración).
+-- Bitácora simple: las compras drenan el fondo y los reembolsos lo rellenan;
+-- saldo = límite - compras + reembolsos (lib/caja.ts). No es registro fiscal
+-- (eso vive en SAP): solo control interno.
+create table if not exists caja_movimientos (
+  id uuid primary key default gen_random_uuid(),
+  tipo text not null check (tipo in ('compra','reembolso')),
+  fecha date not null,
+  concepto text not null,
+  monto numeric(12,2) not null check (monto > 0),
+  comprador text,                -- quién hizo la compra (libre)
+  notas text,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_tickets_estado on tickets(estado);
 create index if not exists idx_tickets_asignado_email on tickets(asignado_email);
 create index if not exists idx_ticket_eventos_ticket on ticket_eventos(ticket_id, created_at);
@@ -319,6 +336,7 @@ create index if not exists idx_facturas_estado on facturas(estado);
 create index if not exists idx_facturas_vencimiento on facturas(fecha_vencimiento);
 create index if not exists idx_facturas_proveedor on facturas(proveedor_id);
 create index if not exists idx_proveedores_activo on proveedores(activo);
+create index if not exists idx_caja_movimientos_fecha on caja_movimientos(fecha);
 
 -- ---------- MIGRACIÓN (bases creadas antes) ----------
 -- `create table if not exists` no agrega columnas a tablas existentes; estas líneas sí.
@@ -395,6 +413,8 @@ alter table config_correo add column if not exists sla_media_resolucion   int;
 alter table config_correo add column if not exists sla_baja_respuesta     int;
 alter table config_correo add column if not exists sla_baja_resolucion    int;
 alter table config_correo add column if not exists sla_por_vencer_pct int not null default 80;
+-- Límite (fondo fijo) de la caja chica. NULL = sin configurar; se captura en /ti/caja.
+alter table config_correo add column if not exists caja_limite numeric(12,2);
 
 -- ---------- SEGURIDAD (RLS) ----------
 -- Solo usuarios autenticados (Supabase Auth) pueden leer y escribir.
@@ -413,6 +433,7 @@ alter table plantillas_responsiva enable row level security;
 alter table campos_inventario enable row level security;
 alter table proveedores enable row level security;
 alter table facturas enable row level security;
+alter table caja_movimientos enable row level security;
 
 -- Si vienes del esquema anterior (acceso abierto), estas líneas retiran esas políticas.
 drop policy if exists "acceso_total_equipos" on equipos;
@@ -445,6 +466,9 @@ create policy "proveedores_autenticados" on proveedores
   for all to authenticated using (true) with check (true);
 drop policy if exists "facturas_autenticados" on facturas;
 create policy "facturas_autenticados" on facturas
+  for all to authenticated using (true) with check (true);
+drop policy if exists "caja_movimientos_autenticados" on caja_movimientos;
+create policy "caja_movimientos_autenticados" on caja_movimientos
   for all to authenticated using (true) with check (true);
 
 -- ---------- STORAGE: bucket de responsivas firmadas ----------

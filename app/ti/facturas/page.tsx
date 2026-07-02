@@ -33,7 +33,7 @@ export default async function Facturas() {
     <div className="pagina-head">
       <div>
         <h1 className="pagina-titulo">Facturas</h1>
-        <p className="pagina-desc">Pagos del departamento: facturas capturadas y servicios recurrentes</p>
+        <p className="pagina-desc">Aviso y registro interno de pagos — lo fiscal se lleva en SAP</p>
       </div>
       <Link href="/ti/facturas/proveedores" className="boton secundario">Proveedores</Link>
     </div>

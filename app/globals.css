@@ -3755,3 +3755,69 @@ details.alta .formulario {
 }
 .config-inv-vacio { font-size: 13px; margin: 2px 2px 12px; }
 .config-inv-agregar { margin-top: 10px; }
+
+/* ---------- Caja chica (/ti/caja) ----------
+   El hero es la caja misma: el saldo grande y una barra que muestra el fondo
+   vaciándose con las compras y rellenándose con los reembolsos. */
+.caja-hero {
+  background: var(--superficie);
+  border-radius: var(--radio-tarjeta);
+  box-shadow: var(--sombra-tarjeta);
+  padding: 22px 24px;
+  margin-bottom: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px 34px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.caja-fondo { flex: 1 1 340px; min-width: 0; }
+.caja-saldo {
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.caja-saldo .de-limite {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tinta-suave);
+  margin-left: 8px;
+  letter-spacing: 0;
+}
+.caja-barra {
+  height: 14px;
+  border-radius: 99px;
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  overflow: hidden;
+  margin-top: 14px;
+}
+.caja-barra-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--pimsa-verde);
+  transition: width 0.4s ease;
+}
+.caja-barra-fill.aviso { background: var(--aviso); }
+.caja-barra-fill.critico { background: var(--critico); }
+.caja-extremos {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--tinta-suave);
+  margin-top: 6px;
+}
+.caja-pie { font-size: 12.5px; color: var(--tinta-suave); margin-top: 12px; }
+.caja-pie b { color: var(--tinta); font-weight: 600; }
+.caja-acciones { display: flex; flex-direction: column; gap: 10px; flex: 0 1 280px; min-width: 240px; }
+.caja-acciones .plegable { margin: 0; }
+@media (max-width: 640px) {
+  .caja-acciones { flex-basis: 100%; }
+  .caja-saldo { font-size: 30px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .caja-barra-fill { transition: none; }
+}
