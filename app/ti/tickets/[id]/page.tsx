@@ -28,6 +28,7 @@ import {
 } from "../actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Ticket" };
 
 // Cada evento de la bitácora trae icono, etiqueta y tono. `respuesta` es el único
 // visible para el solicitante; el resto es interno.

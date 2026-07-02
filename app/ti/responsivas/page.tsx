@@ -14,6 +14,7 @@ import BotonEnviar from "@/components/BotonEnviar";
 import { eliminarResponsiva } from "./actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Responsivas" };
 
 export default async function Responsivas({
   searchParams,

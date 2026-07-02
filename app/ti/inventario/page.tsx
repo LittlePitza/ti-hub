@@ -14,6 +14,7 @@ import { asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
 import { generarResponsivaEquipo } from "../responsivas/actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Inventario" };
 
 const ESTADOS = ["activo", "en_reparacion", "almacen", "baja"];
 const ETIQUETA_ESTADO: Record<string, string> = {

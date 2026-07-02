@@ -19,6 +19,7 @@ import PersonasResponsiva from "@/components/PersonasResponsiva";
 import { editarResponsiva, subirFirmada, cambiarEstadoResponsiva, actualizarDesdeInventario } from "../actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Responsiva" };
 
 export default async function DetalleResponsiva({
   params,

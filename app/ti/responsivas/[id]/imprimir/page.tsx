@@ -9,6 +9,7 @@ import { fusionarPlantilla, CAMPOS_EQUIPO_TODOS, type DatosResponsiva, type Pers
 import BotonImprimir from "@/components/BotonImprimir";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Imprimir responsiva" };
 
 // Tipografía de la marca PIMSA (igual que el resto de la app).
 const signika = Poppins({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"] });

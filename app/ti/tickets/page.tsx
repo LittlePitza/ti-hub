@@ -21,6 +21,7 @@ import ModalCrearTicket from "@/components/ModalCrearTicket";
 import { cambiarEstadoTicket } from "./actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Tickets" };
 
 export default async function Tickets({
   searchParams,

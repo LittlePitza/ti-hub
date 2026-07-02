@@ -11,6 +11,7 @@ import {
 } from "./actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Correo" };
 
 const AVISOS_PRUEBA: Record<string, { tono: string; texto: string }> = {
   ok: { tono: "ok", texto: "Correo de prueba enviado. Revisa la bandeja (y el spam)." },

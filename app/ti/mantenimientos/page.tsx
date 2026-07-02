@@ -6,6 +6,7 @@ import BotonEnviar from "@/components/BotonEnviar";
 import { crearMantenimiento, cambiarEstadoMantenimiento, editarMantenimiento, eliminarMantenimiento } from "./actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Mantenimientos" };
 
 const ESTADOS = ["programado", "en_proceso", "completado", "cancelado"];
 

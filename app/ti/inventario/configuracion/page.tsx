@@ -6,6 +6,7 @@ import BotonEnviar from "@/components/BotonEnviar";
 import { crearCampo, editarCampo, eliminarCampo } from "./actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Configuración de inventario" };
 
 const ETIQUETA_TIPO: Record<string, string> = Object.fromEntries(
   TIPOS_CAMPO.map((t) => [t.valor, t.label]),

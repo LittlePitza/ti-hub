@@ -6,6 +6,7 @@ import BotonEnviar from "@/components/BotonEnviar";
 import { guardarPlantilla, restablecerPlantilla } from "./actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Plantillas de responsiva" };
 
 export default async function Plantillas() {
   const sb = await getSupabase();

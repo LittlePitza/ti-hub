@@ -10,6 +10,7 @@ import SinConexion from "@/components/SinConexion";
 import { guardarAjustesFirma } from "../../actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Firma de correo" };
 
 export default async function FirmaEmpleado({
   params,

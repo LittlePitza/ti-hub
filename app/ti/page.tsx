@@ -8,6 +8,7 @@ import SinConexion from "@/components/SinConexion";
 import { Dona, Barras, type DatoGrafica } from "@/components/Graficas";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Resumen" };
 
 const TIPOS_EQUIPO: Record<string, string> = {
   laptop: "Laptops",

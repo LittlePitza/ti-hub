@@ -8,6 +8,7 @@ import ModalGestionar from "@/components/ModalGestionar";
 import { crearEmpleado, cambiarEstadoEmpleado, editarEmpleado, eliminarEmpleado } from "./actions";
 
 export const dynamic = "force-dynamic";
+export const metadata = { title: "Empleados" };
 
 const ETIQUETA_CAT: Record<string, string> = Object.fromEntries(
   CATEGORIAS_INV.map((c) => [c.valor, c.singular]),
