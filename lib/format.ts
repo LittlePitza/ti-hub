@@ -59,3 +59,15 @@ export function folio(n: number): string {
 export function folioResponsiva(prefijo: string, n: number): string {
   return `RES-${prefijo}-${String(n).padStart(4, "0")}`;
 }
+
+// Folio interno de factura: FAC-#### (p. ej. FAC-0042).
+export function folioFactura(n: number): string {
+  return "FAC-" + String(n).padStart(4, "0");
+}
+
+// Importe con formato es-MX: moneda(1234.5) -> "$1,234.50"; moneda(99, "USD") -> "US$99.00".
+// Ojo: numeric de Postgres llega como string vía supabase-js; convertir con Number() antes.
+export function moneda(n: number | null | undefined, divisa: "MXN" | "USD" = "MXN"): string {
+  if (n === null || n === undefined || !isFinite(n)) return "—";
+  return new Intl.NumberFormat("es-MX", { style: "currency", currency: divisa }).format(n);
+}
