@@ -3597,8 +3597,24 @@ details.alta .formulario {
 }
 @media print {
   .rail, .no-print { display: none !important; }
-  .shell { display: block; }
-  .contenido { padding: 0 !important; max-width: none !important; }
+  /* Página blanca: evita cualquier tinte del fondo mist del panel al imprimir. */
+  html, body { background: #fff !important; }
+  /* Aplana el contenedor del panel: sin fondo, sombra ni esquinas redondeadas,
+     para que el documento no se imprima montado en una "tarjeta" flotante. */
+  .shell {
+    display: block;
+    padding: 0 !important;
+    background: none !important;
+    min-height: 0 !important;
+  }
+  .contenido {
+    padding: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    background: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
   .responsiva-doc { font-size: 11.5px; }
   .responsiva-doc .hoja {
     width: auto;
