@@ -321,6 +321,83 @@ create table if not exists caja_movimientos (
   created_at timestamptz not null default now()
 );
 
+-- ---------- SERVICIOS (estado de sistemas) ----------
+-- Catálogo de los servicios que la empresa usa a diario (internet, Microsoft 365,
+-- SAP, red interna…). Su estado NO se guarda: se deriva de los incidentes abiertos
+-- (lib/servicios.ts), igual que `vencida` en facturas. `visible_portal` controla si
+-- las caídas del servicio se anuncian en el portal del empleado.
+create table if not exists servicios (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null unique,
+  descripcion text,
+  categoria text not null default 'plataforma'
+    check (categoria in ('conectividad','plataforma','infraestructura','otro')),
+  proveedor text,                -- quién lo provee: Telmex, Microsoft, SAP…
+  criticidad text not null default 'normal'
+    check (criticidad in ('critica','alta','normal')),
+  visible_portal boolean not null default true,
+  orden int not null default 0,
+  activo boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+-- Catálogo inicial (idempotente: `nombre` es único y el conflicto se ignora).
+insert into servicios (nombre, categoria, proveedor, criticidad, orden) values
+  ('Internet',       'conectividad',    null,        'critica', 1),
+  ('Microsoft 365',  'plataforma',      'Microsoft', 'critica', 2),
+  ('SAP',            'plataforma',      'SAP',       'critica', 3),
+  ('Red interna',    'conectividad',    null,        'alta',    4),
+  ('Telefonía',      'conectividad',    null,        'normal',  5),
+  ('Impresión',      'infraestructura', null,        'normal',  6)
+on conflict (nombre) do nothing;
+
+-- ---------- INCIDENTES ----------
+-- Registro de caídas, fallas y mantenimientos por servicio. Folio INC-#### con
+-- `num` (lib/format.ts). Ciclo: activo -> vigilando -> resuelto (al resolver se
+-- sella `fin`; la duración es fin − inicio). Un incidente sin resolver mantiene
+-- al servicio "afectado" en el tablero y en el aviso del portal.
+create table if not exists incidentes (
+  id uuid primary key default gen_random_uuid(),
+  num serial,
+  servicio_id uuid not null references servicios(id) on delete cascade,
+  titulo text not null,
+  descripcion text,
+  tipo text not null default 'caida'
+    check (tipo in ('caida','degradado','mantenimiento')),
+  estado text not null default 'activo'
+    check (estado in ('activo','vigilando','resuelto')),
+  inicio timestamptz not null default now(),
+  fin timestamptz,               -- se sella al resolver
+  resolucion text,               -- nota de cierre: qué se hizo
+  created_at timestamptz not null default now()
+);
+
+-- ---------- PROYECTOS Y TAREAS ----------
+-- Agenda de trabajo del equipo de TI (/ti/tareas). Un proyecto agrupa tareas;
+-- una tarea sin proyecto vive en la "bandeja". Completada = `completada_at`
+-- sellado (estado derivado, sin columna booleana extra).
+create table if not exists proyectos (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  descripcion text,
+  estado text not null default 'activo'
+    check (estado in ('activo','pausado','completado','archivado')),
+  fecha_objetivo date,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists tareas (
+  id uuid primary key default gen_random_uuid(),
+  titulo text not null,
+  notas text,
+  proyecto_id uuid references proyectos(id) on delete set null, -- null = bandeja
+  prioridad text not null default 'normal'
+    check (prioridad in ('alta','normal')),
+  fecha_limite date,
+  completada_at timestamptz,     -- null = pendiente
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_tickets_estado on tickets(estado);
 create index if not exists idx_tickets_asignado_email on tickets(asignado_email);
 create index if not exists idx_ticket_eventos_ticket on ticket_eventos(ticket_id, created_at);
@@ -337,6 +414,10 @@ create index if not exists idx_facturas_vencimiento on facturas(fecha_vencimient
 create index if not exists idx_facturas_proveedor on facturas(proveedor_id);
 create index if not exists idx_proveedores_activo on proveedores(activo);
 create index if not exists idx_caja_movimientos_fecha on caja_movimientos(fecha);
+create index if not exists idx_incidentes_servicio on incidentes(servicio_id);
+create index if not exists idx_incidentes_estado on incidentes(estado);
+create index if not exists idx_tareas_proyecto on tareas(proyecto_id);
+create index if not exists idx_tareas_completada on tareas(completada_at);
 
 -- ---------- MIGRACIÓN (bases creadas antes) ----------
 -- `create table if not exists` no agrega columnas a tablas existentes; estas líneas sí.
@@ -434,6 +515,10 @@ alter table campos_inventario enable row level security;
 alter table proveedores enable row level security;
 alter table facturas enable row level security;
 alter table caja_movimientos enable row level security;
+alter table servicios enable row level security;
+alter table incidentes enable row level security;
+alter table proyectos enable row level security;
+alter table tareas enable row level security;
 
 -- Si vienes del esquema anterior (acceso abierto), estas líneas retiran esas políticas.
 drop policy if exists "acceso_total_equipos" on equipos;
@@ -469,6 +554,21 @@ create policy "facturas_autenticados" on facturas
   for all to authenticated using (true) with check (true);
 drop policy if exists "caja_movimientos_autenticados" on caja_movimientos;
 create policy "caja_movimientos_autenticados" on caja_movimientos
+  for all to authenticated using (true) with check (true);
+-- Estado de sistemas: servicios e incidentes son globales; solo el panel (autenticados)
+-- los administra. El portal los lee con la service role (salta RLS), sin políticas anon.
+drop policy if exists "servicios_autenticados" on servicios;
+create policy "servicios_autenticados" on servicios
+  for all to authenticated using (true) with check (true);
+drop policy if exists "incidentes_autenticados" on incidentes;
+create policy "incidentes_autenticados" on incidentes
+  for all to authenticated using (true) with check (true);
+-- Tareas y proyectos: uso interno de TI, solo autenticados.
+drop policy if exists "proyectos_autenticados" on proyectos;
+create policy "proyectos_autenticados" on proyectos
+  for all to authenticated using (true) with check (true);
+drop policy if exists "tareas_autenticados" on tareas;
+create policy "tareas_autenticados" on tareas
   for all to authenticated using (true) with check (true);
 
 -- ---------- STORAGE: bucket de responsivas firmadas ----------

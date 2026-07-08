@@ -4,6 +4,7 @@ import { getSupabasePortal } from "@/lib/supabase";
 import { getCorreoPortal, CATEGORIAS_PORTAL } from "@/lib/portal";
 import SelectorImagenes from "@/components/SelectorImagenes";
 import BotonEnviar from "@/components/BotonEnviar";
+import AvisoServicios from "@/components/AvisoServicios";
 import { crearTicketPortal } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +45,9 @@ export default async function NuevoReporte({
       <p className="portal-desc-pagina">
         Tres preguntas rápidas y el equipo de TI se encarga del resto.
       </p>
+
+      <AvisoServicios />
+
 
       {error && <div className="login-error" style={{ marginBottom: 20 }}>{ERRORES[error] ?? ERRORES.guardar}</div>}
 

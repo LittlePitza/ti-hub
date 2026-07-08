@@ -3,6 +3,7 @@ import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folio, duracionPartes, moneda } from "@/lib/format";
 import { ESTADOS_ACTIVOS, evaluarRespuesta, evaluarResolucion } from "@/lib/tickets";
 import { calendarioPagos, pendienteDelMes, montos, hoyISO } from "@/lib/facturas";
+import { serviciosConEstado, type Servicio, type Incidente } from "@/lib/servicios";
 import { getConfigCorreo, resolverSla } from "@/lib/correo";
 import Insignia from "@/components/Insignia";
 import SinConexion from "@/components/SinConexion";
@@ -69,7 +70,7 @@ export default async function Resumen() {
   const en14 = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
   const en90 = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
 
-  const [equiposQ, ticketsQ, mantosQ, respQ, configCorreo, facturasQ, provsQ] = await Promise.all([
+  const [equiposQ, ticketsQ, mantosQ, respQ, configCorreo, facturasQ, provsQ, serviciosQ, incidentesQ] = await Promise.all([
     sb.from("equipos").select("nombre, tipo, estado, garantia_hasta"),
     sb.from("tickets")
       .select("id, num, titulo, solicitante, estado, prioridad, asignado_a, created_at, primera_respuesta_at, resuelto_at")
@@ -89,6 +90,8 @@ export default async function Resumen() {
       .from("proveedores")
       .select("id, nombre, servicio, costo, moneda, periodicidad, proximo_pago, activo")
       .eq("activo", true),
+    sb.from("servicios").select("*").eq("activo", true),
+    sb.from("incidentes").select("*").neq("estado", "resuelto"),
   ]);
 
   const equipos = equiposQ.data ?? [];
@@ -141,6 +144,12 @@ export default async function Resumen() {
     const s = evaluarResolucion(t, ahora);
     return r.semaforo === "por_vencer" || s.semaforo === "por_vencer";
   }).length;
+
+  // Estado de sistemas: servicios con incidentes abiertos (peor primero).
+  const serviciosAfectados = serviciosConEstado(
+    (serviciosQ.data ?? []) as Servicio[],
+    (incidentesQ.data ?? []) as Incidente[],
+  ).filter((s) => s.estado.valor !== "operativo");
 
   // Garantías por vencer en los próximos 90 días
   const garantias = equipos
@@ -296,6 +305,33 @@ export default async function Resumen() {
 
         {/* Columna de actividad */}
         <aside className="dash-aside">
+          {serviciosAfectados.length > 0 && (
+            <div className="panel">
+              <div className="panel-cab">
+                <span className="panel-cab-titulo">Sistemas con problemas</span>
+                <Link href="/ti/servicios">Ver estado</Link>
+              </div>
+              <div className="panel-cuerpo">
+                {serviciosAfectados.map((s) => (
+                  <div className="fila-compacta" key={s.servicio.id}>
+                    <div className="fila-compacta-main">
+                      <div className="fila-compacta-titulo">
+                        <span className={`estado-punto ${s.estado.tono}`} aria-hidden style={{ marginRight: 7 }} />
+                        {s.servicio.nombre}
+                      </div>
+                      {s.incidentesAbiertos[0] && (
+                        <div className="fila-compacta-sub">{s.incidentesAbiertos[0].titulo}</div>
+                      )}
+                    </div>
+                    <div className="fila-compacta-fin">
+                      <span className={`insignia ${s.estado.tono}`}>{s.estado.etiqueta}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="panel">
             <div className="panel-cab">
               <span className="panel-cab-titulo">Últimos tickets</span>

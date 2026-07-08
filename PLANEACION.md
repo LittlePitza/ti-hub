@@ -106,6 +106,32 @@ correo de un compañero podría ver sus reportes (portal interno, fricción cero
 
 ---
 
+## Fase 6 — Estado de sistemas + Tareas y proyectos ✅
+
+**Objetivo:** dar a TI un tablero de salud de los servicios que la empresa usa a diario
+y una agenda de trabajo propia (to-do + proyectos).
+
+- [x] 🟡 **Estado de sistemas** (`/ti/servicios`): catálogo de servicios (internet, Microsoft 365,
+  SAP, red, telefonía, impresión…) y registro de **incidentes** (caída / degradado / mantenimiento)
+  con ciclo `activo → vigilando → resuelto`. El estado de cada servicio **se deriva** de sus
+  incidentes abiertos (no se guarda), igual que `vencida` en facturas. Folio `INC-####`. Tablero
+  agrupado por categoría con semáforo (punto de estado + halo) e historial de incidentes resueltos
+  con su duración.
+- [x] 🟡 **Aviso en el portal del empleado**: franja que anuncia las caídas de servicios marcados
+  `visible_portal`, para que el trabajador sepa que TI ya está al tanto y no duplique el reporte
+  (`components/AvisoServicios.tsx`, en `/` y `/nuevo`). Solo muestra el título del incidente, nunca
+  la nota interna.
+- [x] 🟢 **Panel "Sistemas con problemas"** en el resumen (`/ti`), visible solo si hay incidentes abiertos.
+- [x] 🟡 **Tareas y proyectos** (`/ti/tareas`): captura rápida de pendientes, agrupados por
+  vencimiento (Vencidas / Para hoy / Próximos 7 días / Más adelante / Sin fecha), con prioridad,
+  proyecto y fecha límite. Completar = sellar `completada_at` (estado derivado). **Proyectos** con
+  barra de avance (hechas/total), estado y fecha objetivo; una tarea sin proyecto vive en la bandeja.
+
+**Cambios de esquema (hechos):** tablas `servicios`, `incidentes`, `proyectos`, `tareas`
+(+ índices y RLS `to authenticated`). El catálogo de servicios se auto-siembra (idempotente por `nombre`).
+
+---
+
 ## Resumen de cambios de base de datos previstos
 
 | Fase | Cambio en `schema.sql` |
@@ -115,6 +141,7 @@ correo de un compañero podría ver sus reportes (portal interno, fricción cero
 | 3 | Tabla `empleados`; FK `equipos.asignado_a` y `tickets` → `empleados` |
 | 4 | ✅ Tablas `proveedores` y `facturas` + bucket de Storage `facturas` |
 | 5 | Bucket de Storage para adjuntos; ✅ tabla `ticket_eventos` (bitácora/comentarios) |
+| 6 | ✅ Tablas `servicios`, `incidentes` (estado de sistemas) y `proyectos`, `tareas` (to-do) |
 
 ## Decisiones abiertas (para resolver con el usuario)
 
@@ -131,4 +158,4 @@ correo de un compañero podría ver sus reportes (portal interno, fricción cero
 La 1 es rápida y de alto impacto visual (se ve PIMSA). La 2 es el objetivo central (portal del empleado). La 3 habilita a la 4. La 5 es pulido.
 
 ---
-_Última actualización: 2026-07-02_
+_Última actualización: 2026-07-08_

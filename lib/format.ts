@@ -65,6 +65,11 @@ export function folioFactura(n: number): string {
   return "FAC-" + String(n).padStart(4, "0");
 }
 
+// Folio de incidente de servicio: INC-#### (p. ej. INC-0007).
+export function folioIncidente(n: number): string {
+  return "INC-" + String(n).padStart(4, "0");
+}
+
 // Importe con formato es-MX: moneda(1234.5) -> "$1,234.50"; moneda(99, "USD") -> "US$99.00".
 // Ojo: numeric de Postgres llega como string vía supabase-js; convertir con Number() antes.
 export function moneda(n: number | null | undefined, divisa: "MXN" | "USD" = "MXN"): string {

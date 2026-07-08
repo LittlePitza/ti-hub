@@ -4,6 +4,7 @@ import { fechaCorta, folio } from "@/lib/format";
 import { getCorreoPortal, nombreDeCorreo, CATEGORIAS_PORTAL, ESTADO_PORTAL, DOMINIO_CORREO } from "@/lib/portal";
 import Ruta from "@/components/Ruta";
 import BotonEnviar from "@/components/BotonEnviar";
+import AvisoServicios from "@/components/AvisoServicios";
 import { entrarPortal, salirPortal, archivarReportePortal, reactivarReportePortal } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +70,8 @@ export default async function Portal({
 
   return (
     <>
+      <AvisoServicios />
+
       {creado && Number.isFinite(Number(creado)) && (
         <div className="banner-exito" role="status">
           <IconoCheck />

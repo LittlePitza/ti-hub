@@ -13,12 +13,16 @@ import BotonEnviar from "@/components/BotonEnviar";
 const GRUPOS: { titulo: string; items: { href: string; label: string; icono: ReactNode }[] }[] = [
   {
     titulo: "Panel",
-    items: [{ href: "/ti", label: "Resumen", icono: <IcoResumen /> }],
+    items: [
+      { href: "/ti", label: "Resumen", icono: <IcoResumen /> },
+      { href: "/ti/tareas", label: "Tareas y proyectos", icono: <IcoTareas /> },
+    ],
   },
   {
     titulo: "Soporte",
     items: [
       { href: "/ti/tickets", label: "Tickets", icono: <IcoTickets /> },
+      { href: "/ti/servicios", label: "Estado de sistemas", icono: <IcoServicios /> },
       { href: "/ti/mantenimientos", label: "Mantenimientos", icono: <IcoManto /> },
     ],
   },
@@ -129,6 +133,23 @@ function IcoTickets() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" />
       <path d="M14 6v12" strokeDasharray="2 2.5" />
+    </svg>
+  );
+}
+function IcoServicios() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 12h3l2.5 7 5-16L18 12h3" />
+    </svg>
+  );
+}
+function IcoTareas() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M9 5h11M9 12h11M9 19h11" />
+      <path d="m3.5 5 1.2 1.2L7 4" />
+      <path d="m3.5 12 1.2 1.2L7 11" />
+      <circle cx="4.5" cy="19" r="1.2" />
     </svg>
   );
 }
