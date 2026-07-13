@@ -15,6 +15,7 @@ const GRUPOS: { titulo: string; items: { href: string; label: string; icono: Rea
     titulo: "Panel",
     items: [
       { href: "/ti", label: "Resumen", icono: <IcoResumen /> },
+      { href: "/ti/reportes", label: "Reportes", icono: <IcoReportes /> },
       { href: "/ti/tareas", label: "Tareas y proyectos", icono: <IcoTareas /> },
     ],
   },
@@ -125,6 +126,17 @@ function IcoResumen() {
       <rect x="14" y="3" width="7" height="5" rx="1.5" />
       <rect x="14" y="12" width="7" height="9" rx="1.5" />
       <rect x="3" y="16" width="7" height="5" rx="1.5" />
+    </svg>
+  );
+}
+function IcoReportes() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 20h18" />
+      <path d="M6 20v-7" />
+      <path d="M11 20V5" />
+      <path d="M16 20v-10" />
+      <path d="M21 20V8" />
     </svg>
   );
 }

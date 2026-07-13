@@ -60,6 +60,85 @@ export function Dona({ datos, unidad }: { datos: DatoGrafica[]; unidad?: string 
   );
 }
 
+// Tendencia mensual con dos series lado a lado (p. ej. tickets creados vs
+// resueltos). Columnas verticales porque el eje X es tiempo; las etiquetas
+// van abajo y el valor encima de cada columna.
+export type PuntoColumnas = { label: string; a: number; b: number };
+
+export function Columnas({
+  datos,
+  serieA,
+  serieB,
+  tonoA = "info",
+  tonoB = "ok",
+}: {
+  datos: PuntoColumnas[];
+  serieA: string;
+  serieB: string;
+  tonoA?: string;
+  tonoB?: string;
+}) {
+  const max = Math.max(...datos.map((d) => Math.max(d.a, d.b)), 1);
+  if (datos.every((d) => d.a === 0 && d.b === 0))
+    return <div className="grafica-vacia">Sin datos todavía</div>;
+
+  // Geometría del lienzo: área de dibujo de 150px de alto; las columnas de cada
+  // mes van pegadas en par, centradas en su celda.
+  const ANCHO = 560;
+  const ALTO = 196;
+  const BASE = 158; // y de la línea base
+  const ALTO_MAX = 128; // alto de la columna más alta
+  const celda = ANCHO / datos.length;
+  const barra = Math.min(20, celda / 3.2);
+
+  const altura = (v: number) => (v === 0 ? 0 : Math.max((v / max) * ALTO_MAX, 3));
+  const colorA = TONOS[tonoA] ?? TONOS.neutro;
+  const colorB = TONOS[tonoB] ?? TONOS.neutro;
+
+  return (
+    <div className="columnas">
+      <svg
+        className="columnas-svg"
+        viewBox={`0 0 ${ANCHO} ${ALTO}`}
+        role="img"
+        aria-label={datos.map((d) => `${d.label}: ${serieA} ${d.a}, ${serieB} ${d.b}`).join("; ")}
+      >
+        <line x1="0" y1={BASE} x2={ANCHO} y2={BASE} className="columnas-eje" />
+        {datos.map((d, i) => {
+          const cx = celda * i + celda / 2;
+          const hA = altura(d.a);
+          const hB = altura(d.b);
+          return (
+            <g key={d.label + i}>
+              <rect x={cx - barra - 1.5} y={BASE - hA} width={barra} height={hA} rx="3" fill={colorA} />
+              <rect x={cx + 1.5} y={BASE - hB} width={barra} height={hB} rx="3" fill={colorB} />
+              <text x={cx - barra / 2 - 1.5} y={BASE - hA - 5} textAnchor="middle" className="columnas-valor">
+                {d.a}
+              </text>
+              <text x={cx + barra / 2 + 1.5} y={BASE - hB - 5} textAnchor="middle" className="columnas-valor">
+                {d.b}
+              </text>
+              <text x={cx} y={BASE + 20} textAnchor="middle" className="columnas-mes">
+                {d.label}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+      <ul className="columnas-leyenda">
+        <li>
+          <span className="punto" style={{ background: colorA }} />
+          <span>{serieA}</span>
+        </li>
+        <li>
+          <span className="punto" style={{ background: colorB }} />
+          <span>{serieB}</span>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
 export function Barras({ datos }: { datos: DatoGrafica[] }) {
   const total = datos.reduce((s, d) => s + d.valor, 0);
   if (total === 0) return <div className="grafica-vacia">Sin datos todavía</div>;

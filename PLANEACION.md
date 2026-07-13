@@ -132,6 +132,32 @@ y una agenda de trabajo propia (to-do + proyectos).
 
 ---
 
+## Fase 7 — Reportes mensuales (KPIs) ✅
+
+**Objetivo:** un corte mensual consultable e imprimible con el que TI reporta sus KPIs:
+cómo nos fue en el mes en tickets, SLA, sistemas y mantenimientos.
+
+- [x] 🟡 **Página `/ti/reportes`** con selector de mes (`?mes=YYYY-MM`, flechas ‹ ›, tope en el
+  mes en curso) y botón de imprimir para llevar el PDF a la junta. Entrada "Reportes" en el
+  sidebar (grupo Panel).
+- [x] 🟡 **Dominio `lib/reportes.ts`**: todo se **deriva** de las tablas existentes (sin tablas
+  nuevas ni snapshots); un mes cerrado siempre se puede reconstruir porque los sellos de tiempo
+  son inmutables. Cohortes estándar de mesa de ayuda: *creados* (created_at en el mes),
+  *atendidos* (primera_respuesta_at en el mes → SLA de respuesta), *resueltos* (resuelto_at en
+  el mes → SLA de resolución) y *backlog al cierre* (para el mes en curso el corte es "ahora").
+- [x] 🟡 **KPIs con variación vs mes anterior** (chips ▲/▼ verdes o rojos según si subir es
+  bueno) + **tendencia de 6 meses** creados vs resueltos (gráfica `Columnas` nueva en
+  `components/Graficas.tsx`).
+- [x] 🟡 **Estado de sistemas del mes**: incidentes iniciados/resueltos/abiertos, tiempo en
+  caída total y tabla de afectación por servicio con **disponibilidad %** (solape de caídas con
+  el mes, calculada sobre el tramo transcurrido para no inflar el mes en curso).
+- [x] 🟢 **Mantenimientos del mes**: programados, completados, pendientes y % de cumplimiento
+  (cancelados fuera de la base).
+- [x] 🟢 De paso: fix en el resumen (`/ti`) — `porVencer` ahora usa el SLA configurado en
+  `/ti/correo` igual que `fueraDeSla` (antes usaba los defaults).
+
+**Cambios de esquema:** ninguno — el reporte es 100% derivado.
+
 ## Resumen de cambios de base de datos previstos
 
 | Fase | Cambio en `schema.sql` |
@@ -158,4 +184,4 @@ y una agenda de trabajo propia (to-do + proyectos).
 La 1 es rápida y de alto impacto visual (se ve PIMSA). La 2 es el objetivo central (portal del empleado). La 3 habilita a la 4. La 5 es pulido.
 
 ---
-_Última actualización: 2026-07-08_
+_Última actualización: 2026-07-13_

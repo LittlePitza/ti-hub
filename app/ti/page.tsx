@@ -140,8 +140,8 @@ export default async function Resumen() {
     return r.semaforo === "incumplido" || s.semaforo === "incumplido";
   }).length;
   const porVencer = ticketsActivos.filter((t) => {
-    const r = evaluarRespuesta(t, ahora);
-    const s = evaluarResolucion(t, ahora);
+    const r = evaluarRespuesta(t, ahora, sla, porVencerPct);
+    const s = evaluarResolucion(t, ahora, sla, porVencerPct);
     return r.semaforo === "por_vencer" || s.semaforo === "por_vencer";
   }).length;
 

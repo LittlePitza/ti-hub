@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 > Todo el código, los textos y la comunicación de este repo van **en español** (nombres de archivos, componentes, clases CSS, columnas de BD, variables). El nuevo código debe seguir igual.
 
@@ -49,7 +49,6 @@ Tablas: `empleados`, `equipos`, `mantenimientos`, `tickets`, `ticket_eventos`, `
 - **`lib/tickets.ts`** — estados (ciclo tipo mesa de ayuda), prioridades, categorías y **SLA por prioridad** (`respuesta`/`resolucion` en horas). `SLA_DEFAULTS` son los valores base (ITIL 4), pero TI los **sobreescribe desde `/ti/correo`** (columnas `sla_*` de `config_correo`): `resolverSla(config)` en `lib/correo.ts` mezcla overrides sobre los defaults y se pasa a `evaluarRespuesta`/`evaluarResolucion`, que calculan el semáforo (cumplido/por vencer/incumplido/pausado). Toda la lógica de SLA y etiquetas de estado pasa por aquí.
 - **`lib/responsivas.ts`** — cartas de resguardo (documento legal de custodia). Las **8 plantillas base viven en código** (`PLANTILLAS_DEFAULT`); la tabla `plantillas_responsiva` solo guarda los overrides que TI edita. Cada responsiva guarda un **snapshot congelado** del empleado y el equipo (no se rompe si luego cambian).
 - **`lib/correo.ts`** — notificaciones por correo, **configuradas desde el panel** (`/ti/correo`, tabla `config_correo`), no por env vars. Tres métodos de envío: `smtp_basico`, `graph_app` (Microsoft Graph app-only) y `oauth_interactivo`. El envío lo dispara TI a voluntad, no es automático (salvo el aviso de ticket nuevo). `config_correo` es además la fila única de configuración general del panel: aquí vive `resolverSla(config)` (ver `lib/tickets.ts`).
-- **`lib/reportes.ts`** — corte mensual para KPIs (`/ti/reportes`): cohortes de tickets (creados / atendidos / resueltos / backlog al cierre), SLA del mes, solape de incidentes con el mes y disponibilidad por servicio, mantenimientos y variación vs mes anterior. **Todo derivado** de las tablas existentes (sin snapshots); el mes en curso corta en "ahora".
 - **`lib/portal.ts`** — identidad del portal y mapeos a lenguaje del empleado (categorías, estados con `paso` 1-3).
 - **`lib/format.ts`** — folios (`folio` → `TK-####`, `folioResponsiva`), fechas y duraciones.
 

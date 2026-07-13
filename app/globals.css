@@ -677,6 +677,100 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   text-align: center;
 }
 
+/* Gráfica de columnas (tendencia mensual del reporte) */
+.columnas-svg { width: 100%; height: auto; display: block; }
+.columnas-eje { stroke: var(--linea-fuerte); stroke-width: 1; }
+.columnas-valor {
+  fill: var(--tinta-suave);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.columnas-mes { fill: var(--tinta-suave); font-size: 11.5px; }
+.columnas-leyenda {
+  list-style: none;
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.columnas-leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--tinta-suave);
+}
+.columnas-leyenda .punto { width: 8px; height: 8px; border-radius: 99px; flex-shrink: 0; }
+
+/* ---------- Reportes mensuales (/ti/reportes) ---------- */
+/* Selector de mes: pastilla con flechas para recorrer los cortes. */
+.selector-mes {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 99px;
+  background: var(--superficie);
+  padding: 3px;
+}
+.selector-mes-flecha {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 99px;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--tinta-suave);
+  transition: background 120ms ease, color 120ms ease;
+}
+.selector-mes-flecha:hover { background: var(--neutro-tenue); color: var(--tinta); }
+.selector-mes-flecha.inactiva { opacity: 0.35; cursor: default; }
+.selector-mes-flecha.inactiva:hover { background: none; color: var(--tinta-suave); }
+.selector-mes-etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.selector-mes-etiqueta em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--petroleo);
+  background: var(--petroleo-tenue);
+  border-radius: 99px;
+  padding: 1px 8px;
+}
+
+/* Chip de variación contra el mes anterior, bajo el valor de la métrica. */
+.kpi-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 99px;
+  padding: 2px 8px;
+}
+.kpi-delta.bueno  { background: var(--ok-tenue);      color: var(--ok); }
+.kpi-delta.malo   { background: var(--critico-tenue); color: var(--critico); }
+.kpi-delta.neutro { background: var(--neutro-tenue);  color: var(--tinta-suave); }
+
+/* Nota entre paréntesis en un título de sección (sin las mayúsculas del eyebrow). */
+.seccion-nota { text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+/* Duración dentro de una métrica: hereda el tamaño del valor y achica la unidad
+   (las clases .tiempo-* nacen del hero del resumen, donde la cifra es de 42px). */
+.metrica-valor .tiempo-cifra { font-size: inherit; font-weight: inherit; }
+.metrica-valor .tiempo-u { font-size: 13px; }
+.metrica-valor .tiempo-parte + .tiempo-parte { margin-left: 7px; }
+
 /* ---------- Pestañas (inventario por categoría) ---------- */
 .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
 .tab {
