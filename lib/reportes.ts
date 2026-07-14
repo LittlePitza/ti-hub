@@ -195,15 +195,29 @@ export interface AfectacionServicio {
   disponibilidad: number; // % del mes transcurrido sin caída total
 }
 
+// Tiempo operativo del mes por servicio, sobre TODO el catálogo (un servicio
+// sin incidentes reporta el 100% de la ventana). Es el corte que se entrega
+// aparte como KPI de disponibilidad.
+export interface DisponibilidadServicio {
+  servicioId: string;
+  nombre: string;
+  criticidad: string;
+  msCaida: number; // caída total que pisó el mes
+  msOperativo: number; // ventana transcurrida menos caída
+  disponibilidad: number; // % del tramo transcurrido sin caída total
+}
+
 export interface ReporteIncidentes {
   iniciados: number; // incidentes que arrancaron en el mes
   resueltos: number; // incidentes cerrados en el mes
   abiertosCierre: number; // seguían abiertos al corte
   msCaidaTotal: number;
+  msVentana: number; // tramo del mes transcurrido al corte (el 100% de referencia)
   mttrMs: number | null; // duración promedio de los incidentes cerrados en el mes
   disponibilidadPromedio: number | null; // promedio del catálogo completo (sin afectación = 100)
   porTipo: Record<string, number>; // incidentes que tocaron el mes, por tipo
   porServicio: AfectacionServicio[]; // solo servicios afectados, peor primero
+  disponibilidadPorServicio: DisponibilidadServicio[]; // catálogo completo, peor primero
 }
 
 // Milisegundos que un incidente pisa dentro de la ventana [inicio, corte).
@@ -246,6 +260,7 @@ export function reporteIncidentes(
   }
 
   const porServicio: AfectacionServicio[] = [];
+  const disponibilidadPorServicio: DisponibilidadServicio[] = [];
   let msCaidaTotal = 0;
   let sumaDisponibilidad = 0;
 
@@ -266,6 +281,14 @@ export function reporteIncidentes(
     // en curso no se vea artificialmente mejor.
     const disponibilidad = Math.max(0, 100 - (msCaida / ventanaMs) * 100);
     sumaDisponibilidad += disponibilidad;
+    disponibilidadPorServicio.push({
+      servicioId: s.id,
+      nombre: s.nombre,
+      criticidad: s.criticidad,
+      msCaida,
+      msOperativo: Math.max(0, ventanaMs - msCaida),
+      disponibilidad,
+    });
     if (cuantos === 0) continue;
     msCaidaTotal += msCaida;
     porServicio.push({
@@ -280,12 +303,16 @@ export function reporteIncidentes(
   }
 
   porServicio.sort((a, b) => b.msAfectado - a.msAfectado || b.incidentes - a.incidentes);
+  disponibilidadPorServicio.sort(
+    (a, b) => a.disponibilidad - b.disponibilidad || a.nombre.localeCompare(b.nombre, "es"),
+  );
 
   return {
     iniciados,
     resueltos: cerradosEnMes.length,
     abiertosCierre,
     msCaidaTotal,
+    msVentana: ventanaMs,
     mttrMs,
     // Promedio sobre TODO el catálogo monitoreado: los servicios sin caída
     // aportan 100, para que el KPI refleje la salud del conjunto y no solo
@@ -293,6 +320,7 @@ export function reporteIncidentes(
     disponibilidadPromedio: servicios.length ? sumaDisponibilidad / servicios.length : null,
     porTipo,
     porServicio,
+    disponibilidadPorServicio,
   };
 }
 

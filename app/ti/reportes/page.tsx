@@ -210,6 +210,12 @@ export default async function Reportes({
       : null;
   const disponibilidadTexto = (pct: number) => (pct >= 99.995 ? "100" : pct.toFixed(2));
 
+  // Disponibilidad del mes anterior por servicio, para el delta de la tabla
+  // de tiempo operativo.
+  const disponibilidadAnterior = new Map(
+    incAnterior.disponibilidadPorServicio.map((s) => [s.servicioId, s.disponibilidad]),
+  );
+
   return (
     <>
       {head}
@@ -456,6 +462,72 @@ export default async function Reportes({
               </table>
             </div>
           </>
+        )}
+      </section>
+
+      {/* Tiempo operativo por servicio: el corte de disponibilidad que se
+          entrega aparte como KPI, sobre TODO el catálogo (también los servicios
+          sin incidentes). En papel arranca en hoja nueva para poderse separar. */}
+      <section className="seccion hoja-aparte">
+        <h2 className="seccion-titulo">
+          Tiempo operativo por servicio · {etiquetaMes(clave)}
+          {enCurso && <span className="seccion-nota"> (mes en curso, corte al día de hoy)</span>}
+        </h2>
+        {inc.disponibilidadPorServicio.length === 0 ? (
+          <div className="vacio">
+            <strong>Sin servicios monitoreados</strong>
+            Da de alta los servicios en Estado de sistemas para medir su tiempo operativo.
+          </div>
+        ) : (
+          <div className="tarjeta" style={{ padding: 0 }}>
+            <table className="tabla">
+              <thead>
+                <tr>
+                  <th>Servicio</th>
+                  <th>Criticidad</th>
+                  <th>Tiempo operativo</th>
+                  <th>Caída total</th>
+                  <th>Disponibilidad</th>
+                  <th>vs mes anterior</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inc.disponibilidadPorServicio.map((s) => {
+                  const anterior = disponibilidadAnterior.get(s.servicioId);
+                  return (
+                    <tr key={s.servicioId}>
+                      <td><div className="celda-principal">{s.nombre}</div></td>
+                      <td>{etiquetaCriticidad(s.criticidad)}</td>
+                      <td className="mono">{duracion(s.msOperativo)}</td>
+                      <td className="mono">{s.msCaida > 0 ? duracion(s.msCaida) : "—"}</td>
+                      <td>
+                        <span className={`insignia ${tonoDisponibilidad(s.disponibilidad)}`}>
+                          {disponibilidadTexto(s.disponibilidad)}%
+                        </span>
+                      </td>
+                      <td>
+                        <Delta
+                          variacion={
+                            anterior === undefined
+                              ? null
+                              : Math.round((s.disponibilidad - anterior) * 100) / 100
+                          }
+                          buenoCuandoSube={true}
+                          sufijo=" pp"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <p className="tabla-nota">
+              Ventana de referencia: {duracion(inc.msVentana)}
+              {enCurso ? " transcurridas del mes al momento del corte" : " (mes completo)"}. El
+              tiempo operativo descuenta solo caídas totales; degradaciones y ventanas de
+              mantenimiento no restan disponibilidad.
+            </p>
+          </div>
         )}
       </section>
 
