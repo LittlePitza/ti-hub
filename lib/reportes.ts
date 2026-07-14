@@ -179,6 +179,12 @@ export interface IncidenteReporte {
   fin: string | null;
 }
 
+// Lo que la tabla de detalle necesita además de lo básico (folio y título).
+export interface IncidenteDetalle extends IncidenteReporte {
+  num: number;
+  titulo: string;
+}
+
 export interface AfectacionServicio {
   servicioId: string;
   nombre: string;
@@ -194,6 +200,9 @@ export interface ReporteIncidentes {
   resueltos: number; // incidentes cerrados en el mes
   abiertosCierre: number; // seguían abiertos al corte
   msCaidaTotal: number;
+  mttrMs: number | null; // duración promedio de los incidentes cerrados en el mes
+  disponibilidadPromedio: number | null; // promedio del catálogo completo (sin afectación = 100)
+  porTipo: Record<string, number>; // incidentes que tocaron el mes, por tipo
   porServicio: AfectacionServicio[]; // solo servicios afectados, peor primero
 }
 
@@ -216,15 +225,29 @@ export function reporteIncidentes(
   const ventanaMs = Math.max(1, corte - r.inicio); // evita dividir entre 0 el día 1
 
   const iniciados = incidentes.filter((i) => dentro(i.inicio, r)).length;
-  const resueltos = incidentes.filter((i) => dentro(i.fin, r)).length;
+  const cerradosEnMes = incidentes.filter((i) => dentro(i.fin, r));
   const abiertosCierre = incidentes.filter((i) => {
     const inicio = new Date(i.inicio).getTime();
     if (inicio >= corte) return false;
     return !i.fin || new Date(i.fin).getTime() >= corte;
   }).length;
 
+  // MTTR sobre la cohorte de cerrados en el mes: duración completa del incidente
+  // (aunque haya arrancado en un mes anterior), igual que la resolución de tickets.
+  const mttrMs = promedio(
+    cerradosEnMes.map((i) => Math.max(0, new Date(i.fin!).getTime() - new Date(i.inicio).getTime())),
+  );
+
+  // Distribución por tipo de todo incidente que pisó el mes (no solo los iniciados).
+  const porTipo: Record<string, number> = {};
+  for (const i of incidentes) {
+    if (solape(i, r.inicio, corte) <= 0) continue;
+    porTipo[i.tipo] = (porTipo[i.tipo] ?? 0) + 1;
+  }
+
   const porServicio: AfectacionServicio[] = [];
   let msCaidaTotal = 0;
+  let sumaDisponibilidad = 0;
 
   for (const s of servicios) {
     const propios = incidentes.filter((i) => i.servicio_id === s.id);
@@ -238,6 +261,11 @@ export function reporteIncidentes(
       if (i.tipo === "caida") msCaida += ms;
       if (i.tipo === "caida" || i.tipo === "degradado") msAfectado += ms;
     }
+    // Disponibilidad = % del tramo transcurrido del mes sin caída total.
+    // Se calcula sobre lo transcurrido (no el mes completo) para que el mes
+    // en curso no se vea artificialmente mejor.
+    const disponibilidad = Math.max(0, 100 - (msCaida / ventanaMs) * 100);
+    sumaDisponibilidad += disponibilidad;
     if (cuantos === 0) continue;
     msCaidaTotal += msCaida;
     porServicio.push({
@@ -247,16 +275,63 @@ export function reporteIncidentes(
       incidentes: cuantos,
       msCaida,
       msAfectado,
-      // Disponibilidad = % del tramo transcurrido del mes sin caída total.
-      // Se calcula sobre lo transcurrido (no el mes completo) para que el mes
-      // en curso no se vea artificialmente mejor.
-      disponibilidad: Math.max(0, 100 - (msCaida / ventanaMs) * 100),
+      disponibilidad,
     });
   }
 
   porServicio.sort((a, b) => b.msAfectado - a.msAfectado || b.incidentes - a.incidentes);
 
-  return { iniciados, resueltos, abiertosCierre, msCaidaTotal, porServicio };
+  return {
+    iniciados,
+    resueltos: cerradosEnMes.length,
+    abiertosCierre,
+    msCaidaTotal,
+    mttrMs,
+    // Promedio sobre TODO el catálogo monitoreado: los servicios sin caída
+    // aportan 100, para que el KPI refleje la salud del conjunto y no solo
+    // de los afectados.
+    disponibilidadPromedio: servicios.length ? sumaDisponibilidad / servicios.length : null,
+    porTipo,
+    porServicio,
+  };
+}
+
+// Serie mensual de incidentes para la tendencia: `creados` = iniciados en el
+// mes, `resueltos` = cerrados en el mes (misma forma que la serie de tickets).
+export function serieMensualIncidentes(
+  incidentes: IncidenteReporte[],
+  claves: string[],
+): PuntoSerie[] {
+  return claves.map((clave) => {
+    const r = rangoMes(clave);
+    return {
+      clave,
+      creados: incidentes.filter((i) => dentro(i.inicio, r)).length,
+      resueltos: incidentes.filter((i) => dentro(i.fin, r)).length,
+    };
+  });
+}
+
+// Incidentes que pisaron el mes, con su duración total y si siguen abiertos,
+// del más reciente al más viejo (tabla de detalle del reporte).
+export function incidentesDelMes<T extends IncidenteReporte>(
+  incidentes: T[],
+  clave: string,
+  ahora: number = Date.now(),
+): (T & { msDuracion: number; abierto: boolean })[] {
+  const r = rangoMes(clave);
+  const corte = Math.min(r.fin, ahora);
+  return incidentes
+    .filter((i) => solape(i, r.inicio, corte) > 0)
+    .map((i) => ({
+      ...i,
+      msDuracion: Math.max(
+        0,
+        (i.fin ? new Date(i.fin).getTime() : ahora) - new Date(i.inicio).getTime(),
+      ),
+      abierto: !i.fin,
+    }))
+    .sort((a, b) => b.inicio.localeCompare(a.inicio));
 }
 
 // Tono de insignia para una disponibilidad mensual (mesa interna: 99.5% de un

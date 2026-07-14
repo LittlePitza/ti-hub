@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { getConfigCorreo, resolverSla } from "@/lib/correo";
-import { duracion, duracionPartes } from "@/lib/format";
+import { duracion, duracionPartes, fechaHora, folioIncidente } from "@/lib/format";
 import { CATEGORIAS_TK, PRIORIDADES } from "@/lib/tickets";
-import { etiquetaCriticidad } from "@/lib/servicios";
+import { etiquetaCriticidad, metaTipoIncidente, TIPOS_INCIDENTE } from "@/lib/servicios";
 import {
   claveMes,
   esClaveMes,
@@ -15,10 +15,12 @@ import {
   reporteIncidentes,
   reporteMantenimientos,
   serieMensual,
+  serieMensualIncidentes,
+  incidentesDelMes,
   tonoDisponibilidad,
   variacionPct,
   type TicketReporte,
-  type IncidenteReporte,
+  type IncidenteDetalle,
   type MantenimientoReporte,
 } from "@/lib/reportes";
 import SinConexion from "@/components/SinConexion";
@@ -104,7 +106,7 @@ export default async function Reportes({
   const enCurso = clave === mesActual;
 
   const head = (
-    <div className="pagina-head">
+    <div className="pagina-head no-print">
       <div>
         <h1 className="pagina-titulo">Reportes</h1>
         <p className="pagina-desc">Corte mensual para KPIs: tickets, SLA, sistemas y mantenimientos</p>
@@ -144,14 +146,14 @@ export default async function Reportes({
 
   const [ticketsQ, incidentesQ, serviciosQ, mantosQ, configCorreo] = await Promise.all([
     sb.from("tickets").select("estado, prioridad, categoria, created_at, primera_respuesta_at, resuelto_at"),
-    sb.from("incidentes").select("servicio_id, tipo, estado, inicio, fin"),
+    sb.from("incidentes").select("num, servicio_id, titulo, tipo, estado, inicio, fin"),
     sb.from("servicios").select("id, nombre, criticidad"),
     sb.from("mantenimientos").select("tipo, estado, fecha_programada"),
     getConfigCorreo(sb),
   ]);
 
   const tickets = (ticketsQ.data ?? []) as TicketReporte[];
-  const incidentes = (incidentesQ.data ?? []) as IncidenteReporte[];
+  const incidentes = (incidentesQ.data ?? []) as IncidenteDetalle[];
   const servicios = serviciosQ.data ?? [];
   const mantos = (mantosQ.data ?? []) as MantenimientoReporte[];
 
@@ -161,7 +163,9 @@ export default async function Reportes({
   const rep = reporteTickets(tickets, clave, sla, porVencerPct, ahora);
   const repAnterior = reporteTickets(tickets, mesVecino(clave, -1), sla, porVencerPct, ahora);
   const inc = reporteIncidentes(incidentes, servicios, clave, ahora);
+  const incAnterior = reporteIncidentes(incidentes, servicios, mesVecino(clave, -1), ahora);
   const manto = reporteMantenimientos(mantos, clave);
+  const mantoAnterior = reporteMantenimientos(mantos, mesVecino(clave, -1));
 
   // Tendencia: los últimos 6 meses terminando en el mes reportado.
   const serie = serieMensual(tickets, ultimosMeses(clave, 6));
@@ -170,6 +174,15 @@ export default async function Reportes({
     a: p.creados,
     b: p.resueltos,
   }));
+  const tendenciaInc: PuntoColumnas[] = serieMensualIncidentes(incidentes, ultimosMeses(clave, 6)).map((p) => ({
+    label: etiquetaMesCorta(p.clave),
+    a: p.creados,
+    b: p.resueltos,
+  }));
+
+  // Detalle de incidentes que pisaron el mes y nombre de su servicio.
+  const detalleInc = incidentesDelMes(incidentes, clave, ahora);
+  const nombreServicio = new Map(servicios.map((s) => [s.id, s.nombre]));
 
   // Diferencia en puntos porcentuales para los KPIs de SLA.
   const deltaPp = (a: number | null, b: number | null) => (a === null || b === null ? null : a - b);
@@ -184,10 +197,47 @@ export default async function Reportes({
     valor: rep.porPrioridad[p],
     tono: PRIORIDAD_TEXTO[p].tono,
   }));
+  const porTipoInc: DatoGrafica[] = TIPOS_INCIDENTE.filter((t) => inc.porTipo[t.valor]).map((t) => ({
+    label: t.etiqueta,
+    valor: inc.porTipo[t.valor],
+    tono: t.tono,
+  }));
+
+  // Delta de disponibilidad en puntos porcentuales, redondeado a centésimas.
+  const deltaDisponibilidad =
+    inc.disponibilidadPromedio !== null && incAnterior.disponibilidadPromedio !== null
+      ? Math.round((inc.disponibilidadPromedio - incAnterior.disponibilidadPromedio) * 100) / 100
+      : null;
+  const disponibilidadTexto = (pct: number) => (pct >= 99.995 ? "100" : pct.toFixed(2));
 
   return (
     <>
       {head}
+
+      {/* Encabezado del documento: solo existe en el papel/PDF (.solo-print). */}
+      <header className="solo-print reporte-impreso-head">
+        <img src="/pimsa-logo.svg" alt="Plásticos PIMSA" />
+        <div className="reporte-impreso-titulos">
+          <strong>Reporte mensual de TI</strong>
+          <span>
+            {etiquetaMes(clave)}
+            {enCurso && " · mes en curso, corte parcial"}
+          </span>
+        </div>
+        <div className="reporte-impreso-meta">
+          <span>Plásticos PIMSA · Departamento de Sistemas</span>
+          <span>
+            Generado el{" "}
+            {new Date(ahora).toLocaleString("es-MX", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        </div>
+      </header>
 
       {/* KPIs del mes, cada uno comparado contra el mes anterior. */}
       <section className="seccion">
@@ -264,17 +314,20 @@ export default async function Reportes({
         </div>
       </section>
 
-      {/* Estado de sistemas: qué se cayó y cuánto costó en tiempo. */}
+      {/* Estado de sistemas: qué se cayó, cuánto costó en tiempo y cómo va
+          contra el mes anterior — mismo tratamiento que la mesa de ayuda. */}
       <section className="seccion">
-        <h2 className="seccion-titulo">Estado de sistemas</h2>
-        <div className="metricas compacta" style={{ marginBottom: 16 }}>
+        <h2 className="seccion-titulo">Estado de sistemas · {etiquetaMes(clave)}</h2>
+        <div className="metricas" style={{ marginBottom: 16 }}>
           <div className="metrica">
             <div className="metrica-valor">{inc.iniciados}</div>
             <div className="metrica-label">Incidentes iniciados</div>
+            <Delta variacion={variacionPct(inc.iniciados, incAnterior.iniciados)} buenoCuandoSube={false} />
           </div>
           <div className="metrica">
             <div className="metrica-valor">{inc.resueltos}</div>
             <div className="metrica-label">Incidentes resueltos</div>
+            <Delta variacion={variacionPct(inc.resueltos, incAnterior.resueltos)} buenoCuandoSube={true} />
           </div>
           <div className="metrica">
             <div className={`metrica-valor ${inc.abiertosCierre > 0 ? "alerta" : ""}`}>{inc.abiertosCierre}</div>
@@ -282,47 +335,127 @@ export default async function Reportes({
           </div>
           <div className="metrica">
             <div className={`metrica-valor ${inc.msCaidaTotal > 0 ? "alerta" : ""}`}>
-              {inc.msCaidaTotal > 0 ? duracion(inc.msCaidaTotal) : "0"}
+              {inc.msCaidaTotal > 0 ? <Duracion ms={inc.msCaidaTotal} /> : "0"}
             </div>
             <div className="metrica-label">Tiempo en caída total</div>
+            <Delta
+              variacion={
+                inc.msCaidaTotal > 0 && incAnterior.msCaidaTotal > 0
+                  ? variacionPct(Math.round(inc.msCaidaTotal), Math.round(incAnterior.msCaidaTotal))
+                  : null
+              }
+              buenoCuandoSube={false}
+            />
+          </div>
+          <div className="metrica">
+            <div className="metrica-valor"><Duracion ms={inc.mttrMs} /></div>
+            <div className="metrica-label">Recuperación promedio (MTTR)</div>
+            <Delta
+              variacion={
+                inc.mttrMs !== null && incAnterior.mttrMs !== null
+                  ? variacionPct(Math.round(inc.mttrMs), Math.round(incAnterior.mttrMs))
+                  : null
+              }
+              buenoCuandoSube={false}
+            />
+          </div>
+          <div className="metrica">
+            <div className="metrica-valor">
+              {inc.disponibilidadPromedio === null ? "—" : `${disponibilidadTexto(inc.disponibilidadPromedio)}%`}
+            </div>
+            <div className="metrica-label">Disponibilidad promedio · {servicios.length} servicios</div>
+            <Delta variacion={deltaDisponibilidad} buenoCuandoSube={true} sufijo=" pp" />
           </div>
         </div>
+
+        <div className="tarjetas">
+          <div className="tarjeta">
+            <h3 className="tarjeta-titulo">Tendencia de incidentes · últimos 6 meses</h3>
+            <Columnas datos={tendenciaInc} serieA="Iniciados" serieB="Resueltos" tonoA="aviso" tonoB="ok" />
+          </div>
+          <div className="tarjeta">
+            <h3 className="tarjeta-titulo">Incidentes del mes por tipo</h3>
+            <Dona datos={porTipoInc} unidad="incidentes" />
+          </div>
+        </div>
+
         {inc.porServicio.length === 0 ? (
           <div className="vacio">
             <strong>Sin afectaciones en {etiquetaMes(clave)}</strong>
             Ningún servicio registró incidentes que tocaran este mes.
           </div>
         ) : (
-          <div className="tarjeta" style={{ padding: 0 }}>
-            <table className="tabla">
-              <thead>
-                <tr>
-                  <th>Servicio</th>
-                  <th>Criticidad</th>
-                  <th>Incidentes</th>
-                  <th>Caída total</th>
-                  <th>Tiempo afectado</th>
-                  <th>Disponibilidad</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inc.porServicio.map((s) => (
-                  <tr key={s.servicioId}>
-                    <td>{s.nombre}</td>
-                    <td>{etiquetaCriticidad(s.criticidad)}</td>
-                    <td className="mono">{s.incidentes}</td>
-                    <td>{s.msCaida > 0 ? duracion(s.msCaida) : "—"}</td>
-                    <td>{s.msAfectado > 0 ? duracion(s.msAfectado) : "—"}</td>
-                    <td>
-                      <span className={`insignia ${tonoDisponibilidad(s.disponibilidad)}`}>
-                        {s.disponibilidad >= 99.995 ? "100" : s.disponibilidad.toFixed(2)}%
-                      </span>
-                    </td>
+          <>
+            <div className="tarjeta" style={{ padding: 0, marginBottom: 16 }}>
+              <h3 className="tarjeta-titulo" style={{ padding: "16px 16px 0" }}>Afectación por servicio</h3>
+              <table className="tabla">
+                <thead>
+                  <tr>
+                    <th>Servicio</th>
+                    <th>Criticidad</th>
+                    <th>Incidentes</th>
+                    <th>Caída total</th>
+                    <th>Tiempo afectado</th>
+                    <th>Disponibilidad</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {inc.porServicio.map((s) => (
+                    <tr key={s.servicioId}>
+                      <td>{s.nombre}</td>
+                      <td>{etiquetaCriticidad(s.criticidad)}</td>
+                      <td className="mono">{s.incidentes}</td>
+                      <td>{s.msCaida > 0 ? duracion(s.msCaida) : "—"}</td>
+                      <td>{s.msAfectado > 0 ? duracion(s.msAfectado) : "—"}</td>
+                      <td>
+                        <span className={`insignia ${tonoDisponibilidad(s.disponibilidad)}`}>
+                          {disponibilidadTexto(s.disponibilidad)}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="tarjeta" style={{ padding: 0 }}>
+              <h3 className="tarjeta-titulo" style={{ padding: "16px 16px 0" }}>Incidentes del mes</h3>
+              <table className="tabla">
+                <thead>
+                  <tr>
+                    <th>Folio</th>
+                    <th>Servicio</th>
+                    <th>Incidente</th>
+                    <th>Tipo</th>
+                    <th>Comenzó</th>
+                    <th>Duración</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detalleInc.map((i) => {
+                    const tipo = metaTipoIncidente(i.tipo);
+                    return (
+                      <tr key={i.num}>
+                        <td className="mono">{folioIncidente(i.num)}</td>
+                        <td className="suave">{nombreServicio.get(i.servicio_id) ?? "—"}</td>
+                        <td><div className="celda-principal">{i.titulo}</div></td>
+                        <td><span className={`insignia ${tipo.tono}`}>{tipo.etiqueta}</span></td>
+                        <td className="suave mono" style={{ whiteSpace: "nowrap" }}>{fechaHora(i.inicio)}</td>
+                        <td className="mono">{duracion(i.msDuracion)}</td>
+                        <td>
+                          {i.abierto ? (
+                            <span className="insignia critico">Abierto</span>
+                          ) : (
+                            <span className="insignia ok">Resuelto</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
 
@@ -339,6 +472,7 @@ export default async function Reportes({
           <div className="metrica">
             <div className="metrica-valor">{manto.completados}</div>
             <div className="metrica-label">Completados</div>
+            <Delta variacion={variacionPct(manto.completados, mantoAnterior.completados)} buenoCuandoSube={true} />
           </div>
           <div className="metrica">
             <div className={`metrica-valor ${manto.pendientes > 0 && !enCurso ? "alerta" : ""}`}>
@@ -353,9 +487,20 @@ export default async function Reportes({
             <div className="metrica-label">
               Cumplimiento{manto.cancelados > 0 ? ` · ${manto.cancelados} cancelados` : ""}
             </div>
+            <Delta
+              variacion={deltaPp(manto.cumplimientoPct, mantoAnterior.cumplimientoPct)}
+              buenoCuandoSube={true}
+              sufijo=" pp"
+            />
           </div>
         </div>
       </section>
+
+      {/* Pie del documento: solo existe en el papel/PDF. */}
+      <footer className="solo-print reporte-impreso-pie">
+        TI Hub · Plásticos PIMSA — reporte derivado de los registros del panel de TI.
+        {enCurso && " El mes en curso corta al momento de generación."}
+      </footer>
     </>
   );
 }

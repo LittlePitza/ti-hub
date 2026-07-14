@@ -3714,8 +3714,42 @@ details.alta .formulario {
   size: letter;
   margin: 14mm 14mm;
 }
+/* Elementos que solo existen en el papel/PDF (encabezado y pie de documento). */
+.solo-print { display: none; }
+
 @media print {
+  /* Papel siempre claro: aunque la pantalla esté en modo noche, el documento
+     sale con la paleta clara. Sin esto, el modo oscuro imprime tinta casi
+     blanca sobre el fondo blanco forzado — ilegible. */
+  :root, :root[data-theme="dark"] {
+    --papel: #ffffff;
+    --superficie: #ffffff;
+    --tinta: #15273a;
+    --tinta-suave: #687280;
+    --linea: #e5e8f0;
+    --linea-fuerte: #d6dbe8;
+    --hover: transparent;
+    --petroleo: #294466;
+    --petroleo-fuerte: #34568a;
+    --petroleo-tenue: #eaeef5;
+    --ok: #5f7d33;
+    --ok-tenue: #eef3e2;
+    --aviso: #b06a08;
+    --aviso-tenue: #fbf2e2;
+    --critico: #d22d2d;
+    --critico-tenue: #fbeaea;
+    --neutro-tenue: #eef1f6;
+    --sombra-tarjeta: none;
+    --sombra-pop: none;
+    color-scheme: light;
+  }
+  /* Los tonos (insignias, semáforos, leyendas y barras de las gráficas) son
+     parte del dato: forzar que el navegador no los descarte al imprimir. */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { size: letter; margin: 14mm 12mm; }
+
   .rail, .no-print { display: none !important; }
+  .solo-print { display: block; }
   /* Página blanca: evita cualquier tinte del fondo mist del panel al imprimir. */
   html, body { background: #fff !important; }
   /* Aplana el contenedor del panel: sin fondo, sombra ni esquinas redondeadas,
@@ -3754,6 +3788,53 @@ details.alta .formulario {
   .responsiva-doc .seccion > h2,
   .responsiva-doc .encabezado { break-after: avoid; }
   .responsiva-doc .firma { break-inside: avoid; }
+
+  /* ----- Reporte mensual y páginas del panel en general ----- */
+  /* Encabezado del documento: logo + título + fecha de generación. */
+  .reporte-impreso-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 14px;
+    margin-bottom: 22px;
+    border-bottom: 2px solid var(--pimsa-azul);
+  }
+  .reporte-impreso-head img { height: 40px; display: block; }
+  .reporte-impreso-titulos { display: flex; flex-direction: column; gap: 2px; }
+  .reporte-impreso-titulos strong { font-size: 17px; letter-spacing: -0.01em; }
+  .reporte-impreso-titulos span { font-size: 12.5px; color: var(--tinta-suave); }
+  .reporte-impreso-meta {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: right;
+    font-size: 10.5px;
+    color: var(--tinta-suave);
+  }
+  .reporte-impreso-pie {
+    margin-top: 26px;
+    padding-top: 10px;
+    border-top: 1px solid var(--linea);
+    font-size: 10px;
+    color: var(--tinta-suave);
+  }
+
+  /* Cortes de página limpios: no partir métricas, tarjetas ni filas; los
+     títulos se quedan con su contenido. */
+  .metricas, .metrica, .tarjeta, .vacio, .grafica-vacia, .tabla tr { break-inside: avoid; }
+  .seccion-titulo, .tarjeta-titulo { break-after: avoid; }
+
+  /* Documento más compacto que la pantalla: menos aire, cifras más chicas. */
+  .seccion { margin-bottom: 24px; }
+  .metricas { margin-bottom: 16px; }
+  .metrica { padding: 12px 14px; }
+  .metrica-valor { font-size: 22px; }
+  .tarjeta { padding: 14px; }
+  .tarjetas { gap: 12px; margin-bottom: 16px; }
+  .tabla td { padding: 8px 10px; font-size: 12px; }
+  .tabla tr:hover td { background: none; }
+  .dona-svg { width: 112px; height: 112px; }
 }
 
 @media (max-width: 760px) {
