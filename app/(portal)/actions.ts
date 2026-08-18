@@ -6,7 +6,13 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { getSupabasePortal } from "@/lib/supabase";
 import { lector } from "@/lib/form";
-import { COOKIE_PORTAL, CATEGORIAS_PORTAL, correoValido, normalizarCorreo, getCorreoPortal } from "@/lib/portal";
+import {
+  COOKIE_PORTAL,
+  CATEGORIAS_PORTAL,
+  correoValido,
+  normalizarCorreo,
+  getCorreoPortal,
+} from "@/lib/portal";
 import { getConfigCorreo, avisaNuevo, enviarNuevoTicket } from "@/lib/correo";
 import { MAX_ADJUNTOS, esImagenValida, type Adjunto } from "@/lib/adjuntos";
 
@@ -198,7 +204,8 @@ export async function crearTicketPortal(formData: FormData) {
       const c = await getConfigCorreo(sb);
       if (avisaNuevo(c)) {
         const base = c.sitio_url?.replace(/\/+$/, "");
-        const categoriaTexto = CATEGORIAS_PORTAL.find((x) => x.valor === categoria)?.titulo ?? categoria!;
+        const categoriaTexto =
+          CATEGORIAS_PORTAL.find((x) => x.valor === categoria)?.titulo ?? categoria!;
         await enviarNuevoTicket(c, sb, {
           num: data.num,
           titulo: titulo!,

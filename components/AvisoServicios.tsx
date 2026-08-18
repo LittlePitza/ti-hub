@@ -17,7 +17,9 @@ export default async function AvisoServicios() {
 
   const servicios = (serviciosQ.data ?? []) as Servicio[];
   const incidentes = (incidentesQ.data ?? []) as Incidente[];
-  const afectados = serviciosConEstado(servicios, incidentes).filter((s) => s.estado.valor !== "operativo");
+  const afectados = serviciosConEstado(servicios, incidentes).filter(
+    (s) => s.estado.valor !== "operativo",
+  );
   if (afectados.length === 0) return null;
 
   const hayCaido = afectados.some((s) => s.estado.valor === "caido");
@@ -25,7 +27,16 @@ export default async function AvisoServicios() {
   return (
     <section className={`portal-aviso ${hayCaido ? "critico" : "aviso"}`} role="status">
       <span className="portal-aviso-icono" aria-hidden>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
           <path d="M12 9v4M12 17h.01" />
         </svg>
@@ -48,7 +59,9 @@ export default async function AvisoServicios() {
             </li>
           ))}
         </ul>
-        <span className="portal-aviso-nota">El equipo de TI ya está trabajando en ello. No necesitas reportarlo.</span>
+        <span className="portal-aviso-nota">
+          El equipo de TI ya está trabajando en ello. No necesitas reportarlo.
+        </span>
       </div>
     </section>
   );

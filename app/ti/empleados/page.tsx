@@ -19,9 +19,21 @@ type Equipo = { nombre: string; categoria: string; asignado_email: string | null
 export default async function Empleados({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; estado?: string; depto?: string; equipos?: string; portal?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    estado?: string;
+    depto?: string;
+    equipos?: string;
+    portal?: string;
+  }>;
 }) {
-  const { q = "", estado = "", depto = "", equipos: equiposFiltro = "", portal = "" } = await searchParams;
+  const {
+    q = "",
+    estado = "",
+    depto = "",
+    equipos: equiposFiltro = "",
+    portal = "",
+  } = await searchParams;
   const sb = await getSupabase();
   const head = (
     <div className="pagina-head">
@@ -31,11 +43,24 @@ export default async function Empleados({
       </div>
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  if (!sb)
+    return (
+      <>
+        {head}
+        <SinConexion />
+      </>
+    );
 
   const [empleadosQ, equiposQ, ticketsQ] = await Promise.all([
-    sb.from("empleados").select("id, nombre, correo, departamento, puesto, extension, estado").order("nombre"),
-    sb.from("equipos").select("nombre, categoria, asignado_email").not("asignado_email", "is", null).neq("estado", "baja"),
+    sb
+      .from("empleados")
+      .select("id, nombre, correo, departamento, puesto, extension, estado")
+      .order("nombre"),
+    sb
+      .from("equipos")
+      .select("nombre, categoria, asignado_email")
+      .not("asignado_email", "is", null)
+      .neq("estado", "baja"),
     sb.from("tickets").select("solicitante_email").not("solicitante_email", "is", null),
   ]);
   const empleados = empleadosQ.data ?? [];
@@ -52,7 +77,9 @@ export default async function Empleados({
   const equiposDe = (correo: string) => equiposPorCorreo.get(correo) ?? [];
   // Correos con actividad en el portal = que han levantado al menos un reporte.
   const portalActivo = new Set(
-    (ticketsQ.data ?? []).map((t) => t.solicitante_email as string | null).filter(Boolean) as string[],
+    (ticketsQ.data ?? [])
+      .map((t) => t.solicitante_email as string | null)
+      .filter(Boolean) as string[],
   );
 
   // Resumen sobre la lista completa (estable, sin filtros).
@@ -63,7 +90,9 @@ export default async function Empleados({
     conEquipos: empleados.filter((p) => equiposDe(p.correo).length > 0).length,
     sinEquipos: empleados.filter((p) => equiposDe(p.correo).length === 0).length,
   };
-  const departamentos = [...new Set(empleados.map((p) => p.departamento).filter(Boolean) as string[])].sort();
+  const departamentos = [
+    ...new Set(empleados.map((p) => p.departamento).filter(Boolean) as string[]),
+  ].sort();
 
   // Filtros server (vía URL params), aplicados sobre la lista.
   const texto = q.trim().toLowerCase();
@@ -124,7 +153,13 @@ export default async function Empleados({
             </div>
             <div className="campo">
               <label htmlFor="em-correo">Correo</label>
-              <input id="em-correo" name="correo" type="email" required placeholder="maria.lopez@plasticospimsa.com" />
+              <input
+                id="em-correo"
+                name="correo"
+                type="email"
+                required
+                placeholder="maria.lopez@plasticospimsa.com"
+              />
             </div>
             <div className="campo">
               <label htmlFor="em-depto">Departamento</label>
@@ -139,7 +174,9 @@ export default async function Empleados({
               <input id="em-ext" name="extension" placeholder="110" />
             </div>
           </div>
-          <BotonEnviar className="boton" ocupado="Guardando…">Guardar empleado</BotonEnviar>
+          <BotonEnviar className="boton" ocupado="Guardando…">
+            Guardar empleado
+          </BotonEnviar>
         </form>
       </details>
 
@@ -160,7 +197,11 @@ export default async function Empleados({
           </select>
           <select name="depto" defaultValue={depto} aria-label="Filtrar por departamento">
             <option value="">Todos los departamentos</option>
-            {departamentos.map((d) => <option key={d} value={d}>{d}</option>)}
+            {departamentos.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
           </select>
           <select name="equipos" defaultValue={equiposFiltro} aria-label="Filtrar por equipos">
             <option value="">Con y sin equipos</option>
@@ -172,8 +213,14 @@ export default async function Empleados({
             <option value="con">Con actividad</option>
             <option value="sin">Sin actividad</option>
           </select>
-          <button className="boton secundario" type="submit">Filtrar</button>
-          {hayFiltro && <Link href="/ti/empleados" className="boton-texto">Limpiar</Link>}
+          <button className="boton secundario" type="submit">
+            Filtrar
+          </button>
+          {hayFiltro && (
+            <Link href="/ti/empleados" className="boton-texto">
+              Limpiar
+            </Link>
+          )}
         </form>
       </div>
 
@@ -204,80 +251,128 @@ export default async function Empleados({
                 <tr key={p.id}>
                   <td data-label="Empleado">
                     <span className="inv-asignado">
-                      <span className="inv-avatar" aria-hidden>{iniciales(p.nombre)}</span>
+                      <span className="inv-avatar" aria-hidden>
+                        {iniciales(p.nombre)}
+                      </span>
                       <span>
                         <span className="inv-asignado-nombre">{p.nombre}</span>
-                        {p.puesto ? <span className="suave" style={{ fontSize: 12, display: "block" }}>{p.puesto}</span> : null}
+                        {p.puesto ? (
+                          <span className="suave" style={{ fontSize: 12, display: "block" }}>
+                            {p.puesto}
+                          </span>
+                        ) : null}
                       </span>
                     </span>
                   </td>
-                  <td data-label="Correo" className="mono">{p.correo}</td>
-                  <td data-label="Departamento" className="suave">{p.departamento ?? "—"}</td>
-                  <td data-label="Ext." className="mono">{p.extension ?? "—"}</td>
+                  <td data-label="Correo" className="mono">
+                    {p.correo}
+                  </td>
+                  <td data-label="Departamento" className="suave">
+                    {p.departamento ?? "—"}
+                  </td>
+                  <td data-label="Ext." className="mono">
+                    {p.extension ?? "—"}
+                  </td>
                   <td data-label="Equipos">
                     {suyos.length === 0 ? (
                       <span className="suave">—</span>
                     ) : (
                       <div className="mini-equipos">
                         {suyos.map((e) => (
-                          <span key={e.nombre} className="insignia info" title={ETIQUETA_CAT[e.categoria] ?? e.categoria}>
+                          <span
+                            key={e.nombre}
+                            className="insignia info"
+                            title={ETIQUETA_CAT[e.categoria] ?? e.categoria}
+                          >
                             {e.nombre}
                           </span>
                         ))}
                       </div>
                     )}
                   </td>
-                  <td data-label="Estado"><Insignia valor={p.estado} /></td>
+                  <td data-label="Estado">
+                    <Insignia valor={p.estado} />
+                  </td>
                   <td data-label="" className="inv-acciones-celda">
                     <div className="fila-acciones">
-                    <Link href={`/ti/empleados/${p.id}/firma`} className="boton secundario mini">Firma</Link>
-                    <ModalGestionar
-                      titulo={p.nombre}
-                      subtitulo={p.puesto || p.departamento || p.correo}
-                      resumen={
-                        <>
-                          <dl className="modal-datos">
-                            <div><dt>Correo</dt><dd className="mono">{p.correo}</dd></div>
-                            <div><dt>Departamento</dt><dd>{p.departamento ?? "—"}</dd></div>
-                            <div><dt>Puesto</dt><dd>{p.puesto ?? "—"}</dd></div>
-                            <div><dt>Extensión</dt><dd className="mono">{p.extension ?? "—"}</dd></div>
-                            <div><dt>Equipos</dt><dd>{suyos.length || "—"}</dd></div>
-                            <div><dt>Portal</dt><dd>{portalActivo.has(p.correo) ? "Con actividad" : "Sin actividad"}</dd></div>
-                          </dl>
-                          <form action={cambiarEstadoEmpleado} className="inv-gestionar-asignar">
-                            <input type="hidden" name="id" value={p.id} />
-                            <label className="mini-label">Estado</label>
-                            <select name="estado" defaultValue={p.estado}>
-                              <option value="activo">activo</option>
-                              <option value="baja">baja</option>
-                            </select>
-                            <BotonEnviar className="boton secundario mini" ocupado="…">Aplicar</BotonEnviar>
-                          </form>
-                        </>
-                      }
-                    >
-                      <form action={editarEmpleado} className="bloque-form">
-                        <input type="hidden" name="id" value={p.id} />
-                        <label className="mini-label">Nombre</label>
-                        <input name="nombre" defaultValue={p.nombre} required />
-                        <label className="mini-label">Correo</label>
-                        <input name="correo" type="email" defaultValue={p.correo} required />
-                        <label className="mini-label">Departamento</label>
-                        <input name="departamento" defaultValue={p.departamento ?? ""} />
-                        <label className="mini-label">Puesto</label>
-                        <input name="puesto" defaultValue={p.puesto ?? ""} />
-                        <label className="mini-label">Extensión</label>
-                        <input name="extension" defaultValue={p.extension ?? ""} />
-                        <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar cambios</BotonEnviar>
-                      </form>
+                      <Link href={`/ti/empleados/${p.id}/firma`} className="boton secundario mini">
+                        Firma
+                      </Link>
+                      <ModalGestionar
+                        titulo={p.nombre}
+                        subtitulo={p.puesto || p.departamento || p.correo}
+                        resumen={
+                          <>
+                            <dl className="modal-datos">
+                              <div>
+                                <dt>Correo</dt>
+                                <dd className="mono">{p.correo}</dd>
+                              </div>
+                              <div>
+                                <dt>Departamento</dt>
+                                <dd>{p.departamento ?? "—"}</dd>
+                              </div>
+                              <div>
+                                <dt>Puesto</dt>
+                                <dd>{p.puesto ?? "—"}</dd>
+                              </div>
+                              <div>
+                                <dt>Extensión</dt>
+                                <dd className="mono">{p.extension ?? "—"}</dd>
+                              </div>
+                              <div>
+                                <dt>Equipos</dt>
+                                <dd>{suyos.length || "—"}</dd>
+                              </div>
+                              <div>
+                                <dt>Portal</dt>
+                                <dd>
+                                  {portalActivo.has(p.correo) ? "Con actividad" : "Sin actividad"}
+                                </dd>
+                              </div>
+                            </dl>
+                            <form action={cambiarEstadoEmpleado} className="inv-gestionar-asignar">
+                              <input type="hidden" name="id" value={p.id} />
+                              <label className="mini-label">Estado</label>
+                              <select name="estado" defaultValue={p.estado}>
+                                <option value="activo">activo</option>
+                                <option value="baja">baja</option>
+                              </select>
+                              <BotonEnviar className="boton secundario mini" ocupado="…">
+                                Aplicar
+                              </BotonEnviar>
+                            </form>
+                          </>
+                        }
+                      >
+                        <form action={editarEmpleado} className="bloque-form">
+                          <input type="hidden" name="id" value={p.id} />
+                          <label className="mini-label">Nombre</label>
+                          <input name="nombre" defaultValue={p.nombre} required />
+                          <label className="mini-label">Correo</label>
+                          <input name="correo" type="email" defaultValue={p.correo} required />
+                          <label className="mini-label">Departamento</label>
+                          <input name="departamento" defaultValue={p.departamento ?? ""} />
+                          <label className="mini-label">Puesto</label>
+                          <input name="puesto" defaultValue={p.puesto ?? ""} />
+                          <label className="mini-label">Extensión</label>
+                          <input name="extension" defaultValue={p.extension ?? ""} />
+                          <BotonEnviar className="boton mini" ocupado="Guardando…">
+                            Guardar cambios
+                          </BotonEnviar>
+                        </form>
 
-                      <form action={eliminarEmpleado} className="inv-gestionar-eliminar">
-                        <input type="hidden" name="id" value={p.id} />
-                        <BotonEnviar className="boton-texto" style={{ color: "var(--critico)" }} ocupado="Eliminando…">
-                          Eliminar empleado
-                        </BotonEnviar>
-                      </form>
-                    </ModalGestionar>
+                        <form action={eliminarEmpleado} className="inv-gestionar-eliminar">
+                          <input type="hidden" name="id" value={p.id} />
+                          <BotonEnviar
+                            className="boton-texto"
+                            style={{ color: "var(--critico)" }}
+                            ocupado="Eliminando…"
+                          >
+                            Eliminar empleado
+                          </BotonEnviar>
+                        </form>
+                      </ModalGestionar>
                     </div>
                   </td>
                 </tr>
@@ -292,5 +387,13 @@ export default async function Empleados({
 
 // Iniciales para el avatar: "María López" -> "ML".
 function iniciales(s: string): string {
-  return s.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+  return (
+    s
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase() || "?"
+  );
 }

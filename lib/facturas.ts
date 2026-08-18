@@ -19,7 +19,7 @@ export type Moneda = "MXN" | "USD";
 // Metadatos de cada estado persistido. `tono` mapea a `.insignia`.
 export const ESTADOS_FACTURA: { valor: EstadoFactura; etiqueta: string; tono: string }[] = [
   { valor: "pendiente", etiqueta: "Pendiente", tono: "aviso" },
-  { valor: "pagada",    etiqueta: "Pagada",    tono: "ok" },
+  { valor: "pagada", etiqueta: "Pagada", tono: "ok" },
   { valor: "cancelada", etiqueta: "Cancelada", tono: "neutro" },
 ];
 
@@ -27,12 +27,12 @@ export const MONEDAS: Moneda[] = ["MXN", "USD"];
 
 // `meses` es el paso de la proyección; 'unico' = 0 (una sola ocurrencia).
 export const PERIODICIDADES: { valor: Periodicidad; etiqueta: string; meses: number }[] = [
-  { valor: "mensual",    etiqueta: "Mensual",    meses: 1 },
-  { valor: "bimestral",  etiqueta: "Bimestral",  meses: 2 },
+  { valor: "mensual", etiqueta: "Mensual", meses: 1 },
+  { valor: "bimestral", etiqueta: "Bimestral", meses: 2 },
   { valor: "trimestral", etiqueta: "Trimestral", meses: 3 },
-  { valor: "semestral",  etiqueta: "Semestral",  meses: 6 },
-  { valor: "anual",      etiqueta: "Anual",      meses: 12 },
-  { valor: "unico",      etiqueta: "Pago único", meses: 0 },
+  { valor: "semestral", etiqueta: "Semestral", meses: 6 },
+  { valor: "anual", etiqueta: "Anual", meses: 12 },
+  { valor: "unico", etiqueta: "Pago único", meses: 0 },
 ];
 
 export function etiquetaPeriodicidad(valor: string): string {
@@ -62,7 +62,9 @@ export function estadoVisible(
 export function sumarMeses(fecha: string, meses: number): string {
   const [a, m, d] = fecha.split("-").map(Number);
   const destino = new Date(Date.UTC(a, m - 1 + meses, 1));
-  const ultimoDia = new Date(Date.UTC(destino.getUTCFullYear(), destino.getUTCMonth() + 1, 0)).getUTCDate();
+  const ultimoDia = new Date(
+    Date.UTC(destino.getUTCFullYear(), destino.getUTCMonth() + 1, 0),
+  ).getUTCDate();
   destino.setUTCDate(Math.min(d, ultimoDia));
   return destino.toISOString().slice(0, 10);
 }
@@ -121,7 +123,15 @@ export function proyectarProveedor(
   // El ancla puede venir del pasado: esas ocurrencias se incluyen como vencidas
   // (ancla sin avanzar = pagos sin registrar).
   while (fecha <= hasta) {
-    out.push({ fecha, origen: "proveedor", refId: p.id, titulo, monto, moneda, vencido: fecha < desde });
+    out.push({
+      fecha,
+      origen: "proveedor",
+      refId: p.id,
+      titulo,
+      monto,
+      moneda,
+      vencido: fecha < desde,
+    });
     if (paso === 0) break; // pago único: una sola ocurrencia
     fecha = sumarMeses(fecha, paso);
   }

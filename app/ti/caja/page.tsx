@@ -25,7 +25,13 @@ export default async function CajaChica() {
       </div>
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  if (!sb)
+    return (
+      <>
+        {head}
+        <SinConexion />
+      </>
+    );
 
   const [{ data: movs }, { data: config }] = await Promise.all([
     sb
@@ -44,9 +50,20 @@ export default async function CajaChica() {
   // Form del límite: se reusa en el estado sin configurar y en el plegable.
   const formLimite = (
     <form action={guardarLimite} className="bloque-form">
-      <label className="mini-label" htmlFor="cj-limite">Fondo fijo (MXN)</label>
-      <input id="cj-limite" name="caja_limite" inputMode="decimal" defaultValue={r.limite ?? ""} placeholder="5,000.00" required />
-      <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar límite</BotonEnviar>
+      <label className="mini-label" htmlFor="cj-limite">
+        Fondo fijo (MXN)
+      </label>
+      <input
+        id="cj-limite"
+        name="caja_limite"
+        inputMode="decimal"
+        defaultValue={r.limite ?? ""}
+        placeholder="5,000.00"
+        required
+      />
+      <BotonEnviar className="boton mini" ocupado="Guardando…">
+        Guardar límite
+      </BotonEnviar>
     </form>
   );
 
@@ -57,11 +74,26 @@ export default async function CajaChica() {
         <td className="mono">{fechaCorta(m.fecha)}</td>
         <td>
           <div className="celda-principal">{m.concepto}</div>
-          {m.notas && <div className="suave" style={{ fontSize: 12.5 }}>{m.notas}</div>}
+          {m.notas && (
+            <div className="suave" style={{ fontSize: 12.5 }}>
+              {m.notas}
+            </div>
+          )}
         </td>
         <td className="suave">{m.comprador ?? "—"}</td>
-        <td><span className={`insignia ${esCompra ? "neutro" : "ok"}`}>{esCompra ? "compra" : "reembolso"}</span></td>
-        <td className="mono" style={{ color: esCompra ? undefined : "var(--ok)", fontWeight: 600, whiteSpace: "nowrap" }}>
+        <td>
+          <span className={`insignia ${esCompra ? "neutro" : "ok"}`}>
+            {esCompra ? "compra" : "reembolso"}
+          </span>
+        </td>
+        <td
+          className="mono"
+          style={{
+            color: esCompra ? undefined : "var(--ok)",
+            fontWeight: 600,
+            whiteSpace: "nowrap",
+          }}
+        >
           {esCompra ? "−" : "+"} {moneda(Number(m.monto))}
         </td>
         <td style={{ whiteSpace: "nowrap" }}>
@@ -90,12 +122,20 @@ export default async function CajaChica() {
                 )}
                 <label className="mini-label">Notas</label>
                 <textarea name="notas" defaultValue={m.notas ?? ""} rows={2} />
-                <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar</BotonEnviar>
+                <BotonEnviar className="boton mini" ocupado="Guardando…">
+                  Guardar
+                </BotonEnviar>
               </form>
             </details>
             <form action={eliminarMovimiento}>
               <input type="hidden" name="id" value={m.id} />
-              <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">Eliminar</BotonEnviar>
+              <BotonEnviar
+                className="boton secundario mini"
+                style={{ color: "var(--critico)" }}
+                ocupado="…"
+              >
+                Eliminar
+              </BotonEnviar>
             </form>
           </div>
         </td>
@@ -111,10 +151,12 @@ export default async function CajaChica() {
         <section className="caja-hero">
           <div className="caja-fondo">
             <span className="eyebrow">Fondo fijo</span>
-            <h2 style={{ fontSize: 20, fontWeight: 600, marginTop: 6 }}>Configura el fondo de la caja</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 600, marginTop: 6 }}>
+              Configura el fondo de la caja
+            </h2>
             <p className="suave" style={{ fontSize: 13.5, marginTop: 4, maxWidth: 480 }}>
-              Captura el monto del fondo fijo. A partir de ahí, cada compra baja el saldo
-              y cada reembolso lo regresa al límite.
+              Captura el monto del fondo fijo. A partir de ahí, cada compra baja el saldo y cada
+              reembolso lo regresa al límite.
             </p>
           </div>
           <div className="caja-acciones">{formLimite}</div>
@@ -127,10 +169,20 @@ export default async function CajaChica() {
               {moneda(r.saldo)}
               <span className="de-limite">de {moneda(r.limite)}</span>
             </div>
-            <div className="caja-barra" role="img" aria-label={`Queda ${moneda(r.saldo)} de ${moneda(r.limite)}`}>
-              <div className={`caja-barra-fill ${nivel.tono}`} style={{ width: `${Math.round(nivel.pct * 100)}%` }} />
+            <div
+              className="caja-barra"
+              role="img"
+              aria-label={`Queda ${moneda(r.saldo)} de ${moneda(r.limite)}`}
+            >
+              <div
+                className={`caja-barra-fill ${nivel.tono}`}
+                style={{ width: `${Math.round(nivel.pct * 100)}%` }}
+              />
             </div>
-            <div className="caja-extremos"><span>$0</span><span>fondo {moneda(r.limite)}</span></div>
+            <div className="caja-extremos">
+              <span>$0</span>
+              <span>fondo {moneda(r.limite)}</span>
+            </div>
             <div className="caja-pie">
               Gastado desde el último reembolso: <b>{moneda(r.gastadoDesdeReembolso)}</b>
               {r.ultimoReembolso && <> · Último reembolso: {fechaCorta(r.ultimoReembolso.fecha)}</>}
@@ -140,8 +192,16 @@ export default async function CajaChica() {
             <details className="plegable">
               <summary>Registrar reembolso</summary>
               <form action={registrarReembolso} className="bloque-form">
-                <label className="mini-label" htmlFor="cj-rmonto">Monto recibido</label>
-                <input id="cj-rmonto" name="monto" inputMode="decimal" defaultValue={r.porReembolsar > 0 ? r.porReembolsar.toFixed(2) : ""} required />
+                <label className="mini-label" htmlFor="cj-rmonto">
+                  Monto recibido
+                </label>
+                <input
+                  id="cj-rmonto"
+                  name="monto"
+                  inputMode="decimal"
+                  defaultValue={r.porReembolsar > 0 ? r.porReembolsar.toFixed(2) : ""}
+                  required
+                />
                 {r.porReembolsar > 0 && (
                   <p className="suave" style={{ fontSize: 12, margin: "2px 0 0" }}>
                     Faltan {moneda(r.porReembolsar)} para volver al fondo completo.
@@ -149,17 +209,34 @@ export default async function CajaChica() {
                 )}
                 <div className="dos-col">
                   <div>
-                    <label className="mini-label" htmlFor="cj-rfecha">Fecha</label>
+                    <label className="mini-label" htmlFor="cj-rfecha">
+                      Fecha
+                    </label>
                     <input id="cj-rfecha" name="fecha" type="date" defaultValue={hoy} required />
                   </div>
                   <div>
-                    <label className="mini-label" htmlFor="cj-rconcepto">Concepto</label>
-                    <input id="cj-rconcepto" name="concepto" placeholder="Reembolso de caja chica" />
+                    <label className="mini-label" htmlFor="cj-rconcepto">
+                      Concepto
+                    </label>
+                    <input
+                      id="cj-rconcepto"
+                      name="concepto"
+                      placeholder="Reembolso de caja chica"
+                    />
                   </div>
                 </div>
-                <label className="mini-label" htmlFor="cj-rnotas">Notas</label>
-                <textarea id="cj-rnotas" name="notas" rows={2} placeholder="Quién lo entregó, referencia…" />
-                <BotonEnviar className="boton mini" ocupado="Registrando…">Registrar reembolso</BotonEnviar>
+                <label className="mini-label" htmlFor="cj-rnotas">
+                  Notas
+                </label>
+                <textarea
+                  id="cj-rnotas"
+                  name="notas"
+                  rows={2}
+                  placeholder="Quién lo entregó, referencia…"
+                />
+                <BotonEnviar className="boton mini" ocupado="Registrando…">
+                  Registrar reembolso
+                </BotonEnviar>
               </form>
             </details>
             <details className="plegable">
@@ -175,7 +252,12 @@ export default async function CajaChica() {
         <div className="campos">
           <div className="campo ancho">
             <label htmlFor="cj-concepto">Qué se compró</label>
-            <input id="cj-concepto" name="concepto" required placeholder="Cable HDMI para sala de juntas" />
+            <input
+              id="cj-concepto"
+              name="concepto"
+              required
+              placeholder="Cable HDMI para sala de juntas"
+            />
           </div>
           <div className="campo">
             <label htmlFor="cj-monto">Monto</label>
@@ -194,16 +276,30 @@ export default async function CajaChica() {
             <textarea id="cj-notas" name="notas" placeholder="Ticket, tienda, para qué equipo…" />
           </div>
         </div>
-        <BotonEnviar className="boton" ocupado="Registrando…">Registrar compra</BotonEnviar>
+        <BotonEnviar className="boton" ocupado="Registrando…">
+          Registrar compra
+        </BotonEnviar>
       </form>
 
       <section className="seccion">
         <h2 className="seccion-titulo">Movimientos</h2>
         {movimientos.length === 0 ? (
-          <div className="vacio">Sin movimientos. La caja está en su fondo completo; registra la primera compra cuando salga efectivo.</div>
+          <div className="vacio">
+            Sin movimientos. La caja está en su fondo completo; registra la primera compra cuando
+            salga efectivo.
+          </div>
         ) : (
           <table className="tabla">
-            <thead><tr><th>Fecha</th><th>Concepto</th><th>Quién</th><th>Tipo</th><th>Monto</th><th></th></tr></thead>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Concepto</th>
+                <th>Quién</th>
+                <th>Tipo</th>
+                <th>Monto</th>
+                <th></th>
+              </tr>
+            </thead>
             <tbody>{movimientos.map(fila)}</tbody>
           </table>
         )}

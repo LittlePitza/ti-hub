@@ -3,7 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { getSupabaseAutenticado } from "@/lib/supabase";
 import { lector } from "@/lib/form";
-import { MONEDAS, PERIODICIDADES, sumarMeses, type Moneda, type Periodicidad } from "@/lib/facturas";
+import {
+  MONEDAS,
+  PERIODICIDADES,
+  sumarMeses,
+  type Moneda,
+  type Periodicidad,
+} from "@/lib/facturas";
 
 function refrescar() {
   revalidatePath("/ti/facturas/proveedores");
@@ -128,7 +134,10 @@ export async function registrarPagoProveedor(formData: FormData) {
 
   const paso = PERIODICIDADES.find((x) => x.valor === p.periodicidad)?.meses ?? 1;
   const siguiente = paso === 0 ? null : sumarMeses(p.proximo_pago, paso);
-  const { error: errAncla } = await sb.from("proveedores").update({ proximo_pago: siguiente }).eq("id", id);
+  const { error: errAncla } = await sb
+    .from("proveedores")
+    .update({ proximo_pago: siguiente })
+    .eq("id", id);
   if (errAncla) console.error("[proveedores] avanzar ancla:", errAncla.message);
   refrescar();
 }

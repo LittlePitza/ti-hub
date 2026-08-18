@@ -4,13 +4,7 @@
 // fuente de verdad de los valores permitidos; aquí viven etiquetas y reglas de negocio.
 
 export type EstadoTicket =
-  | "abierto"
-  | "en_proceso"
-  | "en_espera"
-  | "resuelto"
-  | "cerrado"
-  | "reabierto"
-  | "archivado";
+  "abierto" | "en_proceso" | "en_espera" | "resuelto" | "cerrado" | "reabierto" | "archivado";
 
 export type Prioridad = "baja" | "media" | "alta" | "critica";
 export type CategoriaTicket = "hardware" | "software" | "red" | "accesos" | "correo" | "otro";
@@ -24,20 +18,45 @@ export const ESTADOS_TICKET: {
   activo: boolean;
   cuentaResuelto: boolean;
 }[] = [
-  { valor: "abierto",    etiqueta: "Abierto",    tono: "critico", activo: true,  cuentaResuelto: false },
-  { valor: "en_proceso", etiqueta: "En proceso", tono: "aviso",   activo: true,  cuentaResuelto: false },
-  { valor: "en_espera",  etiqueta: "En espera",  tono: "info",    activo: true,  cuentaResuelto: false },
-  { valor: "reabierto",  etiqueta: "Reabierto",  tono: "critico", activo: true,  cuentaResuelto: false },
+  { valor: "abierto", etiqueta: "Abierto", tono: "critico", activo: true, cuentaResuelto: false },
+  {
+    valor: "en_proceso",
+    etiqueta: "En proceso",
+    tono: "aviso",
+    activo: true,
+    cuentaResuelto: false,
+  },
+  { valor: "en_espera", etiqueta: "En espera", tono: "info", activo: true, cuentaResuelto: false },
+  {
+    valor: "reabierto",
+    etiqueta: "Reabierto",
+    tono: "critico",
+    activo: true,
+    cuentaResuelto: false,
+  },
   // Cerrado = trabajo terminado (visible, se reabre si el solicitante responde).
-  { valor: "cerrado",    etiqueta: "Cerrado",    tono: "ok",      activo: false, cuentaResuelto: true  },
+  { valor: "cerrado", etiqueta: "Cerrado", tono: "ok", activo: false, cuentaResuelto: true },
   // Archivado = guardado en frío: sale del trabajo a la vista y vive en su pestaña.
-  { valor: "archivado",  etiqueta: "Archivado",  tono: "neutro",  activo: false, cuentaResuelto: true  },
+  {
+    valor: "archivado",
+    etiqueta: "Archivado",
+    tono: "neutro",
+    activo: false,
+    cuentaResuelto: true,
+  },
   // resuelto se conserva para datos antiguos y la bitácora; el flujo nuevo cierra.
-  { valor: "resuelto",   etiqueta: "Resuelto",   tono: "ok",      activo: false, cuentaResuelto: true  },
+  { valor: "resuelto", etiqueta: "Resuelto", tono: "ok", activo: false, cuentaResuelto: true },
 ];
 
 export const PRIORIDADES: Prioridad[] = ["baja", "media", "alta", "critica"];
-export const CATEGORIAS_TK: CategoriaTicket[] = ["hardware", "software", "red", "accesos", "correo", "otro"];
+export const CATEGORIAS_TK: CategoriaTicket[] = [
+  "hardware",
+  "software",
+  "red",
+  "accesos",
+  "correo",
+  "otro",
+];
 
 export const ESTADOS_ACTIVOS: EstadoTicket[] = ["abierto", "en_proceso", "en_espera", "reabierto"];
 // Estados terminales (detienen el reloj de resolución). Engloba cerrados + archivados.
@@ -107,7 +126,7 @@ export interface TicketParaSla {
 const MS_HORA = 3_600_000;
 
 function objetivos(prioridad: string, sla: SlaTabla) {
-  return sla[(prioridad as Prioridad)] ?? sla.media;
+  return sla[prioridad as Prioridad] ?? sla.media;
 }
 
 // Evalúa el tiempo de primera respuesta contra el SLA.
@@ -123,7 +142,12 @@ export function evaluarRespuesta(
 
   if (t.primera_respuesta_at) {
     const ms = new Date(t.primera_respuesta_at).getTime() - creado;
-    return { ms, objetivoMs, semaforo: (ms <= objetivoMs ? "cumplido" : "incumplido") as SemaforoSla, pendiente: false };
+    return {
+      ms,
+      objetivoMs,
+      semaforo: (ms <= objetivoMs ? "cumplido" : "incumplido") as SemaforoSla,
+      pendiente: false,
+    };
   }
   // Aún sin primer contacto.
   if (t.estado === "en_espera") {
@@ -148,7 +172,12 @@ export function evaluarResolucion(
 
   if (t.resuelto_at) {
     const ms = new Date(t.resuelto_at).getTime() - creado;
-    return { ms, objetivoMs, semaforo: (ms <= objetivoMs ? "cumplido" : "incumplido") as SemaforoSla, pendiente: false };
+    return {
+      ms,
+      objetivoMs,
+      semaforo: (ms <= objetivoMs ? "cumplido" : "incumplido") as SemaforoSla,
+      pendiente: false,
+    };
   }
   if (!ESTADOS_ACTIVOS.includes(t.estado as EstadoTicket)) {
     return { ms: 0, objetivoMs, semaforo: "na" as SemaforoSla, pendiente: false };

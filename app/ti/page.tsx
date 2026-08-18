@@ -36,7 +36,13 @@ function contar<T>(lista: T[], llave: (x: T) => string): Record<string, number> 
 // Color de la barra "real vs SLA": verde si cumplimos, ámbar si flaqueamos,
 // rojo si vamos mal. El umbral 80% es el mismo que usa el resto del panel.
 const colorPct = (pct: number | null) =>
-  pct === null ? "var(--linea-fuerte)" : pct >= 80 ? "var(--ok)" : pct >= 50 ? "var(--aviso)" : "var(--critico)";
+  pct === null
+    ? "var(--linea-fuerte)"
+    : pct >= 80
+      ? "var(--ok)"
+      : pct >= 50
+        ? "var(--aviso)"
+        : "var(--critico)";
 
 // Pinta una duración con la cifra grande y la unidad chica pegada ("3d 5h"),
 // en vez de un string mono con espacios que la dejan descoyuntada.
@@ -64,18 +70,38 @@ export default async function Resumen() {
       </div>
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  if (!sb)
+    return (
+      <>
+        {head}
+        <SinConexion />
+      </>
+    );
 
   const hoy = new Date().toISOString().slice(0, 10);
   const en14 = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
   const en90 = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
 
-  const [equiposQ, ticketsQ, mantosQ, respQ, configCorreo, facturasQ, provsQ, serviciosQ, incidentesQ] = await Promise.all([
+  const [
+    equiposQ,
+    ticketsQ,
+    mantosQ,
+    respQ,
+    configCorreo,
+    facturasQ,
+    provsQ,
+    serviciosQ,
+    incidentesQ,
+  ] = await Promise.all([
     sb.from("equipos").select("nombre, tipo, estado, garantia_hasta"),
-    sb.from("tickets")
-      .select("id, num, titulo, solicitante, estado, prioridad, asignado_a, created_at, primera_respuesta_at, resuelto_at")
+    sb
+      .from("tickets")
+      .select(
+        "id, num, titulo, solicitante, estado, prioridad, asignado_a, created_at, primera_respuesta_at, resuelto_at",
+      )
       .order("created_at", { ascending: false }),
-    sb.from("mantenimientos")
+    sb
+      .from("mantenimientos")
       .select("id, titulo, tipo, responsable, fecha_programada, estado")
       .in("estado", ["programado", "en_proceso"])
       .lte("fecha_programada", en14)
@@ -116,19 +142,27 @@ export default async function Resumen() {
   const promedio = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
   const conRespuesta = tickets.filter((t) => t.primera_respuesta_at);
-  const tiemposRespuesta = conRespuesta.map((t) => evaluarRespuesta(t, ahora, sla, porVencerPct).ms);
-  const respuestaEnSla = conRespuesta.filter((t) => evaluarRespuesta(t, ahora, sla, porVencerPct).semaforo === "cumplido").length;
+  const tiemposRespuesta = conRespuesta.map(
+    (t) => evaluarRespuesta(t, ahora, sla, porVencerPct).ms,
+  );
+  const respuestaEnSla = conRespuesta.filter(
+    (t) => evaluarRespuesta(t, ahora, sla, porVencerPct).semaforo === "cumplido",
+  ).length;
   const pctRespuestaSla = conRespuesta.length
     ? Math.round((respuestaEnSla / conRespuesta.length) * 100)
     : null;
 
   const resueltosTk = tickets.filter((t) => t.resuelto_at);
-  const tiemposResolucion = resueltosTk.map((t) => evaluarResolucion(t, ahora, sla, porVencerPct).ms);
+  const tiemposResolucion = resueltosTk.map(
+    (t) => evaluarResolucion(t, ahora, sla, porVencerPct).ms,
+  );
 
   // Velocidad + calidad de atención, para el hero del resumen.
   const atendidos = conRespuesta.length;
   const resueltos = resueltosTk.length;
-  const resolucionEnSla = resueltosTk.filter((t) => evaluarResolucion(t, ahora, sla, porVencerPct).semaforo === "cumplido").length;
+  const resolucionEnSla = resueltosTk.filter(
+    (t) => evaluarResolucion(t, ahora, sla, porVencerPct).semaforo === "cumplido",
+  ).length;
   const pctResolucionSla = resueltos ? Math.round((resolucionEnSla / resueltos) * 100) : null;
   const msResolucion = tiemposResolucion.length ? promedio(tiemposResolucion) : null;
   const msRespuesta = tiemposRespuesta.length ? promedio(tiemposRespuesta) : null;
@@ -153,7 +187,13 @@ export default async function Resumen() {
 
   // Garantías por vencer en los próximos 90 días
   const garantias = equipos
-    .filter((e) => e.estado !== "baja" && e.garantia_hasta && e.garantia_hasta >= hoy && e.garantia_hasta <= en90)
+    .filter(
+      (e) =>
+        e.estado !== "baja" &&
+        e.garantia_hasta &&
+        e.garantia_hasta >= hoy &&
+        e.garantia_hasta <= en90,
+    )
     .sort((a, b) => a.garantia_hasta!.localeCompare(b.garantia_hasta!));
 
   // Datos para gráficas
@@ -203,21 +243,38 @@ export default async function Resumen() {
         <div className="resumen-hero-cuerpo">
           <div className="tiempo-metrica destacada">
             <div className="tiempo-label">Resolución promedio</div>
-            <div className="tiempo-valor"><Duracion ms={msResolucion} /></div>
+            <div className="tiempo-valor">
+              <Duracion ms={msResolucion} />
+            </div>
             <div className="tiempo-track">
               <div
                 className="tiempo-track-fill"
-                style={{ width: `${pctResolucionSla ?? 0}%`, background: colorPct(pctResolucionSla) }}
+                style={{
+                  width: `${pctResolucionSla ?? 0}%`,
+                  background: colorPct(pctResolucionSla),
+                }}
               />
             </div>
             <div className="tiempo-pie">
-              <span>{pctResolucionSla === null ? "Aún sin tickets resueltos" : <><b>{pctResolucionSla}%</b> dentro de SLA</>}</span>
-              <span>{resueltos} {resueltos === 1 ? "resuelto" : "resueltos"}</span>
+              <span>
+                {pctResolucionSla === null ? (
+                  "Aún sin tickets resueltos"
+                ) : (
+                  <>
+                    <b>{pctResolucionSla}%</b> dentro de SLA
+                  </>
+                )}
+              </span>
+              <span>
+                {resueltos} {resueltos === 1 ? "resuelto" : "resueltos"}
+              </span>
             </div>
           </div>
           <div className="tiempo-metrica">
             <div className="tiempo-label">Primera respuesta</div>
-            <div className="tiempo-valor"><Duracion ms={msRespuesta} /></div>
+            <div className="tiempo-valor">
+              <Duracion ms={msRespuesta} />
+            </div>
             <div className="tiempo-track">
               <div
                 className="tiempo-track-fill"
@@ -225,8 +282,18 @@ export default async function Resumen() {
               />
             </div>
             <div className="tiempo-pie">
-              <span>{pctRespuestaSla === null ? "Aún sin atender" : <><b>{pctRespuestaSla}%</b> dentro de SLA</>}</span>
-              <span>{atendidos} {atendidos === 1 ? "atendido" : "atendidos"}</span>
+              <span>
+                {pctRespuestaSla === null ? (
+                  "Aún sin atender"
+                ) : (
+                  <>
+                    <b>{pctRespuestaSla}%</b> dentro de SLA
+                  </>
+                )}
+              </span>
+              <span>
+                {atendidos} {atendidos === 1 ? "atendido" : "atendidos"}
+              </span>
             </div>
           </div>
           <Link href="/ti/tickets" className="tiempo-metrica carga-metrica">
@@ -238,9 +305,18 @@ export default async function Resumen() {
               </span>
             </div>
             <ul className="carga-lista">
-              <li className={fueraDeSla > 0 ? "mal" : ""}><span>Fuera de SLA</span><b>{fueraDeSla}</b></li>
-              <li className={porVencer > 0 ? "ojo" : ""}><span>Por vencer</span><b>{porVencer}</b></li>
-              <li className={sinAsignar > 0 ? "ojo" : ""}><span>Sin asignar</span><b>{sinAsignar}</b></li>
+              <li className={fueraDeSla > 0 ? "mal" : ""}>
+                <span>Fuera de SLA</span>
+                <b>{fueraDeSla}</b>
+              </li>
+              <li className={porVencer > 0 ? "ojo" : ""}>
+                <span>Por vencer</span>
+                <b>{porVencer}</b>
+              </li>
+              <li className={sinAsignar > 0 ? "ojo" : ""}>
+                <span>Sin asignar</span>
+                <b>{sinAsignar}</b>
+              </li>
             </ul>
           </Link>
         </div>
@@ -255,11 +331,15 @@ export default async function Resumen() {
             <div className="metrica-label">Equipos en inventario</div>
           </div>
           <div className="metrica">
-            <div className={`metrica-valor ${enReparacion > 0 ? "alerta" : ""}`}>{enReparacion}</div>
+            <div className={`metrica-valor ${enReparacion > 0 ? "alerta" : ""}`}>
+              {enReparacion}
+            </div>
             <div className="metrica-label">En reparación</div>
           </div>
           <div className="metrica">
-            <div className={`metrica-valor ${vencidos.length > 0 ? "alerta" : ""}`}>{vencidos.length}</div>
+            <div className={`metrica-valor ${vencidos.length > 0 ? "alerta" : ""}`}>
+              {vencidos.length}
+            </div>
             <div className="metrica-label">Mantenimientos vencidos</div>
           </div>
           <div className="metrica">
@@ -267,7 +347,9 @@ export default async function Resumen() {
             <div className="metrica-label">Próximos 14 días</div>
           </div>
           <div className="metrica">
-            <div className={`metrica-valor ${respPendientes > 0 ? "alerta" : ""}`}>{respPendientes}</div>
+            <div className={`metrica-valor ${respPendientes > 0 ? "alerta" : ""}`}>
+              {respPendientes}
+            </div>
             <div className="metrica-label">Responsivas sin firmar</div>
           </div>
           <div className="metrica">
@@ -316,7 +398,11 @@ export default async function Resumen() {
                   <div className="fila-compacta" key={s.servicio.id}>
                     <div className="fila-compacta-main">
                       <div className="fila-compacta-titulo">
-                        <span className={`estado-punto ${s.estado.tono}`} aria-hidden style={{ marginRight: 7 }} />
+                        <span
+                          className={`estado-punto ${s.estado.tono}`}
+                          aria-hidden
+                          style={{ marginRight: 7 }}
+                        />
                         {s.servicio.nombre}
                       </div>
                       {s.incidentesAbiertos[0] && (
@@ -344,12 +430,18 @@ export default async function Resumen() {
                 ultimosTickets.map((t) => (
                   <div className="fila-compacta" key={t.id}>
                     <div className="fila-compacta-main">
-                      <Link href={`/ti/tickets/${t.id}`} className="fila-compacta-titulo">{t.titulo}</Link>
+                      <Link href={`/ti/tickets/${t.id}`} className="fila-compacta-titulo">
+                        {t.titulo}
+                      </Link>
                       <div className="fila-compacta-sub">
-                        <span className="mono">{folio(t.num)}</span><span>·</span><span>{t.solicitante}</span>
+                        <span className="mono">{folio(t.num)}</span>
+                        <span>·</span>
+                        <span>{t.solicitante}</span>
                       </div>
                     </div>
-                    <div className="fila-compacta-fin"><Insignia valor={t.estado} /></div>
+                    <div className="fila-compacta-fin">
+                      <Insignia valor={t.estado} />
+                    </div>
                   </div>
                 ))
               )}
@@ -372,14 +464,20 @@ export default async function Resumen() {
                       <div className="fila-compacta-main">
                         <div className="fila-compacta-titulo">{m.titulo}</div>
                         <div className="fila-compacta-sub">
-                          <span>{m.tipo}</span><span>·</span><span>{m.responsable ?? "Sin responsable"}</span>
+                          <span>{m.tipo}</span>
+                          <span>·</span>
+                          <span>{m.responsable ?? "Sin responsable"}</span>
                         </div>
                       </div>
                       <div className="fila-compacta-fin">
                         <div className={`fila-compacta-fecha ${vencido ? "fecha-vencida" : ""}`}>
                           {fechaCorta(m.fecha_programada)}
                         </div>
-                        {vencido && <div className="fecha-vencida" style={{ fontSize: 11 }}>vencido</div>}
+                        {vencido && (
+                          <div className="fecha-vencida" style={{ fontSize: 11 }}>
+                            vencido
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
@@ -404,12 +502,20 @@ export default async function Resumen() {
                       <div className="fila-compacta-sub">
                         <span>{v.origen === "factura" ? "factura" : "recurrente"}</span>
                         <span>·</span>
-                        <span>{v.monto === null ? "monto variable" : moneda(v.monto, v.moneda)}</span>
+                        <span>
+                          {v.monto === null ? "monto variable" : moneda(v.monto, v.moneda)}
+                        </span>
                       </div>
                     </div>
                     <div className="fila-compacta-fin">
-                      <div className={`fila-compacta-fecha ${v.vencido ? "fecha-vencida" : ""}`}>{fechaCorta(v.fecha)}</div>
-                      {v.vencido && <div className="fecha-vencida" style={{ fontSize: 11 }}>vencido</div>}
+                      <div className={`fila-compacta-fecha ${v.vencido ? "fecha-vencida" : ""}`}>
+                        {fechaCorta(v.fecha)}
+                      </div>
+                      {v.vencido && (
+                        <div className="fecha-vencida" style={{ fontSize: 11 }}>
+                          vencido
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
@@ -425,7 +531,9 @@ export default async function Resumen() {
               </div>
               <div className="panel-cuerpo">
                 {garantias.map((e) => {
-                  const dias = Math.ceil((new Date(e.garantia_hasta! + "T12:00:00").getTime() - Date.now()) / 86400000);
+                  const dias = Math.ceil(
+                    (new Date(e.garantia_hasta! + "T12:00:00").getTime() - Date.now()) / 86400000,
+                  );
                   return (
                     <div className="fila-compacta" key={e.nombre}>
                       <div className="fila-compacta-main">
@@ -434,7 +542,12 @@ export default async function Resumen() {
                       </div>
                       <div className="fila-compacta-fin">
                         <div className="fila-compacta-fecha">{fechaCorta(e.garantia_hasta)}</div>
-                        <div className={dias <= 30 ? "fecha-vencida" : "suave"} style={{ fontSize: 11 }}>{dias} días</div>
+                        <div
+                          className={dias <= 30 ? "fecha-vencida" : "suave"}
+                          style={{ fontSize: 11 }}
+                        >
+                          {dias} días
+                        </div>
                       </div>
                     </div>
                   );

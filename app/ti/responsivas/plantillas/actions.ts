@@ -13,7 +13,10 @@ function lineas(v: FormDataEntryValue | null): string[] {
 }
 
 // Cada línea "Título | texto" -> { titulo, texto } (para cláusulas y firmas).
-function paresLinea(v: FormDataEntryValue | null, claves: [string, string]): Record<string, string>[] {
+function paresLinea(
+  v: FormDataEntryValue | null,
+  claves: [string, string],
+): Record<string, string>[] {
   return lineas(v).map((l) => {
     const [a, ...resto] = l.split("|");
     return { [claves[0]]: a.trim(), [claves[1]]: resto.join("|").trim() };
@@ -62,7 +65,10 @@ export async function guardarPlantilla(formData: FormData) {
 export async function restablecerPlantilla(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  const { error } = await sb.from("plantillas_responsiva").delete().eq("clave", formData.get("clave") as string);
+  const { error } = await sb
+    .from("plantillas_responsiva")
+    .delete()
+    .eq("clave", formData.get("clave") as string);
   if (error) {
     console.error("[plantillas] restablecer:", error.message);
     return;

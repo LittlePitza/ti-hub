@@ -12,7 +12,17 @@ import SelectorSolicitante, { type EmpleadoOpcion } from "@/components/SelectorS
 // éxito el modal se cierra y el formulario se limpia.
 
 const ICONO_MAS = (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
     <line x1="12" y1="5" x2="12" y2="19" />
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
@@ -75,14 +85,21 @@ export default function ModalCrearTicket({ empleados }: { empleados: EmpleadoOpc
 
                 <div className="campo ancho">
                   <label htmlFor="tk-titulo">Asunto</label>
-                  <input id="tk-titulo" name="titulo" required placeholder="No imprime desde piso 2" />
+                  <input
+                    id="tk-titulo"
+                    name="titulo"
+                    required
+                    placeholder="No imprime desde piso 2"
+                  />
                 </div>
 
                 <div className="campo">
                   <label htmlFor="tk-categoria">Categoría</label>
                   <select id="tk-categoria" name="categoria" defaultValue="hardware">
                     {CATEGORIAS_TK.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -91,7 +108,9 @@ export default function ModalCrearTicket({ empleados }: { empleados: EmpleadoOpc
                   <label htmlFor="tk-prioridad">Prioridad</label>
                   <select id="tk-prioridad" name="prioridad" defaultValue="media">
                     {PRIORIDADES.map((p) => (
-                      <option key={p} value={p}>{p}</option>
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -103,7 +122,11 @@ export default function ModalCrearTicket({ empleados }: { empleados: EmpleadoOpc
 
                 <div className="campo ancho">
                   <label htmlFor="tk-desc">Descripción</label>
-                  <textarea id="tk-desc" name="descripcion" placeholder="Qué pasa, desde cuándo, qué se ha intentado…" />
+                  <textarea
+                    id="tk-desc"
+                    name="descripcion"
+                    placeholder="Qué pasa, desde cuándo, qué se ha intentado…"
+                  />
                 </div>
               </div>
 
@@ -117,7 +140,9 @@ export default function ModalCrearTicket({ empleados }: { empleados: EmpleadoOpc
 
               {estado?.ok === false && <p className="combo-error">{estado.error}</p>}
 
-              <BotonEnviar className="boton" ocupado="Creando…">Crear ticket</BotonEnviar>
+              <BotonEnviar className="boton" ocupado="Creando…">
+                Crear ticket
+              </BotonEnviar>
             </form>
           </div>
         </div>

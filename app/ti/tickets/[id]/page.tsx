@@ -42,19 +42,25 @@ const META_EVENTO: Record<string, { icono: string; etiqueta: string }> = {
 };
 
 const iniciales = (s: string) =>
-  s.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+  s
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase() || "?";
 
-export default async function DetalleTicket({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function DetalleTicket({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const sb = await getSupabase();
   if (!sb) {
     return (
       <>
-        <div className="pagina-head"><div><h1 className="pagina-titulo">Ticket</h1></div></div>
+        <div className="pagina-head">
+          <div>
+            <h1 className="pagina-titulo">Ticket</h1>
+          </div>
+        </div>
         <SinConexion />
       </>
     );
@@ -63,7 +69,11 @@ export default async function DetalleTicket({
   // Ticket, bitácora y configuración no dependen entre sí: una sola ronda a la BD.
   const [{ data: t }, { data: eventosData }, config] = await Promise.all([
     sb.from("tickets").select("*, equipos(nombre)").eq("id", id).maybeSingle(),
-    sb.from("ticket_eventos").select("*").eq("ticket_id", id).order("created_at", { ascending: false }),
+    sb
+      .from("ticket_eventos")
+      .select("*")
+      .eq("ticket_id", id)
+      .order("created_at", { ascending: false }),
     getConfigCorreo(sb),
   ]);
   if (!t) notFound();
@@ -93,7 +103,9 @@ export default async function DetalleTicket({
   // Notificación por correo: opcional (casilla) y solo posible si el servicio está
   // operativo y el solicitante tiene correo. La precarga sale de la config del panel.
   const operativo = correoOperativo(config);
-  const emailDestino = correoValido(t.solicitante_email ?? "") ? (t.solicitante_email as string) : null;
+  const emailDestino = correoValido(t.solicitante_email ?? "")
+    ? (t.solicitante_email as string)
+    : null;
   const puedeNotificar = Boolean(operativo && emailDestino);
   const defResp = config?.notif_respuesta_def ?? true;
   const defEstado = config?.notif_estado_def ?? false;
@@ -102,7 +114,9 @@ export default async function DetalleTicket({
     <>
       {/* Tarjeta de encabezado: toda la información del ticket de un vistazo */}
       <section className="ticket-encabezado detalle-head">
-        <Link href="/ti/tickets" className="boton-texto">← Tickets</Link>
+        <Link href="/ti/tickets" className="boton-texto">
+          ← Tickets
+        </Link>
         <div className="ticket-enc-top">
           <div className="ticket-enc-id">
             <span className="ticket-enc-folio mono">{folio(t.num)}</span>
@@ -128,7 +142,9 @@ export default async function DetalleTicket({
             <dd>
               {t.asignado_a ? (
                 <span className="enc-asignado">
-                  <span className="enc-avatar" aria-hidden>{iniciales(t.asignado_a)}</span>
+                  <span className="enc-avatar" aria-hidden>
+                    {iniciales(t.asignado_a)}
+                  </span>
                   {t.asignado_a}
                 </span>
               ) : (
@@ -141,7 +157,8 @@ export default async function DetalleTicket({
             <dd className="enc-sla">
               <PildoraSla semaforo={resp.semaforo} />
               <span className="enc-sub mono">
-                {resp.pendiente && resp.semaforo !== "pausado" ? "pendiente" : duracion(resp.ms)} · meta {objetivo.respuesta} h
+                {resp.pendiente && resp.semaforo !== "pausado" ? "pendiente" : duracion(resp.ms)} ·
+                meta {objetivo.respuesta} h
               </span>
             </dd>
           </div>
@@ -150,13 +167,17 @@ export default async function DetalleTicket({
             <dd className="enc-sla">
               <PildoraSla semaforo={reso.semaforo} />
               <span className="enc-sub mono">
-                {reso.pendiente || reso.semaforo === "na" ? "pendiente" : duracion(reso.ms)} · meta {objetivo.resolucion} h
+                {reso.pendiente || reso.semaforo === "na" ? "pendiente" : duracion(reso.ms)} · meta{" "}
+                {objetivo.resolucion} h
               </span>
             </dd>
           </div>
           <div className="enc-dato">
             <dt>{t.resuelto_at ? "Tiempo total" : "Tiempo abierto"}</dt>
-            <dd>{duracion(tiempoAbierto)}<span className="enc-sub mono">desde {fechaHora(t.created_at)}</span></dd>
+            <dd>
+              {duracion(tiempoAbierto)}
+              <span className="enc-sub mono">desde {fechaHora(t.created_at)}</span>
+            </dd>
           </div>
         </dl>
       </section>
@@ -166,15 +187,17 @@ export default async function DetalleTicket({
         <div className="detalle-principal">
           <section className="tarjeta-detalle">
             <h2 className="seccion-titulo">Descripción</h2>
-            <p className={t.descripcion ? "" : "suave"}>
-              {t.descripcion || "Sin descripción."}
-            </p>
+            <p className={t.descripcion ? "" : "suave"}>{t.descripcion || "Sin descripción."}</p>
             {t.equipos?.nombre && (
-              <p className="suave mono" style={{ marginTop: 10 }}>Equipo relacionado: {t.equipos.nombre}</p>
+              <p className="suave mono" style={{ marginTop: 10 }}>
+                Equipo relacionado: {t.equipos.nombre}
+              </p>
             )}
             {fotos.length > 0 && (
               <>
-                <h3 className="aside-titulo" style={{ marginTop: 16 }}>Fotos del solicitante</h3>
+                <h3 className="aside-titulo" style={{ marginTop: 16 }}>
+                  Fotos del solicitante
+                </h3>
                 <ul className="galeria-adjuntos">
                   {fotos.map((f) => (
                     <li key={f.url}>
@@ -190,8 +213,12 @@ export default async function DetalleTicket({
 
           <section className="tarjeta-detalle">
             <div className="conv-cab">
-              <h2 className="seccion-titulo" style={{ margin: 0 }}>Conversación y actividad</h2>
-              <span className="conv-conteo">{respondidos} {respondidos === 1 ? "respuesta enviada" : "respuestas enviadas"}</span>
+              <h2 className="seccion-titulo" style={{ margin: 0 }}>
+                Conversación y actividad
+              </h2>
+              <span className="conv-conteo">
+                {respondidos} {respondidos === 1 ? "respuesta enviada" : "respuestas enviadas"}
+              </span>
             </div>
 
             {/* Un solo cuadro de texto, dos destinos: nota interna o respuesta al cliente. */}
@@ -206,7 +233,8 @@ export default async function DetalleTicket({
               <div className="responder-pie">
                 <div className="responder-info">
                   <span className="responder-hint">
-                    La <strong>nota interna</strong> solo la ve TI. La <strong>respuesta</strong> aparece en el portal del solicitante.
+                    La <strong>nota interna</strong> solo la ve TI. La <strong>respuesta</strong>{" "}
+                    aparece en el portal del solicitante.
                   </span>
                   {puedeNotificar ? (
                     <label className="responder-correo">
@@ -214,38 +242,59 @@ export default async function DetalleTicket({
                       También enviar por correo a <strong>{emailDestino}</strong>
                     </label>
                   ) : emailDestino ? (
-                    <span className="correo-aviso">Correo apagado · <Link href="/ti/correo">configurar</Link></span>
+                    <span className="correo-aviso">
+                      Correo apagado · <Link href="/ti/correo">configurar</Link>
+                    </span>
                   ) : (
                     <span className="correo-aviso">El solicitante no tiene correo registrado.</span>
                   )}
                 </div>
                 <div className="responder-acciones">
-                  <BotonEnviar className="boton secundario" formAction={agregarComentario} ocupado="Guardando…">Nota interna</BotonEnviar>
-                  <BotonEnviar className="boton" formAction={responderCliente} ocupado="Enviando…">Responder al cliente</BotonEnviar>
+                  <BotonEnviar
+                    className="boton secundario"
+                    formAction={agregarComentario}
+                    ocupado="Guardando…"
+                  >
+                    Nota interna
+                  </BotonEnviar>
+                  <BotonEnviar className="boton" formAction={responderCliente} ocupado="Enviando…">
+                    Responder al cliente
+                  </BotonEnviar>
                 </div>
               </div>
             </form>
 
             {eventos.length === 0 ? (
-              <div className="vacio" style={{ marginTop: 18 }}>Sin movimientos todavía.</div>
+              <div className="vacio" style={{ marginTop: 18 }}>
+                Sin movimientos todavía.
+              </div>
             ) : (
               <ol className="bitacora">
                 {eventos.map((e: any) => {
                   const m = META_EVENTO[e.tipo] ?? META_EVENTO.sistema;
                   return (
                     <li key={e.id} className={`bitacora-item tipo-${e.tipo}`}>
-                      <span className="bitacora-icono" aria-hidden>{m.icono}</span>
+                      <span className="bitacora-icono" aria-hidden>
+                        {m.icono}
+                      </span>
                       <div className="bitacora-cuerpo">
                         <div className="bitacora-meta">
                           <strong>{e.autor ?? "TI"}</strong>
-                          {e.tipo === "respuesta" && <span className="bitacora-tag enviado">Visible para el cliente</span>}
-                          {e.tipo === "mensaje_cliente" && <span className="bitacora-tag cliente">Del solicitante</span>}
-                          {e.tipo === "comentario" && <span className="bitacora-tag interno">Interno</span>}
+                          {e.tipo === "respuesta" && (
+                            <span className="bitacora-tag enviado">Visible para el cliente</span>
+                          )}
+                          {e.tipo === "mensaje_cliente" && (
+                            <span className="bitacora-tag cliente">Del solicitante</span>
+                          )}
+                          {e.tipo === "comentario" && (
+                            <span className="bitacora-tag interno">Interno</span>
+                          )}
                           <span className="suave mono">{fechaHora(e.created_at)}</span>
                         </div>
                         {e.tipo === "estado" && (
                           <div className="bitacora-texto">
-                            Cambió el estado: <Insignia valor={e.estado_anterior} /> → <Insignia valor={e.estado_nuevo} />
+                            Cambió el estado: <Insignia valor={e.estado_anterior} /> →{" "}
+                            <Insignia valor={e.estado_nuevo} />
                           </div>
                         )}
                         {e.cuerpo && <div className="bitacora-texto">{e.cuerpo}</div>}
@@ -265,9 +314,16 @@ export default async function DetalleTicket({
             <form action={cambiarEstadoTicket} className="bloque-form">
               <input type="hidden" name="id" value={t.id} />
               <select name="estado" defaultValue={t.estado}>
-                {((ESTADOS_SELECCIONABLES as string[]).includes(t.estado) ? ESTADOS_SELECCIONABLES : [t.estado, ...ESTADOS_SELECCIONABLES]).map((valor) => {
+                {((ESTADOS_SELECCIONABLES as string[]).includes(t.estado)
+                  ? ESTADOS_SELECCIONABLES
+                  : [t.estado, ...ESTADOS_SELECCIONABLES]
+                ).map((valor) => {
                   const meta = ESTADOS_TICKET.find((s) => s.valor === valor);
-                  return <option key={valor} value={valor}>{meta?.etiqueta ?? valor}</option>;
+                  return (
+                    <option key={valor} value={valor}>
+                      {meta?.etiqueta ?? valor}
+                    </option>
+                  );
                 })}
               </select>
               <textarea name="nota" placeholder="Nota del cambio (opcional)" rows={2} />
@@ -277,9 +333,13 @@ export default async function DetalleTicket({
                   Notificar al solicitante por correo
                 </label>
               ) : emailDestino ? (
-                <span className="correo-aviso">Correo apagado · <Link href="/ti/correo">configurar</Link></span>
+                <span className="correo-aviso">
+                  Correo apagado · <Link href="/ti/correo">configurar</Link>
+                </span>
               ) : null}
-              <BotonEnviar className="boton" ocupado="Guardando…">Guardar estado</BotonEnviar>
+              <BotonEnviar className="boton" ocupado="Guardando…">
+                Guardar estado
+              </BotonEnviar>
             </form>
           </section>
 
@@ -287,18 +347,28 @@ export default async function DetalleTicket({
             <h3 className="aside-titulo">Asignación</h3>
             <form action={asignarTicket} className="bloque-form">
               <input type="hidden" name="id" value={t.id} />
-              <input name="asignado_a" defaultValue={t.asignado_a ?? ""} placeholder="Técnico responsable" />
-              <BotonEnviar className="boton secundario" ocupado="Asignando…">Asignar</BotonEnviar>
+              <input
+                name="asignado_a"
+                defaultValue={t.asignado_a ?? ""}
+                placeholder="Técnico responsable"
+              />
+              <BotonEnviar className="boton secundario" ocupado="Asignando…">
+                Asignar
+              </BotonEnviar>
             </form>
           </section>
 
           <section className="tarjeta-detalle">
             <h3 className="aside-titulo">Detalles</h3>
             <dl className="datos-lista">
-              <dt>Estado</dt><dd>{meta.etiqueta}</dd>
-              <dt>Prioridad</dt><dd>{t.prioridad}</dd>
-              <dt>Categoría</dt><dd>{t.categoria}</dd>
-              <dt>Actualizado</dt><dd className="mono">{fechaHora(t.updated_at)}</dd>
+              <dt>Estado</dt>
+              <dd>{meta.etiqueta}</dd>
+              <dt>Prioridad</dt>
+              <dd>{t.prioridad}</dd>
+              <dt>Categoría</dt>
+              <dd>{t.categoria}</dd>
+              <dt>Actualizado</dt>
+              <dd className="mono">{fechaHora(t.updated_at)}</dd>
             </dl>
 
             <details className="plegable interno">
@@ -313,13 +383,21 @@ export default async function DetalleTicket({
                   <div>
                     <label className="mini-label">Categoría</label>
                     <select name="categoria" defaultValue={t.categoria}>
-                      {CATEGORIAS_TK.map((c) => <option key={c} value={c}>{c}</option>)}
+                      {CATEGORIAS_TK.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
                     <label className="mini-label">Prioridad</label>
                     <select name="prioridad" defaultValue={t.prioridad}>
-                      {PRIORIDADES.map((p) => <option key={p} value={p}>{p}</option>)}
+                      {PRIORIDADES.map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -327,7 +405,9 @@ export default async function DetalleTicket({
                 <input name="asignado_a" defaultValue={t.asignado_a ?? ""} />
                 <label className="mini-label">Descripción</label>
                 <textarea name="descripcion" defaultValue={t.descripcion ?? ""} rows={4} />
-                <BotonEnviar className="boton" ocupado="Guardando…">Guardar cambios</BotonEnviar>
+                <BotonEnviar className="boton" ocupado="Guardando…">
+                  Guardar cambios
+                </BotonEnviar>
               </form>
             </details>
 
@@ -339,7 +419,11 @@ export default async function DetalleTicket({
                 <p className="suave" style={{ fontSize: 12.5, marginBottom: 8 }}>
                   Esta acción es permanente y borra también su bitácora.
                 </p>
-                <BotonEnviar className="boton secundario" style={{ color: "var(--critico)" }} ocupado="Eliminando…">
+                <BotonEnviar
+                  className="boton secundario"
+                  style={{ color: "var(--critico)" }}
+                  ocupado="Eliminando…"
+                >
                   Eliminar definitivamente
                 </BotonEnviar>
               </form>

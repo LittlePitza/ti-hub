@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
 import { lector } from "@/lib/form";
-import { categoriaInv, sanitizarAccesos, sanitizarExtras, campoDeFila, type CampoInv } from "@/lib/inventario";
+import {
+  categoriaInv,
+  sanitizarAccesos,
+  sanitizarExtras,
+  campoDeFila,
+  type CampoInv,
+} from "@/lib/inventario";
 import { generarResponsiva, sincronizarResponsivasEquipo } from "@/app/ti/responsivas/actions";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -17,7 +23,11 @@ function refrescar(cat: string) {
 
 // Definiciones activas de campos personalizados de una categoría (para sanear extras).
 async function defsCategoria(sb: SupabaseClient, categoria: string): Promise<CampoInv[]> {
-  const { data } = await sb.from("campos_inventario").select("*").eq("categoria", categoria).eq("activo", true);
+  const { data } = await sb
+    .from("campos_inventario")
+    .select("*")
+    .eq("categoria", categoria)
+    .eq("activo", true);
   return (data ?? []).map(campoDeFila);
 }
 
@@ -49,30 +59,35 @@ export async function crearEquipo(
   if (!nombre) {
     return {
       ok: false,
-      error: cat.valor === "linea"
-        ? "Escribe el número de la línea."
-        : `Escribe un nombre o etiqueta para ${cat.singular === "equipo" ? "el equipo" : "la " + cat.singular}.`,
+      error:
+        cat.valor === "linea"
+          ? "Escribe el número de la línea."
+          : `Escribe un nombre o etiqueta para ${cat.singular === "equipo" ? "el equipo" : "la " + cat.singular}.`,
     };
   }
 
   const correo = v("empleado")?.toLowerCase() ?? null;
-  const { data: creado, error } = await sb.from("equipos").insert({
-    nombre,
-    categoria: cat.valor,
-    tipo,
-    marca: v("marca"),
-    modelo: v("modelo"),
-    num_serie: v("num_serie"),
-    telefono,
-    ...(await datosAsignacion(sb, correo)),
-    ubicacion: v("ubicacion"),
-    estado: v("estado") ?? "activo",
-    fecha_compra: v("fecha_compra"),
-    garantia_hasta: v("garantia_hasta"),
-    notas: v("notas"),
-    accesos: sanitizarAccesos(formData.get("accesos")),
-    extras: sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras")),
-  }).select("id").single();
+  const { data: creado, error } = await sb
+    .from("equipos")
+    .insert({
+      nombre,
+      categoria: cat.valor,
+      tipo,
+      marca: v("marca"),
+      modelo: v("modelo"),
+      num_serie: v("num_serie"),
+      telefono,
+      ...(await datosAsignacion(sb, correo)),
+      ubicacion: v("ubicacion"),
+      estado: v("estado") ?? "activo",
+      fecha_compra: v("fecha_compra"),
+      garantia_hasta: v("garantia_hasta"),
+      notas: v("notas"),
+      accesos: sanitizarAccesos(formData.get("accesos")),
+      extras: sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras")),
+    })
+    .select("id")
+    .single();
   if (error) return { ok: false, error: "No se pudo guardar. Intenta de nuevo." };
   refrescar(cat.valor);
 
@@ -88,7 +103,8 @@ export async function crearEquipo(
 export async function cambiarEstadoEquipo(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  const { error } = await sb.from("equipos")
+  const { error } = await sb
+    .from("equipos")
     .update({ estado: formData.get("estado") as string })
     .eq("id", formData.get("id") as string);
   if (error) {
@@ -112,22 +128,25 @@ export async function editarEquipo(formData: FormData) {
   const nombre = v("nombre") ?? (telefono ? `Línea ${telefono}` : null);
   if (!nombre) return;
 
-  const { error } = await sb.from("equipos").update({
-    nombre,
-    tipo,
-    marca: v("marca"),
-    modelo: v("modelo"),
-    num_serie: v("num_serie"),
-    telefono,
-    ...(await datosAsignacion(sb, v("empleado")?.toLowerCase() ?? null)),
-    ubicacion: v("ubicacion"),
-    estado: v("estado") ?? "activo",
-    fecha_compra: v("fecha_compra"),
-    garantia_hasta: v("garantia_hasta"),
-    notas: v("notas"),
-    accesos: sanitizarAccesos(formData.get("accesos")),
-    extras: sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras")),
-  }).eq("id", id);
+  const { error } = await sb
+    .from("equipos")
+    .update({
+      nombre,
+      tipo,
+      marca: v("marca"),
+      modelo: v("modelo"),
+      num_serie: v("num_serie"),
+      telefono,
+      ...(await datosAsignacion(sb, v("empleado")?.toLowerCase() ?? null)),
+      ubicacion: v("ubicacion"),
+      estado: v("estado") ?? "activo",
+      fecha_compra: v("fecha_compra"),
+      garantia_hasta: v("garantia_hasta"),
+      notas: v("notas"),
+      accesos: sanitizarAccesos(formData.get("accesos")),
+      extras: sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras")),
+    })
+    .eq("id", id);
   if (error) {
     console.error("[inventario] editar:", error.message);
     return;
@@ -145,7 +164,10 @@ export async function asignarEquipo(formData: FormData) {
   const id = formData.get("id") as string;
   const cat = (formData.get("categoria") as string) ?? "computo";
   const correo = ((formData.get("empleado") as string) ?? "").trim().toLowerCase() || null;
-  const { error } = await sb.from("equipos").update(await datosAsignacion(sb, correo)).eq("id", id);
+  const { error } = await sb
+    .from("equipos")
+    .update(await datosAsignacion(sb, correo))
+    .eq("id", id);
   if (error) {
     console.error("[inventario] asignar:", error.message);
     return;
@@ -163,7 +185,10 @@ export async function asignarEquipo(formData: FormData) {
 export async function eliminarEquipo(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  const { error } = await sb.from("equipos").delete().eq("id", formData.get("id") as string);
+  const { error } = await sb
+    .from("equipos")
+    .delete()
+    .eq("id", formData.get("id") as string);
   if (error) {
     console.error("[inventario] eliminar:", error.message);
     return;

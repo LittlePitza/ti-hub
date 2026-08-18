@@ -25,7 +25,7 @@ export default function BotonEnviar({
       {...rest}
     >
       {pending && <span className="spinner" aria-hidden />}
-      {pending ? ocupado ?? children : children}
+      {pending ? (ocupado ?? children) : children}
     </button>
   );
 }

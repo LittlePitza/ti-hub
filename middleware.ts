@@ -13,8 +13,7 @@ export async function middleware(request: NextRequest) {
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key =
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   // Sin configuración (dev local) cada página muestra <SinConexion />.
   if (!url || !key) return NextResponse.next();
 
@@ -25,13 +24,17 @@ export async function middleware(request: NextRequest) {
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         respuesta = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => respuesta.cookies.set(name, value, options));
+        cookiesToSet.forEach(({ name, value, options }) =>
+          respuesta.cookies.set(name, value, options),
+        );
       },
     },
   });
 
   // getUser() valida el JWT contra Supabase; no confiar en getSession() aquí.
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user && esPanel) {
     const destino = request.nextUrl.clone();

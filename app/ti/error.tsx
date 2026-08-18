@@ -18,7 +18,8 @@ export default function ErrorPanel({
   return (
     <div className="vacio" role="alert">
       <strong>Algo salió mal</strong>
-      No se pudo cargar esta sección. Intenta de nuevo; si el problema sigue, revisa la conexión con la base de datos.
+      No se pudo cargar esta sección. Intenta de nuevo; si el problema sigue, revisa la conexión con
+      la base de datos.
       <div style={{ marginTop: 12 }}>
         <button type="button" className="boton" onClick={() => reset()}>
           Reintentar

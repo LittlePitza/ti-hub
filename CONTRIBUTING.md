@@ -4,15 +4,15 @@
 
 This repository mixes languages on purpose. The rule is **audience-based**:
 
-| Layer | Language | Why |
-|---|---|---|
-| Identifiers — files, directories, functions, components, types, constants | **English** | Standard practice; keeps the code readable to anyone |
-| Code comments | **English** | Same |
-| Documentation — `README`, `CONTRIBUTING`, `docs/architecture.md`, `docs/roadmap.md` | **English** | Same |
-| **UI copy** — every string a user reads | **Spanish** | Read by plant and office staff in Santa Catarina; English here is a regression, not a cleanup |
-| **CSS class names** | **Spanish** | ~510 existing classes are untyped string literals across 68 files. Renaming them fails silently — the build stays green while styling breaks |
-| **Database** — tables, columns, enum values | **Spanish** | Enum values are live production data; renaming needs a data migration, not just DDL |
-| `docs/documentacion-sistema.md` | **Spanish** | Audience is PIMSA management and employees |
+| Layer                                                                               | Language    | Why                                                                                                                                          |
+| ----------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Identifiers — files, directories, functions, components, types, constants           | **English** | Standard practice; keeps the code readable to anyone                                                                                         |
+| Code comments                                                                       | **English** | Same                                                                                                                                         |
+| Documentation — `README`, `CONTRIBUTING`, `docs/architecture.md`, `docs/roadmap.md` | **English** | Same                                                                                                                                         |
+| **UI copy** — every string a user reads                                             | **Spanish** | Read by plant and office staff in Santa Catarina; English here is a regression, not a cleanup                                                |
+| **CSS class names**                                                                 | **Spanish** | ~510 existing classes are untyped string literals across 68 files. Renaming them fails silently — the build stays green while styling breaks |
+| **Database** — tables, columns, enum values                                         | **Spanish** | Enum values are live production data; renaming needs a data migration, not just DDL                                                          |
+| `docs/documentacion-sistema.md`                                                     | **Spanish** | Audience is PIMSA management and employees                                                                                                   |
 
 So: an English variable may hold a Spanish string, and an English function may write to a Spanish
 column. That is correct and intended.
@@ -28,30 +28,30 @@ return <span className="insignia ok">Resuelto</span>;        // class + copy sta
 
 Use these consistently. Inconsistent English is worse than Spanish.
 
-| Spanish | English | Note |
-|---|---|---|
-| `responsiva` | `custodyLetter` | Mexican legal asset-custody document |
-| `caja chica` | `pettyCash` | |
-| `folio` | `folio` | **Keep as-is** — document serial number, a domain term of art |
-| `bitácora` | `activityLog` | |
-| `insignia` | `badge` | |
-| `equipo` | `device` | Not "team" |
-| `empleado` | `employee` | |
-| `solicitante` | `requester` | |
-| `semáforo` | `slaStatus` | The cumplido/por vencer/incumplido/pausado indicator |
-| `vencimiento` | `dueDate` | |
-| `criticidad` | `criticality` | |
-| `mantenimiento` | `maintenance` | |
-| `proveedor` | `vendor` | |
-| `factura` | `invoice` | |
-| `servicio` | `service` | |
-| `incidente` | `incident` | |
-| `tarea` / `proyecto` | `task` / `project` | |
-| `plantilla` | `template` | |
-| `firma` | `signature` | |
-| `adjunto` | `attachment` | |
-| `ubicación` | `location` | |
-| `estado` | `status` | For lifecycle states; `state` only for UI state |
+| Spanish              | English            | Note                                                          |
+| -------------------- | ------------------ | ------------------------------------------------------------- |
+| `responsiva`         | `custodyLetter`    | Mexican legal asset-custody document                          |
+| `caja chica`         | `pettyCash`        |                                                               |
+| `folio`              | `folio`            | **Keep as-is** — document serial number, a domain term of art |
+| `bitácora`           | `activityLog`      |                                                               |
+| `insignia`           | `badge`            |                                                               |
+| `equipo`             | `device`           | Not "team"                                                    |
+| `empleado`           | `employee`         |                                                               |
+| `solicitante`        | `requester`        |                                                               |
+| `semáforo`           | `slaStatus`        | The cumplido/por vencer/incumplido/pausado indicator          |
+| `vencimiento`        | `dueDate`          |                                                               |
+| `criticidad`         | `criticality`      |                                                               |
+| `mantenimiento`      | `maintenance`      |                                                               |
+| `proveedor`          | `vendor`           |                                                               |
+| `factura`            | `invoice`          |                                                               |
+| `servicio`           | `service`          |                                                               |
+| `incidente`          | `incident`         |                                                               |
+| `tarea` / `proyecto` | `task` / `project` |                                                               |
+| `plantilla`          | `template`         |                                                               |
+| `firma`              | `signature`        |                                                               |
+| `adjunto`            | `attachment`       |                                                               |
+| `ubicación`          | `location`         |                                                               |
+| `estado`             | `status`           | For lifecycle states; `state` only for UI state               |
 
 Routes are **not** renamed. `/ti/inventario`, `/nuevo` and `/reporte/[id]` are live URLs baked into
 links already sent by email through `config_correo.sitio_url`. Changing them breaks bookmarks and

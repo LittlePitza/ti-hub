@@ -4,7 +4,8 @@ import TemaToggle from "@/components/TemaToggle";
 
 export const metadata: Metadata = {
   title: "Soporte TI · Plásticos PIMSA",
-  description: "Portal del empleado: reporta problemas de equipo, correo o sistemas al departamento de TI.",
+  description:
+    "Portal del empleado: reporta problemas de equipo, correo o sistemas al departamento de TI.",
 };
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
@@ -28,7 +29,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <footer className="portal-pie">
         Departamento de TI · Plásticos PIMSA
         {" · "}
-        <a href="/ti" className="pie-ti">TI</a>
+        <a href="/ti" className="pie-ti">
+          TI
+        </a>
       </footer>
     </div>
   );

@@ -7,21 +7,10 @@
 import type { CategoriaInv } from "./inventario";
 
 export type ClavePlantilla =
-  | "laptop"
-  | "pc"
-  | "movil"
-  | "monitor"
-  | "impresora"
-  | "servidor"
-  | "software"
-  | "devolucion";
+  "laptop" | "pc" | "movil" | "monitor" | "impresora" | "servidor" | "software" | "devolucion";
 
 export type EstadoResponsiva =
-  | "borrador"
-  | "pendiente_firma"
-  | "firmada"
-  | "devuelta"
-  | "cancelada";
+  "borrador" | "pendiente_firma" | "firmada" | "devuelta" | "cancelada";
 
 export interface ClausulaPlantilla {
   titulo: string;
@@ -206,13 +195,39 @@ export const PLANTILLAS_DEFAULT: Record<ClavePlantilla, Plantilla> = {
     aviso: AVISO_ESTANDAR,
     iso: "Controles ISO/IEC 27001:2022: A.5.9 · A.5.10 · A.5.11 · A.7.9 · A.8.1.",
     clausulas: [
-      { titulo: "Uso aceptable (A.5.10)", texto: "La laptop es propiedad de la Empresa y se destina exclusivamente a fines laborales, conforme a las políticas de seguridad de la información." },
-      { titulo: "Movilidad (A.7.9)", texto: "Al ser un equipo portátil, extremaré el cuidado fuera de las instalaciones: no lo dejaré desatendido ni a la vista en vehículos, y usaré redes seguras para conectarme." },
-      { titulo: "Integridad y configuración (A.8.1)", texto: "No desactivaré el cifrado ni el antivirus, no instalaré software sin licencia o autorización, ni retiraré las etiquetas de inventario." },
-      { titulo: "Confidencialidad", texto: "Protegeré la información almacenada y no compartiré mis credenciales de acceso." },
-      { titulo: "Reporte de incidentes", texto: "Reportaré de inmediato a Sistemas cualquier falla, robo, pérdida o incidente de seguridad, presentando acta ante la autoridad cuando aplique." },
-      { titulo: "No transferencia", texto: "No prestaré ni cederé el equipo a terceros sin autorización escrita de Sistemas." },
-      { titulo: "Devolución (A.5.11)", texto: "Devolveré el equipo con todos sus accesorios y en buen estado al término de la relación laboral, cambio de puesto o cuando me sea requerido. En caso de daño o pérdida por negligencia comprobada, acepto cubrir el costo de reparación o reposición conforme a la política aplicable." },
+      {
+        titulo: "Uso aceptable (A.5.10)",
+        texto:
+          "La laptop es propiedad de la Empresa y se destina exclusivamente a fines laborales, conforme a las políticas de seguridad de la información.",
+      },
+      {
+        titulo: "Movilidad (A.7.9)",
+        texto:
+          "Al ser un equipo portátil, extremaré el cuidado fuera de las instalaciones: no lo dejaré desatendido ni a la vista en vehículos, y usaré redes seguras para conectarme.",
+      },
+      {
+        titulo: "Integridad y configuración (A.8.1)",
+        texto:
+          "No desactivaré el cifrado ni el antivirus, no instalaré software sin licencia o autorización, ni retiraré las etiquetas de inventario.",
+      },
+      {
+        titulo: "Confidencialidad",
+        texto: "Protegeré la información almacenada y no compartiré mis credenciales de acceso.",
+      },
+      {
+        titulo: "Reporte de incidentes",
+        texto:
+          "Reportaré de inmediato a Sistemas cualquier falla, robo, pérdida o incidente de seguridad, presentando acta ante la autoridad cuando aplique.",
+      },
+      {
+        titulo: "No transferencia",
+        texto: "No prestaré ni cederé el equipo a terceros sin autorización escrita de Sistemas.",
+      },
+      {
+        titulo: "Devolución (A.5.11)",
+        texto:
+          "Devolveré el equipo con todos sus accesorios y en buen estado al término de la relación laboral, cambio de puesto o cuando me sea requerido. En caso de daño o pérdida por negligencia comprobada, acepto cubrir el costo de reparación o reposición conforme a la política aplicable.",
+      },
     ],
   },
   pc: {
@@ -241,12 +256,34 @@ export const PLANTILLAS_DEFAULT: Record<ClavePlantilla, Plantilla> = {
     aviso: AVISO_ESTANDAR,
     iso: "Controles ISO/IEC 27001:2022: A.5.9 · A.5.10 · A.5.11 · A.8.1.",
     clausulas: [
-      { titulo: "Uso aceptable (A.5.10)", texto: "El equipo es propiedad de la Empresa y se destina exclusivamente a fines laborales, conforme a las políticas de seguridad de la información." },
-      { titulo: "Custodia", texto: "Mantendré el equipo en el sitio asignado; no lo reubicaré ni desconectaré sus componentes sin avisar a Sistemas." },
-      { titulo: "Integridad y configuración (A.8.1)", texto: "No instalaré software sin licencia o autorización, no alteraré la configuración de seguridad, ni retiraré etiquetas de inventario." },
-      { titulo: "Confidencialidad", texto: "Protegeré la información almacenada y no compartiré mis credenciales de acceso." },
-      { titulo: "Reporte de incidentes", texto: "Reportaré de inmediato a Sistemas cualquier falla, daño o incidente de seguridad." },
-      { titulo: "Devolución (A.5.11)", texto: "Devolveré el equipo y todos sus componentes en buen estado al término de la relación laboral, cambio de puesto o cuando me sea requerido. En caso de daño o pérdida por negligencia comprobada, acepto cubrir el costo conforme a la política aplicable." },
+      {
+        titulo: "Uso aceptable (A.5.10)",
+        texto:
+          "El equipo es propiedad de la Empresa y se destina exclusivamente a fines laborales, conforme a las políticas de seguridad de la información.",
+      },
+      {
+        titulo: "Custodia",
+        texto:
+          "Mantendré el equipo en el sitio asignado; no lo reubicaré ni desconectaré sus componentes sin avisar a Sistemas.",
+      },
+      {
+        titulo: "Integridad y configuración (A.8.1)",
+        texto:
+          "No instalaré software sin licencia o autorización, no alteraré la configuración de seguridad, ni retiraré etiquetas de inventario.",
+      },
+      {
+        titulo: "Confidencialidad",
+        texto: "Protegeré la información almacenada y no compartiré mis credenciales de acceso.",
+      },
+      {
+        titulo: "Reporte de incidentes",
+        texto: "Reportaré de inmediato a Sistemas cualquier falla, daño o incidente de seguridad.",
+      },
+      {
+        titulo: "Devolución (A.5.11)",
+        texto:
+          "Devolveré el equipo y todos sus componentes en buen estado al término de la relación laboral, cambio de puesto o cuando me sea requerido. En caso de daño o pérdida por negligencia comprobada, acepto cubrir el costo conforme a la política aplicable.",
+      },
     ],
   },
   movil: {
@@ -255,14 +292,7 @@ export const PLANTILLAS_DEFAULT: Record<ClavePlantilla, Plantilla> = {
     codigo: "TI-RES-03",
     titulo: "Dispositivo Móvil (Smartphone / Tablet / Línea)",
     prefijoFolio: "MOV",
-    accesorios: [
-      "Cargador",
-      "Cable",
-      "Funda / mica",
-      "Audífonos",
-      "Caja",
-      "SIM corporativa",
-    ],
+    accesorios: ["Cargador", "Cable", "Funda / mica", "Audífonos", "Caja", "SIM corporativa"],
     seguridad: [
       "Gestión MDM / MAM inscrita",
       "Bloqueo (PIN / biometría)",
@@ -274,13 +304,41 @@ export const PLANTILLAS_DEFAULT: Record<ClavePlantilla, Plantilla> = {
     aviso: AVISO_ESTANDAR,
     iso: "Controles ISO/IEC 27001:2022: A.5.9 · A.5.10 · A.5.11 · A.7.9 · A.8.1.",
     clausulas: [
-      { titulo: "Uso aceptable (A.5.10)", texto: "El dispositivo y la línea son propiedad de la Empresa y se destinan principalmente a fines laborales, conforme a las políticas vigentes." },
-      { titulo: "Movilidad (A.7.9)", texto: "Extremaré el cuidado fuera de las instalaciones; no dejaré el dispositivo desatendido y mantendré activo el bloqueo de pantalla." },
-      { titulo: "Gestión remota (A.8.1)", texto: "Autorizo la administración del dispositivo mediante MDM/MAM, incluyendo el borrado remoto de la información corporativa en caso de robo, pérdida o terminación de la relación laboral." },
-      { titulo: "Configuración", texto: "No realizaré «jailbreak»/«root», no desactivaré los controles de seguridad ni instalaré aplicaciones no autorizadas para el uso corporativo." },
-      { titulo: "Consumo", texto: "Me apegaré al plan contratado; los consumos excedentes por uso personal injustificado podrán ser a mi cargo." },
-      { titulo: "Reporte de incidentes", texto: "Reportaré de inmediato a Sistemas cualquier robo, pérdida o incidente, presentando acta ante la autoridad cuando aplique." },
-      { titulo: "Devolución (A.5.11)", texto: "Devolveré el dispositivo con sus accesorios y en buen estado al término de la relación laboral o cuando me sea requerido. En caso de daño o pérdida por negligencia comprobada, acepto cubrir el costo conforme a la política aplicable." },
+      {
+        titulo: "Uso aceptable (A.5.10)",
+        texto:
+          "El dispositivo y la línea son propiedad de la Empresa y se destinan principalmente a fines laborales, conforme a las políticas vigentes.",
+      },
+      {
+        titulo: "Movilidad (A.7.9)",
+        texto:
+          "Extremaré el cuidado fuera de las instalaciones; no dejaré el dispositivo desatendido y mantendré activo el bloqueo de pantalla.",
+      },
+      {
+        titulo: "Gestión remota (A.8.1)",
+        texto:
+          "Autorizo la administración del dispositivo mediante MDM/MAM, incluyendo el borrado remoto de la información corporativa en caso de robo, pérdida o terminación de la relación laboral.",
+      },
+      {
+        titulo: "Configuración",
+        texto:
+          "No realizaré «jailbreak»/«root», no desactivaré los controles de seguridad ni instalaré aplicaciones no autorizadas para el uso corporativo.",
+      },
+      {
+        titulo: "Consumo",
+        texto:
+          "Me apegaré al plan contratado; los consumos excedentes por uso personal injustificado podrán ser a mi cargo.",
+      },
+      {
+        titulo: "Reporte de incidentes",
+        texto:
+          "Reportaré de inmediato a Sistemas cualquier robo, pérdida o incidente, presentando acta ante la autoridad cuando aplique.",
+      },
+      {
+        titulo: "Devolución (A.5.11)",
+        texto:
+          "Devolveré el dispositivo con sus accesorios y en buen estado al término de la relación laboral o cuando me sea requerido. En caso de daño o pérdida por negligencia comprobada, acepto cubrir el costo conforme a la política aplicable.",
+      },
     ],
   },
   monitor: {
@@ -302,12 +360,30 @@ export const PLANTILLAS_DEFAULT: Record<ClavePlantilla, Plantilla> = {
     aviso: AVISO_ESTANDAR,
     iso: "Controles ISO/IEC 27001:2022: A.5.9 · A.5.10 · A.5.11.",
     clausulas: [
-      { titulo: "Uso aceptable (A.5.10)", texto: "Los activos son propiedad de la Empresa y se destinan exclusivamente a fines laborales." },
-      { titulo: "Custodia y cuidado", texto: "Resguardaré los activos con la diligencia debida y los protegeré de daño, pérdida o uso indebido." },
-      { titulo: "Integridad", texto: "No retiraré etiquetas de inventario ni modificaré los activos." },
+      {
+        titulo: "Uso aceptable (A.5.10)",
+        texto:
+          "Los activos son propiedad de la Empresa y se destinan exclusivamente a fines laborales.",
+      },
+      {
+        titulo: "Custodia y cuidado",
+        texto:
+          "Resguardaré los activos con la diligencia debida y los protegeré de daño, pérdida o uso indebido.",
+      },
+      {
+        titulo: "Integridad",
+        texto: "No retiraré etiquetas de inventario ni modificaré los activos.",
+      },
       { titulo: "Reporte", texto: "Reportaré a Sistemas cualquier falla, daño o pérdida." },
-      { titulo: "No transferencia", texto: "No prestaré ni cederé los activos a terceros sin autorización de Sistemas." },
-      { titulo: "Devolución (A.5.11)", texto: "Devolveré los activos en buen estado al término de la relación laboral, cambio de puesto o cuando me sean requeridos. En caso de daño o pérdida por negligencia comprobada, acepto cubrir el costo conforme a la política aplicable." },
+      {
+        titulo: "No transferencia",
+        texto: "No prestaré ni cederé los activos a terceros sin autorización de Sistemas.",
+      },
+      {
+        titulo: "Devolución (A.5.11)",
+        texto:
+          "Devolveré los activos en buen estado al término de la relación laboral, cambio de puesto o cuando me sean requeridos. En caso de daño o pérdida por negligencia comprobada, acepto cubrir el costo conforme a la política aplicable.",
+      },
     ],
   },
   impresora: {
@@ -332,12 +408,35 @@ export const PLANTILLAS_DEFAULT: Record<ClavePlantilla, Plantilla> = {
     aviso: AVISO_ESTANDAR,
     iso: "Controles ISO/IEC 27001:2022: A.5.9 · A.5.10 · A.5.11 · A.7.10 Medios de almacenamiento.",
     clausulas: [
-      { titulo: "Uso aceptable (A.5.10)", texto: "El equipo es propiedad/responsabilidad de la Empresa y se destina exclusivamente a fines laborales." },
-      { titulo: "Custodia", texto: "Mantendré el equipo en la ubicación asignada; no lo reubicaré sin avisar a Sistemas." },
-      { titulo: "Seguridad de la información", texto: "No dejaré documentos confidenciales en la bandeja de salida y vaciaré la memoria/escaneos conforme a la política de manejo de información." },
-      { titulo: "Consumibles y mantenimiento", texto: "Solicitaré consumibles y mantenimiento únicamente a través de Sistemas o el proveedor autorizado; no abriré el equipo para reparaciones." },
-      { titulo: "Reporte", texto: "Reportaré a Sistemas cualquier falla, atasco recurrente o daño." },
-      { titulo: "Devolución (A.5.11)", texto: "Devolveré el equipo en buen estado al término del resguardo o cuando me sea requerido. En caso de daño por negligencia comprobada, acepto cubrir el costo conforme a la política aplicable." },
+      {
+        titulo: "Uso aceptable (A.5.10)",
+        texto:
+          "El equipo es propiedad/responsabilidad de la Empresa y se destina exclusivamente a fines laborales.",
+      },
+      {
+        titulo: "Custodia",
+        texto:
+          "Mantendré el equipo en la ubicación asignada; no lo reubicaré sin avisar a Sistemas.",
+      },
+      {
+        titulo: "Seguridad de la información",
+        texto:
+          "No dejaré documentos confidenciales en la bandeja de salida y vaciaré la memoria/escaneos conforme a la política de manejo de información.",
+      },
+      {
+        titulo: "Consumibles y mantenimiento",
+        texto:
+          "Solicitaré consumibles y mantenimiento únicamente a través de Sistemas o el proveedor autorizado; no abriré el equipo para reparaciones.",
+      },
+      {
+        titulo: "Reporte",
+        texto: "Reportaré a Sistemas cualquier falla, atasco recurrente o daño.",
+      },
+      {
+        titulo: "Devolución (A.5.11)",
+        texto:
+          "Devolveré el equipo en buen estado al término del resguardo o cuando me sea requerido. En caso de daño por negligencia comprobada, acepto cubrir el costo conforme a la política aplicable.",
+      },
     ],
   },
   servidor: {
@@ -362,13 +461,40 @@ export const PLANTILLAS_DEFAULT: Record<ClavePlantilla, Plantilla> = {
       "Documento de resguardo de activo crítico. La firma acredita la aceptación de las responsabilidades de administración descritas. Las contraseñas NO se anotan en este documento; se resguardan en el gestor de secretos autorizado.",
     iso: "Controles ISO/IEC 27001:2022: A.5.9 · A.5.10 · A.5.11 · A.8.2 Accesos privilegiados · A.7.4 Seguridad física · A.8.13 Respaldo.",
     clausulas: [
-      { titulo: "Uso aceptable y privilegios (A.5.10 / A.8.2)", texto: "Administraré el activo conforme a mi rol, aplicando el principio de mínimo privilegio y únicamente para fines operativos autorizados." },
-      { titulo: "Confidencialidad y credenciales", texto: "Resguardaré las credenciales en el gestor autorizado, no las compartiré y usaré MFA donde aplique." },
-      { titulo: "Gestión de cambios", texto: "Aplicaré cambios de configuración a través del proceso de control de cambios y mantendré la documentación actualizada." },
-      { titulo: "Bitácoras y monitoreo", texto: "No deshabilitaré el registro de eventos ni los mecanismos de monitoreo." },
-      { titulo: "Continuidad", texto: "Verificaré el funcionamiento de respaldos y reportaré de inmediato cualquier incidente de seguridad o disponibilidad." },
-      { titulo: "Integridad física", texto: "No retiraré el activo del site/rack sin autorización ni removeré etiquetas de inventario." },
-      { titulo: "Devolución / traspaso (A.5.11)", texto: "Al cambio de rol o término de la relación laboral, entregaré el activo, la documentación y transferiré las credenciales conforme al procedimiento de baja de accesos." },
+      {
+        titulo: "Uso aceptable y privilegios (A.5.10 / A.8.2)",
+        texto:
+          "Administraré el activo conforme a mi rol, aplicando el principio de mínimo privilegio y únicamente para fines operativos autorizados.",
+      },
+      {
+        titulo: "Confidencialidad y credenciales",
+        texto:
+          "Resguardaré las credenciales en el gestor autorizado, no las compartiré y usaré MFA donde aplique.",
+      },
+      {
+        titulo: "Gestión de cambios",
+        texto:
+          "Aplicaré cambios de configuración a través del proceso de control de cambios y mantendré la documentación actualizada.",
+      },
+      {
+        titulo: "Bitácoras y monitoreo",
+        texto: "No deshabilitaré el registro de eventos ni los mecanismos de monitoreo.",
+      },
+      {
+        titulo: "Continuidad",
+        texto:
+          "Verificaré el funcionamiento de respaldos y reportaré de inmediato cualquier incidente de seguridad o disponibilidad.",
+      },
+      {
+        titulo: "Integridad física",
+        texto:
+          "No retiraré el activo del site/rack sin autorización ni removeré etiquetas de inventario.",
+      },
+      {
+        titulo: "Devolución / traspaso (A.5.11)",
+        texto:
+          "Al cambio de rol o término de la relación laboral, entregaré el activo, la documentación y transferiré las credenciales conforme al procedimiento de baja de accesos.",
+      },
     ],
   },
   software: {
@@ -392,12 +518,35 @@ export const PLANTILLAS_DEFAULT: Record<ClavePlantilla, Plantilla> = {
       "El uso de software sin licencia o fuera de los términos autorizados es responsabilidad del usuario y puede constituir una falta. La firma acredita la aceptación de estas condiciones.",
     iso: "Controles ISO/IEC 27001:2022: A.5.9 · A.5.10 · A.5.11 · A.5.32 Derechos de propiedad intelectual · A.8.19 Instalación de software.",
     clausulas: [
-      { titulo: "Uso aceptable (A.5.10)", texto: "Utilizaré el software y los servicios exclusivamente para fines laborales y conforme a los términos de licenciamiento del fabricante." },
-      { titulo: "Propiedad intelectual (A.5.32)", texto: "No copiaré, reinstalaré en equipos no autorizados, ni distribuiré las licencias; reconozco que son propiedad de la Empresa o de su titular." },
-      { titulo: "Confidencialidad de credenciales", texto: "Resguardaré usuarios, claves y tokens de acceso, no los compartiré y usaré MFA cuando esté disponible." },
-      { titulo: "Instalación autorizada", texto: "No instalaré software adicional sin aprobación de Sistemas, evitando software sin licencia o de origen no confiable." },
-      { titulo: "Cumplimiento", texto: "Permitiré las auditorías de licenciamiento que realice la Empresa." },
-      { titulo: "Baja (A.5.11)", texto: "Al término de la relación laboral o cambio de funciones, cesaré el uso, desinstalaré el software y permitiré la reasignación o revocación de las licencias y cuentas." },
+      {
+        titulo: "Uso aceptable (A.5.10)",
+        texto:
+          "Utilizaré el software y los servicios exclusivamente para fines laborales y conforme a los términos de licenciamiento del fabricante.",
+      },
+      {
+        titulo: "Propiedad intelectual (A.5.32)",
+        texto:
+          "No copiaré, reinstalaré en equipos no autorizados, ni distribuiré las licencias; reconozco que son propiedad de la Empresa o de su titular.",
+      },
+      {
+        titulo: "Confidencialidad de credenciales",
+        texto:
+          "Resguardaré usuarios, claves y tokens de acceso, no los compartiré y usaré MFA cuando esté disponible.",
+      },
+      {
+        titulo: "Instalación autorizada",
+        texto:
+          "No instalaré software adicional sin aprobación de Sistemas, evitando software sin licencia o de origen no confiable.",
+      },
+      {
+        titulo: "Cumplimiento",
+        texto: "Permitiré las auditorías de licenciamiento que realice la Empresa.",
+      },
+      {
+        titulo: "Baja (A.5.11)",
+        texto:
+          "Al término de la relación laboral o cambio de funciones, cesaré el uso, desinstalaré el software y permitiré la reasignación o revocación de las licencias y cuentas.",
+      },
     ],
   },
   devolucion: {

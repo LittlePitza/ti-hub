@@ -29,16 +29,26 @@ export default async function Responsivas({
         <h1 className="pagina-titulo">Responsivas</h1>
         <p className="pagina-desc">Cartas de resguardo: del borrador a la firma y el archivo</p>
       </div>
-      <Link href="/ti/responsivas/plantillas" className="boton secundario">Plantillas</Link>
+      <Link href="/ti/responsivas/plantillas" className="boton secundario">
+        Plantillas
+      </Link>
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  if (!sb)
+    return (
+      <>
+        {head}
+        <SinConexion />
+      </>
+    );
 
   // Solo las columnas que pinta la lista: el snapshot `datos` (jsonb pesado)
   // únicamente lo usa la página de detalle.
   const { data } = await sb
     .from("responsivas")
-    .select("id, num, plantilla, estado, archivo_url, equipo_nombre, empleado_nombre, empleado_correo, personas, fecha_generada")
+    .select(
+      "id, num, plantilla, estado, archivo_url, equipo_nombre, empleado_nombre, empleado_correo, personas, fecha_generada",
+    )
     .order("created_at", { ascending: false });
   const todas = data ?? [];
 
@@ -91,18 +101,34 @@ export default async function Responsivas({
             placeholder="Buscar por folio, equipo o resguardante…"
             aria-label="Buscar responsivas"
           />
-          <button className="boton secundario" type="submit">Buscar</button>
-          {(texto || filtro) && <Link href="/ti/responsivas" className="boton-texto">Limpiar</Link>}
+          <button className="boton secundario" type="submit">
+            Buscar
+          </button>
+          {(texto || filtro) && (
+            <Link href="/ti/responsivas" className="boton-texto">
+              Limpiar
+            </Link>
+          )}
         </form>
       </div>
 
       {lista.length === 0 ? (
         <div className="vacio">
-          <strong>{texto ? "Sin coincidencias" : `Sin responsivas ${filtro ? `en «${ESTADOS_RESP[filtro as EstadoResponsiva]?.texto}»` : "todavía"}`}</strong>
+          <strong>
+            {texto
+              ? "Sin coincidencias"
+              : `Sin responsivas ${filtro ? `en «${ESTADOS_RESP[filtro as EstadoResponsiva]?.texto}»` : "todavía"}`}
+          </strong>
           {texto ? (
             "Ajusta la búsqueda o limpia los filtros."
           ) : (
-            <>Se generan en automático al asignar un equipo a un empleado desde <Link href="/ti/inventario" style={{ textDecoration: "underline" }}>Inventario</Link>.</>
+            <>
+              Se generan en automático al asignar un equipo a un empleado desde{" "}
+              <Link href="/ti/inventario" style={{ textDecoration: "underline" }}>
+                Inventario
+              </Link>
+              .
+            </>
           )}
         </div>
       ) : (
@@ -127,16 +153,24 @@ export default async function Responsivas({
                 <tr key={r.id}>
                   <td>
                     <div className="celda-principal mono">{folio}</div>
-                    <div className="suave" style={{ fontSize: 12.5 }}>{pl.nombre}</div>
+                    <div className="suave" style={{ fontSize: 12.5 }}>
+                      {pl.nombre}
+                    </div>
                   </td>
                   <td>
                     <div className="celda-principal">{r.equipo_nombre ?? "—"}</div>
-                    <div className="suave" style={{ fontSize: 12 }}>Generada {fechaCorta(r.fecha_generada)}</div>
+                    <div className="suave" style={{ fontSize: 12 }}>
+                      Generada {fechaCorta(r.fecha_generada)}
+                    </div>
                   </td>
                   <td className="suave">
                     {r.empleado_nombre}
                     {Array.isArray(r.personas) && r.personas.length > 0 && (
-                      <span className="insignia neutro" style={{ marginLeft: 6 }} title={`${r.personas.length} persona(s) adicional(es)`}>
+                      <span
+                        className="insignia neutro"
+                        style={{ marginLeft: 6 }}
+                        title={`${r.personas.length} persona(s) adicional(es)`}
+                      >
                         +{r.personas.length}
                       </span>
                     )}
@@ -152,15 +186,30 @@ export default async function Responsivas({
                       ))}
                     </div>
                   </td>
-                  <td><span className={`insignia ${ins.tono}`}>{ins.texto}</span></td>
+                  <td>
+                    <span className={`insignia ${ins.tono}`}>{ins.texto}</span>
+                  </td>
                   <td style={{ whiteSpace: "nowrap" }}>
                     <div className="fila-acciones">
-                      <Link href={`/ti/responsivas/${r.id}`} className="boton secundario mini">Abrir</Link>
-                      <Link href={`/ti/responsivas/${r.id}/imprimir`} className="boton secundario mini">Imprimir</Link>
+                      <Link href={`/ti/responsivas/${r.id}`} className="boton secundario mini">
+                        Abrir
+                      </Link>
+                      <Link
+                        href={`/ti/responsivas/${r.id}/imprimir`}
+                        className="boton secundario mini"
+                      >
+                        Imprimir
+                      </Link>
                       <form action={eliminarResponsiva}>
                         <input type="hidden" name="id" value={r.id} />
                         <input type="hidden" name="archivo_url" value={r.archivo_url ?? ""} />
-                        <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">Eliminar</BotonEnviar>
+                        <BotonEnviar
+                          className="boton secundario mini"
+                          style={{ color: "var(--critico)" }}
+                          ocupado="…"
+                        >
+                          Eliminar
+                        </BotonEnviar>
                       </form>
                     </div>
                   </td>

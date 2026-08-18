@@ -13,7 +13,13 @@ import {
   type EstadoTicket,
 } from "@/lib/tickets";
 import { ESTADO_PORTAL, correoValido, nombreDeCorreo } from "@/lib/portal";
-import { getConfigCorreo, correoOperativo, enviarRespuesta, enviarEstado, enviarTicketCreado } from "@/lib/correo";
+import {
+  getConfigCorreo,
+  correoOperativo,
+  enviarRespuesta,
+  enviarEstado,
+  enviarTicketCreado,
+} from "@/lib/correo";
 import { recomprimirArchivado } from "@/lib/imagen";
 import type { Adjunto } from "@/lib/adjuntos";
 
@@ -44,8 +50,7 @@ async function registrarEvento(
   if (error) console.error("[tickets] registrar evento:", error.message);
 }
 
-const limpiar = (formData: FormData, k: string) =>
-  (formData.get(k) as string)?.trim() || null;
+const limpiar = (formData: FormData, k: string) => (formData.get(k) as string)?.trim() || null;
 
 // Al archivar un ticket, sus fotos pasan a almacenamiento en frío: se recomprimen
 // (más pequeñas, menor calidad) y se sobreescriben en su misma ruta. Cada adjunto
@@ -309,7 +314,10 @@ export async function agregarComentario(formData: FormData) {
   if (actual && !actual.primera_respuesta_at) {
     await sb
       .from("tickets")
-      .update({ primera_respuesta_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .update({
+        primera_respuesta_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", id);
   }
 
@@ -341,7 +349,10 @@ export async function responderCliente(formData: FormData) {
   if (actual && !actual.primera_respuesta_at) {
     await sb
       .from("tickets")
-      .update({ primera_respuesta_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .update({
+        primera_respuesta_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", id);
   }
 
@@ -355,7 +366,11 @@ export async function responderCliente(formData: FormData) {
   // La respuesta se ve siempre en el portal; por correo solo si TI marcó la casilla.
   // El correo se difiere con after(): el panel responde de inmediato y el envío
   // (que puede tardar segundos) ocurre después de mandar la respuesta.
-  if (formData.get("notificar") === "on" && actual && correoValido(actual.solicitante_email ?? "")) {
+  if (
+    formData.get("notificar") === "on" &&
+    actual &&
+    correoValido(actual.solicitante_email ?? "")
+  ) {
     const email = actual.solicitante_email!;
     const datosCorreo = { num: actual.num, titulo: actual.titulo, mensaje: cuerpo };
     after(async () => {
@@ -382,7 +397,10 @@ export async function responderCliente(formData: FormData) {
 export async function eliminarTicket(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  const { error } = await sb.from("tickets").delete().eq("id", formData.get("id") as string);
+  const { error } = await sb
+    .from("tickets")
+    .delete()
+    .eq("id", formData.get("id") as string);
   if (error) {
     console.error("[tickets] eliminar:", error.message);
     return;

@@ -18,7 +18,17 @@ type Empleado = { nombre: string; correo: string };
 
 // Iconos estáticos, hoisteados fuera del render.
 const ICONO_MAS = (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
     <line x1="12" y1="5" x2="12" y2="19" />
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
@@ -38,16 +48,27 @@ const GLIFO_PROPS = {
 };
 const GLIFO: Record<CategoriaInv, ReactNode> = {
   computo: (
-    <svg {...GLIFO_PROPS}><rect x="3" y="5" width="18" height="12" rx="2" /><path d="M2 20h20" /></svg>
+    <svg {...GLIFO_PROPS}>
+      <rect x="3" y="5" width="18" height="12" rx="2" />
+      <path d="M2 20h20" />
+    </svg>
   ),
   celular: (
-    <svg {...GLIFO_PROPS}><rect x="6" y="2" width="12" height="20" rx="2.5" /><path d="M11 18h2" /></svg>
+    <svg {...GLIFO_PROPS}>
+      <rect x="6" y="2" width="12" height="20" rx="2.5" />
+      <path d="M11 18h2" />
+    </svg>
   ),
   linea: (
-    <svg {...GLIFO_PROPS}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+    <svg {...GLIFO_PROPS}>
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
   ),
   software: (
-    <svg {...GLIFO_PROPS}><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M8 10l-2 2 2 2M16 10l2 2-2 2M13 8l-2 8" /></svg>
+    <svg {...GLIFO_PROPS}>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M8 10l-2 2 2 2M16 10l2 2-2 2M13 8l-2 8" />
+    </svg>
   ),
 };
 
@@ -89,13 +110,22 @@ function CamposEquipo({
     <div className="campos">
       <div className="campo">
         <label htmlFor="eq-nombre">{c.nombre.label}</label>
-        <input id="eq-nombre" name="nombre" placeholder={c.nombre.placeholder} required={cat.valor !== "linea"} />
+        <input
+          id="eq-nombre"
+          name="nombre"
+          placeholder={c.nombre.placeholder}
+          required={cat.valor !== "linea"}
+        />
       </div>
       {cat.tipos.length > 1 ? (
         <div className="campo">
           <label htmlFor="eq-tipo">Tipo</label>
           <select id="eq-tipo" name="tipo" defaultValue={cat.tipos[0]}>
-            {cat.tipos.map((t) => <option key={t} value={t}>{TIPO_LABEL[t] ?? t}</option>)}
+            {cat.tipos.map((t) => (
+              <option key={t} value={t}>
+                {TIPO_LABEL[t] ?? t}
+              </option>
+            ))}
           </select>
         </div>
       ) : null}
@@ -120,14 +150,23 @@ function CamposEquipo({
       {c.telefono ? (
         <div className="campo">
           <label htmlFor="eq-telefono">{c.telefono.label}</label>
-          <input id="eq-telefono" name="telefono" placeholder={c.telefono.placeholder} required={cat.valor === "linea"} />
+          <input
+            id="eq-telefono"
+            name="telefono"
+            placeholder={c.telefono.placeholder}
+            required={cat.valor === "linea"}
+          />
         </div>
       ) : null}
       <div className="campo">
         <label htmlFor="eq-empleado">Asignar a</label>
         <select id="eq-empleado" name="empleado" defaultValue="">
           <option value="">— Libre / sin asignar —</option>
-          {empleados.map((p) => <option key={p.correo} value={p.correo}>{p.nombre}</option>)}
+          {empleados.map((p) => (
+            <option key={p.correo} value={p.correo}>
+              {p.nombre}
+            </option>
+          ))}
         </select>
       </div>
       {c.ubicacion ? (
@@ -139,7 +178,11 @@ function CamposEquipo({
       <div className="campo">
         <label htmlFor="eq-estado">Estado</label>
         <select id="eq-estado" name="estado" defaultValue="activo">
-          {ESTADOS.map((e) => <option key={e.valor} value={e.valor}>{e.label}</option>)}
+          {ESTADOS.map((e) => (
+            <option key={e.valor} value={e.valor}>
+              {e.label}
+            </option>
+          ))}
         </select>
       </div>
       {c.fechas ? (
@@ -156,7 +199,11 @@ function CamposEquipo({
       ) : null}
       <div className="campo ancho">
         <label htmlFor="eq-notas">Notas</label>
-        <textarea id="eq-notas" name="notas" placeholder="Detalles, accesorios incluidos, historial…" />
+        <textarea
+          id="eq-notas"
+          name="notas"
+          placeholder="Detalles, accesorios incluidos, historial…"
+        />
       </div>
     </div>
   );
@@ -241,10 +288,17 @@ export default function NuevoEquipo({
               <input type="hidden" name="categoria" value={categoria} />
               <CamposEquipo key={categoria} cat={cat} empleados={empleados} />
               <AccesosEquipo />
-              <CamposExtra key={`extra-${categoria}`} definiciones={camposPorCategoria[categoria] ?? []} />
-              <p className="alta-nota suave">Si lo asignas a un empleado, se generará su responsiva en automático.</p>
+              <CamposExtra
+                key={`extra-${categoria}`}
+                definiciones={camposPorCategoria[categoria] ?? []}
+              />
+              <p className="alta-nota suave">
+                Si lo asignas a un empleado, se generará su responsiva en automático.
+              </p>
               {estado?.ok === false ? <p className="combo-error">{estado.error}</p> : null}
-              <BotonEnviar className="boton" ocupado="Guardando…">Guardar {cat.singular}</BotonEnviar>
+              <BotonEnviar className="boton" ocupado="Guardando…">
+                Guardar {cat.singular}
+              </BotonEnviar>
             </form>
           </div>
         </div>

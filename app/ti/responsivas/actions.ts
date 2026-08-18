@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
-import { plantillaDeEquipo, snapshotEquipo, sanitizarPersonas, type DatosResponsiva } from "@/lib/responsivas";
+import {
+  plantillaDeEquipo,
+  snapshotEquipo,
+  sanitizarPersonas,
+  type DatosResponsiva,
+} from "@/lib/responsivas";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 function refrescar(id?: string) {
@@ -77,7 +82,11 @@ export async function generarResponsivaEquipo(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
   const equipoId = formData.get("equipo_id") as string;
-  const { data: eq } = await sb.from("equipos").select("asignado_email").eq("id", equipoId).maybeSingle();
+  const { data: eq } = await sb
+    .from("equipos")
+    .select("asignado_email")
+    .eq("id", equipoId)
+    .maybeSingle();
   if (!eq?.asignado_email) return;
   const id = await generarResponsiva(equipoId, eq.asignado_email);
   if (id) redirect(`/ti/responsivas/${id}`);
@@ -101,7 +110,10 @@ export async function editarResponsiva(formData: FormData) {
   const fechaEntrega = ((formData.get("fecha_entrega") as string) ?? "").trim() || null;
   const personas = sanitizarPersonas(formData.get("personas"));
 
-  const { error } = await sb.from("responsivas").update({ datos, notas, fecha_entrega: fechaEntrega, personas }).eq("id", id);
+  const { error } = await sb
+    .from("responsivas")
+    .update({ datos, notas, fecha_entrega: fechaEntrega, personas })
+    .eq("id", id);
   if (error) {
     console.error("[responsivas] editar:", error.message);
     return;
@@ -129,7 +141,10 @@ export async function sincronizarResponsivasEquipo(sb: SupabaseClient, equipoId:
   const equipo = snapshotEquipo(eq);
   for (const r of resps) {
     const datos = { ...(r.datos ?? {}), equipo };
-    const { error } = await sb.from("responsivas").update({ datos, equipo_nombre: eq.nombre }).eq("id", r.id);
+    const { error } = await sb
+      .from("responsivas")
+      .update({ datos, equipo_nombre: eq.nombre })
+      .eq("id", r.id);
     if (error) {
       console.error("[responsivas] sincronizar snapshot:", error.message);
       continue;
@@ -158,7 +173,10 @@ export async function actualizarDesdeInventario(formData: FormData) {
   if (!eq) return;
 
   const datos = { ...(r.datos ?? {}), equipo: snapshotEquipo(eq) };
-  const { error } = await sb.from("responsivas").update({ datos, equipo_nombre: eq.nombre }).eq("id", id);
+  const { error } = await sb
+    .from("responsivas")
+    .update({ datos, equipo_nombre: eq.nombre })
+    .eq("id", id);
   if (error) {
     console.error("[responsivas] actualizar desde inventario:", error.message);
     return;

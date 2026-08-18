@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAutenticado } from "@/lib/supabase";
-import { CATEGORIAS_INV, TIPOS_CAMPO, slugCampo, type CategoriaInv, type TipoCampo } from "@/lib/inventario";
+import {
+  CATEGORIAS_INV,
+  TIPOS_CAMPO,
+  slugCampo,
+  type CategoriaInv,
+  type TipoCampo,
+} from "@/lib/inventario";
 
 // Convierte un textarea (una opción por línea) en arreglo limpio.
 function lineas(v: FormDataEntryValue | null): string[] {
@@ -95,7 +101,10 @@ export async function editarCampo(formData: FormData) {
 export async function eliminarCampo(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  const { error } = await sb.from("campos_inventario").delete().eq("id", formData.get("id") as string);
+  const { error } = await sb
+    .from("campos_inventario")
+    .delete()
+    .eq("id", formData.get("id") as string);
   if (error) {
     console.error("[campos_inventario] eliminar:", error.message);
     return;

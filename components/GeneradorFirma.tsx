@@ -1,30 +1,40 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  firmaCorreoHtml,
-  documentoFirma,
-  firmaTextoPlano,
-  type DatosFirma,
-} from "@/lib/firma";
+import { firmaCorreoHtml, documentoFirma, firmaTextoPlano, type DatosFirma } from "@/lib/firma";
 
 type Copia = "" | "firma" | "html";
 
 function slug(s: string): string {
-  return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "empleado";
+  return (
+    s
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "empleado"
+  );
 }
 
 // Apartado de generación de firma: formulario editable a la izquierda y vista
 // previa en vivo a la derecha. "Copiar firma" deja el HTML enriquecido en el
 // portapapeles para pegarlo formateado en Outlook/Gmail.
-export default function GeneradorFirma({ initial, logoUrl }: { initial: DatosFirma; logoUrl: string }) {
+export default function GeneradorFirma({
+  initial,
+  logoUrl,
+}: {
+  initial: DatosFirma;
+  logoUrl: string;
+}) {
   const [d, setD] = useState<DatosFirma>(initial);
   const [copia, setCopia] = useState<Copia>("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   const html = useMemo(() => firmaCorreoHtml(d, logoUrl), [d, logoUrl]);
 
@@ -77,7 +87,13 @@ export default function GeneradorFirma({ initial, logoUrl }: { initial: DatosFir
   const campo = (k: keyof DatosFirma, etiqueta: string, ancho = false, placeholder = "") => (
     <div className={`campo ${ancho ? "ancho" : ""}`}>
       <label htmlFor={`f-${k}`}>{etiqueta}</label>
-      <input id={`f-${k}`} value={d[k]} onChange={set(k)} placeholder={placeholder} autoComplete="off" />
+      <input
+        id={`f-${k}`}
+        value={d[k]}
+        onChange={set(k)}
+        placeholder={placeholder}
+        autoComplete="off"
+      />
     </div>
   );
 
@@ -96,7 +112,8 @@ export default function GeneradorFirma({ initial, logoUrl }: { initial: DatosFir
           {campo("eslogan", "Eslogan", true)}
         </div>
         <p className="suave" style={{ fontSize: 12.5, marginTop: 2 }}>
-          Los campos vacíos no aparecen en la firma. Los datos de empresa traen valores PIMSA por defecto.
+          Los campos vacíos no aparecen en la firma. Los datos de empresa traen valores PIMSA por
+          defecto.
         </p>
       </form>
 
@@ -115,8 +132,8 @@ export default function GeneradorFirma({ initial, logoUrl }: { initial: DatosFir
           </button>
         </div>
         <p className="suave" style={{ fontSize: 12.5 }}>
-          “Copiar firma” la deja lista para pegar formateada en Outlook o Gmail. El logo carga desde el sitio,
-          así que se ve cuando el correo permite imágenes.
+          “Copiar firma” la deja lista para pegar formateada en Outlook o Gmail. El logo carga desde
+          el sitio, así que se ve cuando el correo permite imágenes.
         </p>
       </div>
     </div>

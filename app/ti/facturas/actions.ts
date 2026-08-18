@@ -32,7 +32,11 @@ function esAdjuntoValido(f: File): boolean {
 
 // Sube los archivos del input `adjuntos` al bucket `facturas` bajo {id}/… y
 // devuelve las referencias. Un archivo que falle se omite (no rompe el alta).
-async function subirAdjuntos(sb: SupabaseClient, facturaId: string, formData: FormData): Promise<Adjunto[]> {
+async function subirAdjuntos(
+  sb: SupabaseClient,
+  facturaId: string,
+  formData: FormData,
+): Promise<Adjunto[]> {
   const archivos = formData.getAll("adjuntos").filter((f): f is File => f instanceof File);
   const validos = archivos.filter(esAdjuntoValido).slice(0, 6);
   const subidos: Adjunto[] = [];
@@ -47,7 +51,11 @@ async function subirAdjuntos(sb: SupabaseClient, facturaId: string, formData: Fo
       console.error("[facturas] subir adjunto:", error.message);
       continue;
     }
-    subidos.push({ path, nombre: file.name, tipo: ext === "pdf" ? "application/pdf" : "application/xml" });
+    subidos.push({
+      path,
+      nombre: file.name,
+      tipo: ext === "pdf" ? "application/pdf" : "application/xml",
+    });
   }
   return subidos;
 }
@@ -123,7 +131,10 @@ export async function editarFactura(formData: FormData) {
   if (nuevos.length) {
     const { data: f } = await sb.from("facturas").select("adjuntos").eq("id", id).maybeSingle();
     const actuales: Adjunto[] = Array.isArray(f?.adjuntos) ? f.adjuntos : [];
-    const { error: errAdj } = await sb.from("facturas").update({ adjuntos: [...actuales, ...nuevos] }).eq("id", id);
+    const { error: errAdj } = await sb
+      .from("facturas")
+      .update({ adjuntos: [...actuales, ...nuevos] })
+      .eq("id", id);
     if (errAdj) console.error("[facturas] guardar adjuntos:", errAdj.message);
   }
   refrescar();

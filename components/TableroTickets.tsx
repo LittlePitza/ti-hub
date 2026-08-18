@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useTransition, type CSSProperties, type DragEvent, type MouseEvent } from "react";
+import {
+  useState,
+  useTransition,
+  type CSSProperties,
+  type DragEvent,
+  type MouseEvent,
+} from "react";
 import Link from "next/link";
 import { folio, duracion } from "@/lib/format";
 import {
@@ -47,16 +53,34 @@ const COLUMNAS: {
   limite?: number;
   hecho?: boolean;
 }[] = [
-  { titulo: "Por atender", estados: ["abierto", "reabierto"], destino: "abierto", acento: "var(--critico)" },
+  {
+    titulo: "Por atender",
+    estados: ["abierto", "reabierto"],
+    destino: "abierto",
+    acento: "var(--critico)",
+  },
   { titulo: "En proceso", estados: ["en_proceso"], destino: "en_proceso", acento: "var(--aviso)" },
   { titulo: "En espera", estados: ["en_espera"], destino: "en_espera", acento: "var(--petroleo)" },
   // Cerrar es el final normal del trabajo; Archivar (guardar en frío) se hace con el
   // selector de la tarjeta y vive en el acordeón de abajo, no en una columna.
-  { titulo: "Cerrados", estados: ["cerrado", "resuelto"], destino: "cerrado", acento: "var(--ok)", limite: 8, hecho: true },
+  {
+    titulo: "Cerrados",
+    estados: ["cerrado", "resuelto"],
+    destino: "cerrado",
+    acento: "var(--ok)",
+    limite: 8,
+    hecho: true,
+  },
 ];
 
 const iniciales = (s: string) =>
-  s.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+  s
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase() || "?";
 
 // Resueltos: los más recientes arriba; el trabajo terminado se lee como bitácora.
 const porResueltoReciente = (a: Tk, b: Tk) =>
@@ -156,14 +180,23 @@ export default function TableroTickets({
         {...dragProps(t.id)}
       >
         <div className="tk-card-top">
-          <Link href={`/ti/tickets/${t.id}`} className="tk-card-titulo" draggable={false}>{t.titulo}</Link>
+          <Link href={`/ti/tickets/${t.id}`} className="tk-card-titulo" draggable={false}>
+            {t.titulo}
+          </Link>
           <Insignia valor={t.prioridad} esPrioridad />
         </div>
         <div className="tk-card-meta">
-          <Link href={`/ti/tickets/${t.id}`} className="enlace-folio" draggable={false}>{folio(t.num)}</Link>
+          <Link href={`/ti/tickets/${t.id}`} className="enlace-folio" draggable={false}>
+            {folio(t.num)}
+          </Link>
           <span>·</span>
           <span>{t.solicitante}</span>
-          {t.equipos?.nombre && (<><span>·</span><span className="mono">{t.equipos.nombre}</span></>)}
+          {t.equipos?.nombre && (
+            <>
+              <span>·</span>
+              <span className="mono">{t.equipos.nombre}</span>
+            </>
+          )}
         </div>
         <div className="tk-tags">
           <span className="tk-tag">{t.categoria}</span>
@@ -174,12 +207,16 @@ export default function TableroTickets({
         <div className="tk-card-pie">
           {t.asignado_a ? (
             <span className="tk-asignado" title={`Asignado a ${t.asignado_a}`}>
-              <span className="tk-avatar" aria-hidden>{iniciales(t.asignado_a)}</span>
+              <span className="tk-avatar" aria-hidden>
+                {iniciales(t.asignado_a)}
+              </span>
               <span className="tk-asignado-nombre">{t.asignado_a}</span>
             </span>
           ) : (
             <span className="tk-asignado libre">
-              <span className="tk-avatar" aria-hidden>?</span>
+              <span className="tk-avatar" aria-hidden>
+                ?
+              </span>
               <span className="tk-asignado-nombre">Sin asignar</span>
             </span>
           )}
@@ -198,11 +235,17 @@ export default function TableroTickets({
         className={`tk-done ${arrastrando === t.id ? "arrastrando" : ""}`}
         {...dragProps(t.id)}
       >
-        <span className="tk-done-check" aria-hidden>✓</span>
-        <Link href={`/ti/tickets/${t.id}`} className="tk-done-titulo" draggable={false}>{t.titulo}</Link>
+        <span className="tk-done-check" aria-hidden>
+          ✓
+        </span>
+        <Link href={`/ti/tickets/${t.id}`} className="tk-done-titulo" draggable={false}>
+          {t.titulo}
+        </Link>
         <span className="tk-done-fin">
           {reso.semaforo !== "na" && !reso.pendiente && (
-            <span className="tk-done-tiempo" title={`Resuelto en ${duracion(reso.ms)}`}>{duracion(reso.ms)}</span>
+            <span className="tk-done-tiempo" title={`Resuelto en ${duracion(reso.ms)}`}>
+              {duracion(reso.ms)}
+            </span>
           )}
         </span>
       </article>
@@ -212,17 +255,25 @@ export default function TableroTickets({
   return (
     <>
       <div className="tablero-resumen">
-        <span><b>{activos.length}</b> activos</span>
+        <span>
+          <b>{activos.length}</b> activos
+        </span>
         {fueraSla > 0 && <span className="alerta">{fueraSla} fuera de SLA</span>}
         {sinAsignar > 0 && <span className="aviso-txt">{sinAsignar} sin asignar</span>}
-        <span className="suave" style={{ fontSize: 11.5 }}>Arrastra una tarjeta para cambiar su estado</span>
+        <span className="suave" style={{ fontSize: 11.5 }}>
+          Arrastra una tarjeta para cambiar su estado
+        </span>
         {pendiente && (
           <span className="tablero-guardando" role="status">
             <span className="spinner" aria-hidden />
             Guardando…
           </span>
         )}
-        {hayFiltro && <Link href={hrefLimpiar} className="boton-texto">Limpiar filtros</Link>}
+        {hayFiltro && (
+          <Link href={hrefLimpiar} className="boton-texto">
+            Limpiar filtros
+          </Link>
+        )}
       </div>
 
       <div className={`tablero ${arrastrando ? "arrastrando-activo" : ""}`} aria-busy={pendiente}>
@@ -244,7 +295,8 @@ export default function TableroTickets({
               }}
               onDragLeave={(e) => {
                 // Solo limpia si el cursor salió de la columna, no al pasar sobre un hijo.
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) setSobre((s) => (s === col.titulo ? null : s));
+                if (!e.currentTarget.contains(e.relatedTarget as Node))
+                  setSobre((s) => (s === col.titulo ? null : s));
               }}
               onDrop={(e) => alSoltar(e, col.destino, col.estados)}
             >
@@ -253,7 +305,9 @@ export default function TableroTickets({
                 <span className="tablero-col-num">{enCol.length}</span>
               </div>
               {visibles.length === 0 ? (
-                <div className="tablero-col-vacio">{col.hecho ? "Nada archivado aún" : "Sin tickets"}</div>
+                <div className="tablero-col-vacio">
+                  {col.hecho ? "Nada archivado aún" : "Sin tickets"}
+                </div>
               ) : (
                 <div className={`tablero-col-lista ${col.hecho ? "lista-hecho" : ""}`}>
                   {visibles.map(col.hecho ? filaHecha : tarjeta)}
@@ -277,9 +331,7 @@ export default function TableroTickets({
             <span className="tablero-archivados-titulo">Archivados</span>
             <span className="tablero-col-num">{archivados.length}</span>
           </summary>
-          <div className="tablero-archivados-lista lista-hecho">
-            {archivados.map(filaHecha)}
-          </div>
+          <div className="tablero-archivados-lista lista-hecho">{archivados.map(filaHecha)}</div>
         </details>
       )}
     </>

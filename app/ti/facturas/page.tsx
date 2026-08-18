@@ -35,10 +35,18 @@ export default async function Facturas() {
         <h1 className="pagina-titulo">Facturas</h1>
         <p className="pagina-desc">Aviso y registro interno de pagos — lo fiscal se lleva en SAP</p>
       </div>
-      <Link href="/ti/facturas/proveedores" className="boton secundario">Proveedores</Link>
+      <Link href="/ti/facturas/proveedores" className="boton secundario">
+        Proveedores
+      </Link>
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  if (!sb)
+    return (
+      <>
+        {head}
+        <SinConexion />
+      </>
+    );
 
   const [{ data: facturas }, { data: proveedores }] = await Promise.all([
     sb
@@ -81,7 +89,9 @@ export default async function Facturas() {
   const activas = lista.filter((f) => f.estado === "pendiente");
   const historial = lista
     .filter((f) => f.estado !== "pendiente")
-    .sort((a, b) => (b.fecha_pago ?? b.fecha_vencimiento).localeCompare(a.fecha_pago ?? a.fecha_vencimiento));
+    .sort((a, b) =>
+      (b.fecha_pago ?? b.fecha_vencimiento).localeCompare(a.fecha_pago ?? a.fecha_vencimiento),
+    );
 
   const fila = (f: any) => {
     const est = estadoVisible(f, hoy);
@@ -96,8 +106,15 @@ export default async function Facturas() {
               {adjuntos.map((a) => {
                 const url = firmados.get(a.path);
                 return url ? (
-                  <a key={a.path} href={url} target="_blank" rel="noreferrer" className="resguardo-chip info">
-                    <span className="punto" />{a.nombre}
+                  <a
+                    key={a.path}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="resguardo-chip info"
+                  >
+                    <span className="punto" />
+                    {a.nombre}
                   </a>
                 ) : null;
               })}
@@ -106,11 +123,16 @@ export default async function Facturas() {
         </td>
         <td className="suave">{f.proveedores?.nombre ?? "—"}</td>
         <td className="mono">{moneda(Number(f.monto), f.moneda === "USD" ? "USD" : "MXN")}</td>
-        <td className="mono" style={est.valor === "vencida" ? { color: "var(--critico)", fontWeight: 600 } : undefined}>
+        <td
+          className="mono"
+          style={est.valor === "vencida" ? { color: "var(--critico)", fontWeight: 600 } : undefined}
+        >
           {fechaCorta(f.fecha_vencimiento)}
         </td>
         <td className="suave">{f.estado === "pagada" ? fechaCorta(f.fecha_pago) : "—"}</td>
-        <td><span className={`insignia ${est.tono}`}>{est.etiqueta}</span></td>
+        <td>
+          <span className={`insignia ${est.tono}`}>{est.etiqueta}</span>
+        </td>
         <td style={{ whiteSpace: "nowrap" }}>
           <div className="fila-acciones">
             <details className="plegable interno editar">
@@ -122,7 +144,11 @@ export default async function Facturas() {
                 <label className="mini-label">Proveedor</label>
                 <select name="proveedor_id" defaultValue={f.proveedor_id ?? ""}>
                   <option value="">— Sin proveedor —</option>
-                  {provs.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                  {provs.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nombre}
+                    </option>
+                  ))}
                 </select>
                 <div className="dos-col">
                   <div>
@@ -132,7 +158,11 @@ export default async function Facturas() {
                   <div>
                     <label className="mini-label">Moneda</label>
                     <select name="moneda" defaultValue={f.moneda}>
-                      {MONEDAS.map((m) => <option key={m} value={m}>{m}</option>)}
+                      {MONEDAS.map((m) => (
+                        <option key={m} value={m}>
+                          {m}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -143,7 +173,12 @@ export default async function Facturas() {
                   </div>
                   <div>
                     <label className="mini-label">Vencimiento</label>
-                    <input name="fecha_vencimiento" type="date" defaultValue={f.fecha_vencimiento} required />
+                    <input
+                      name="fecha_vencimiento"
+                      type="date"
+                      defaultValue={f.fecha_vencimiento}
+                      required
+                    />
                   </div>
                 </div>
                 <div className="dos-col">
@@ -153,7 +188,11 @@ export default async function Facturas() {
                   </div>
                   <div>
                     <label className="mini-label">Método de pago</label>
-                    <input name="metodo_pago" defaultValue={f.metodo_pago ?? ""} placeholder="Transferencia" />
+                    <input
+                      name="metodo_pago"
+                      defaultValue={f.metodo_pago ?? ""}
+                      placeholder="Transferencia"
+                    />
                   </div>
                 </div>
                 <label className="mini-label">UUID del CFDI</label>
@@ -162,7 +201,9 @@ export default async function Facturas() {
                 <textarea name="notas" defaultValue={f.notas ?? ""} rows={2} />
                 <label className="mini-label">Agregar adjuntos (PDF/XML)</label>
                 <input name="adjuntos" type="file" accept=".pdf,.xml" multiple />
-                <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar</BotonEnviar>
+                <BotonEnviar className="boton mini" ocupado="Guardando…">
+                  Guardar
+                </BotonEnviar>
               </form>
             </details>
             {adjuntos.length > 0 && (
@@ -170,11 +211,31 @@ export default async function Facturas() {
                 <summary className="boton secundario mini">Adjuntos</summary>
                 <div className="bloque-form panel-editar">
                   {adjuntos.map((a) => (
-                    <form action={quitarAdjunto} key={a.path} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <form
+                      action={quitarAdjunto}
+                      key={a.path}
+                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                    >
                       <input type="hidden" name="id" value={f.id} />
                       <input type="hidden" name="path" value={a.path} />
-                      <span className="suave" style={{ fontSize: 12.5, flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>{a.nombre}</span>
-                      <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">Quitar</BotonEnviar>
+                      <span
+                        className="suave"
+                        style={{
+                          fontSize: 12.5,
+                          flex: 1,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {a.nombre}
+                      </span>
+                      <BotonEnviar
+                        className="boton secundario mini"
+                        style={{ color: "var(--critico)" }}
+                        ocupado="…"
+                      >
+                        Quitar
+                      </BotonEnviar>
                     </form>
                   ))}
                 </div>
@@ -184,23 +245,40 @@ export default async function Facturas() {
               <>
                 <form action={marcarPagada}>
                   <input type="hidden" name="id" value={f.id} />
-                  <input name="fecha_pago" type="date" defaultValue={hoy} aria-label="Fecha de pago" />
-                  <BotonEnviar className="boton mini" ocupado="…">Pagada</BotonEnviar>
+                  <input
+                    name="fecha_pago"
+                    type="date"
+                    defaultValue={hoy}
+                    aria-label="Fecha de pago"
+                  />
+                  <BotonEnviar className="boton mini" ocupado="…">
+                    Pagada
+                  </BotonEnviar>
                 </form>
                 <form action={cancelarFactura}>
                   <input type="hidden" name="id" value={f.id} />
-                  <BotonEnviar className="boton secundario mini" ocupado="…">Cancelar</BotonEnviar>
+                  <BotonEnviar className="boton secundario mini" ocupado="…">
+                    Cancelar
+                  </BotonEnviar>
                 </form>
               </>
             ) : (
               <form action={reabrirFactura}>
                 <input type="hidden" name="id" value={f.id} />
-                <BotonEnviar className="boton secundario mini" ocupado="…">Reabrir</BotonEnviar>
+                <BotonEnviar className="boton secundario mini" ocupado="…">
+                  Reabrir
+                </BotonEnviar>
               </form>
             )}
             <form action={eliminarFactura}>
               <input type="hidden" name="id" value={f.id} />
-              <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">Eliminar</BotonEnviar>
+              <BotonEnviar
+                className="boton secundario mini"
+                style={{ color: "var(--critico)" }}
+                ocupado="…"
+              >
+                Eliminar
+              </BotonEnviar>
             </form>
           </div>
         </td>
@@ -209,7 +287,16 @@ export default async function Facturas() {
   };
 
   const encabezados = (
-    <tr><th>Folio</th><th>Concepto</th><th>Proveedor</th><th>Monto</th><th>Vence</th><th>Pagada</th><th>Estado</th><th></th></tr>
+    <tr>
+      <th>Folio</th>
+      <th>Concepto</th>
+      <th>Proveedor</th>
+      <th>Monto</th>
+      <th>Vence</th>
+      <th>Pagada</th>
+      <th>Estado</th>
+      <th></th>
+    </tr>
   );
 
   return (
@@ -236,13 +323,22 @@ export default async function Facturas() {
         <div className="campos">
           <div className="campo ancho">
             <label htmlFor="fc-concepto">Concepto</label>
-            <input id="fc-concepto" name="concepto" required placeholder="Internet dedicado · julio 2026" />
+            <input
+              id="fc-concepto"
+              name="concepto"
+              required
+              placeholder="Internet dedicado · julio 2026"
+            />
           </div>
           <div className="campo">
             <label htmlFor="fc-proveedor">Proveedor (opcional)</label>
             <select id="fc-proveedor" name="proveedor_id" defaultValue="">
               <option value="">— Sin proveedor —</option>
-              {provsActivos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              {provsActivos.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre}
+                </option>
+              ))}
             </select>
           </div>
           <div className="campo">
@@ -252,7 +348,11 @@ export default async function Facturas() {
           <div className="campo">
             <label htmlFor="fc-moneda">Moneda</label>
             <select id="fc-moneda" name="moneda" defaultValue="MXN">
-              {MONEDAS.map((m) => <option key={m} value={m}>{m}</option>)}
+              {MONEDAS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
             </select>
           </div>
           <div className="campo">
@@ -284,13 +384,17 @@ export default async function Facturas() {
             <textarea id="fc-notas" name="notas" placeholder="Referencia bancaria, aclaraciones…" />
           </div>
         </div>
-        <BotonEnviar className="boton" ocupado="Guardando…">Capturar</BotonEnviar>
+        <BotonEnviar className="boton" ocupado="Guardando…">
+          Capturar
+        </BotonEnviar>
       </form>
 
       <section className="seccion">
         <h2 className="seccion-titulo">Agenda de pagos · próximos 90 días</h2>
         {agenda.length === 0 ? (
-          <div className="vacio">Sin pagos en el horizonte. Captura facturas o define el próximo pago de tus proveedores.</div>
+          <div className="vacio">
+            Sin pagos en el horizonte. Captura facturas o define el próximo pago de tus proveedores.
+          </div>
         ) : (
           agenda.map((mes) => (
             <div className="tarjeta" key={mes.clave} style={{ marginBottom: 14 }}>
@@ -310,8 +414,12 @@ export default async function Facturas() {
                     </div>
                   </div>
                   <div className="fila-compacta-fin">
-                    <div className={`fila-compacta-fecha ${v.vencido ? "fecha-vencida" : ""}`}>{fechaCorta(v.fecha)}</div>
-                    <div className="mono suave" style={{ fontSize: 12 }}>{v.monto === null ? "variable" : moneda(v.monto, v.moneda)}</div>
+                    <div className={`fila-compacta-fecha ${v.vencido ? "fecha-vencida" : ""}`}>
+                      {fechaCorta(v.fecha)}
+                    </div>
+                    <div className="mono suave" style={{ fontSize: 12 }}>
+                      {v.monto === null ? "variable" : moneda(v.monto, v.moneda)}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -334,7 +442,9 @@ export default async function Facturas() {
 
       {historial.length > 0 && (
         <details className="plegable">
-          <summary>Historial · {historial.length} {historial.length === 1 ? "factura" : "facturas"}</summary>
+          <summary>
+            Historial · {historial.length} {historial.length === 1 ? "factura" : "facturas"}
+          </summary>
           <div style={{ padding: "0 16px 16px" }}>
             <table className="tabla">
               <thead>{encabezados}</thead>

@@ -14,7 +14,7 @@ export default async function Login({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
-  const mensaje = error ? MENSAJES[error] ?? MENSAJES.credenciales : null;
+  const mensaje = error ? (MENSAJES[error] ?? MENSAJES.credenciales) : null;
 
   return (
     <div className="login-marco">
@@ -22,7 +22,12 @@ export default async function Login({
         <div className="login-marca">
           <span className="login-logo-card">
             <span className="logo-claro">
-              <img className="brand-iso" src="/pimsa-isotipo.svg" alt="Plásticos PIMSA" style={{ height: 44 }} />
+              <img
+                className="brand-iso"
+                src="/pimsa-isotipo.svg"
+                alt="Plásticos PIMSA"
+                style={{ height: 44 }}
+              />
             </span>
           </span>
           <p className="eyebrow login-eyebrow">Plásticos PIMSA · Sistemas</p>
@@ -31,7 +36,9 @@ export default async function Login({
         <form className="login-caja" action={iniciarSesion}>
           <div className="login-caja-titulo">
             <h1>Iniciar sesión</h1>
-            <p className="login-desc">Acceso restringido. Inicia sesión con tu cuenta del departamento.</p>
+            <p className="login-desc">
+              Acceso restringido. Inicia sesión con tu cuenta del departamento.
+            </p>
           </div>
 
           {mensaje && <div className="login-error">{mensaje}</div>}
@@ -42,10 +49,18 @@ export default async function Login({
           </div>
           <div className="campo">
             <label htmlFor="password">Contraseña</label>
-            <input id="password" name="password" type="password" autoComplete="current-password" required />
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="current-password"
+              required
+            />
           </div>
 
-          <BotonEnviar className="boton press login-boton" ocupado="Entrando…">Entrar</BotonEnviar>
+          <BotonEnviar className="boton press login-boton" ocupado="Entrando…">
+            Entrar
+          </BotonEnviar>
         </form>
 
         <p className="login-pie">TI Hub · Plásticos PIMSA</p>

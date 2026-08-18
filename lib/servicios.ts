@@ -65,8 +65,20 @@ export const TIPOS_INCIDENTE: {
   estadoServicio: EstadoServicioValor;
 }[] = [
   { valor: "caida", etiqueta: "Caída total", tono: "critico", rango: 3, estadoServicio: "caido" },
-  { valor: "degradado", etiqueta: "Degradado", tono: "aviso", rango: 2, estadoServicio: "degradado" },
-  { valor: "mantenimiento", etiqueta: "Mantenimiento", tono: "info", rango: 1, estadoServicio: "mantenimiento" },
+  {
+    valor: "degradado",
+    etiqueta: "Degradado",
+    tono: "aviso",
+    rango: 2,
+    estadoServicio: "degradado",
+  },
+  {
+    valor: "mantenimiento",
+    etiqueta: "Mantenimiento",
+    tono: "info",
+    rango: 1,
+    estadoServicio: "mantenimiento",
+  },
 ];
 
 export const ESTADOS_INCIDENTE: { valor: EstadoIncidente; etiqueta: string; tono: string }[] = [
@@ -93,7 +105,8 @@ export function etiquetaCriticidad(valor: string): string {
 }
 
 // ---------- Estado derivado del servicio ----------
-export type EstadoServicioValor = "operativo" | "mantenimiento" | "degradado" | "vigilando" | "caido";
+export type EstadoServicioValor =
+  "operativo" | "mantenimiento" | "degradado" | "vigilando" | "caido";
 
 export interface EstadoServicio {
   valor: EstadoServicioValor;
@@ -103,11 +116,11 @@ export interface EstadoServicio {
 }
 
 const ESTADO_META: Record<EstadoServicioValor, Omit<EstadoServicio, "valor">> = {
-  operativo:     { etiqueta: "Operativo",     tono: "ok",      rango: 0 },
-  mantenimiento: { etiqueta: "Mantenimiento", tono: "info",    rango: 1 },
-  vigilando:     { etiqueta: "Vigilando",     tono: "aviso",   rango: 2 },
-  degradado:     { etiqueta: "Degradado",     tono: "aviso",   rango: 3 },
-  caido:         { etiqueta: "Caído",         tono: "critico", rango: 4 },
+  operativo: { etiqueta: "Operativo", tono: "ok", rango: 0 },
+  mantenimiento: { etiqueta: "Mantenimiento", tono: "info", rango: 1 },
+  vigilando: { etiqueta: "Vigilando", tono: "aviso", rango: 2 },
+  degradado: { etiqueta: "Degradado", tono: "aviso", rango: 3 },
+  caido: { etiqueta: "Caído", tono: "critico", rango: 4 },
 };
 
 export function metaEstadoServicio(valor: EstadoServicioValor): EstadoServicio {
@@ -134,7 +147,10 @@ export function estadoServicio(incidentesDelServicio: Incidente[]): EstadoServic
 }
 
 // Duración de un incidente en ms: fin (si resuelto) o ahora, menos inicio.
-export function duracionIncidente(i: { inicio: string; fin: string | null }, ahora: number = Date.now()): number {
+export function duracionIncidente(
+  i: { inicio: string; fin: string | null },
+  ahora: number = Date.now(),
+): number {
   const fin = i.fin ? new Date(i.fin).getTime() : ahora;
   return Math.max(0, fin - new Date(i.inicio).getTime());
 }
@@ -147,7 +163,10 @@ export interface ServicioConEstado {
 
 // Une servicios con sus incidentes y calcula el estado de cada uno. Ordena por
 // severidad (lo caído primero) y, a igualdad, por el `orden` del catálogo.
-export function serviciosConEstado(servicios: Servicio[], incidentes: Incidente[]): ServicioConEstado[] {
+export function serviciosConEstado(
+  servicios: Servicio[],
+  incidentes: Incidente[],
+): ServicioConEstado[] {
   const porServicio = new Map<string, Incidente[]>();
   for (const i of incidentes) {
     const lista = porServicio.get(i.servicio_id) ?? [];

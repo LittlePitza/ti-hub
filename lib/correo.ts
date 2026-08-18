@@ -100,7 +100,9 @@ export function tieneCredenciales(c: ConfigCorreo | null): c is ConfigCorreo {
   if (c.metodo === "graph_app")
     return Boolean(c.azure_tenant_id && c.azure_client_id && c.azure_client_secret && buzon(c));
   if (c.metodo === "oauth_interactivo")
-    return Boolean(c.azure_tenant_id && c.azure_client_id && c.azure_client_secret && c.oauth_refresh_token);
+    return Boolean(
+      c.azure_tenant_id && c.azure_client_id && c.azure_client_secret && c.oauth_refresh_token,
+    );
   return Boolean(c.smtp_user && c.smtp_pass && (c.remitente || c.smtp_user));
 }
 // Listo para notificar de verdad: credenciales + interruptor maestro encendido.
@@ -151,11 +153,14 @@ export async function intercambiarCodigo(
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error_description || data.error || "No se pudo canjear el código.");
+  if (!res.ok)
+    throw new Error(data.error_description || data.error || "No se pudo canjear el código.");
 
   let cuenta = "";
   try {
-    const me = await fetch(`${GRAPH}/me`, { headers: { authorization: `Bearer ${data.access_token}` } });
+    const me = await fetch(`${GRAPH}/me`, {
+      headers: { authorization: `Bearer ${data.access_token}` },
+    });
     const mj = await me.json();
     cuenta = mj.mail || mj.userPrincipalName || "";
   } catch {
@@ -177,7 +182,10 @@ async function tokenAppOnly(c: ConfigCorreo): Promise<string> {
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error_description || data.error || "Fallo al obtener el token de aplicación.");
+  if (!res.ok)
+    throw new Error(
+      data.error_description || data.error || "Fallo al obtener el token de aplicación.",
+    );
   return data.access_token;
 }
 
@@ -196,7 +204,10 @@ async function tokenInteractivo(c: ConfigCorreo, sb: SupabaseClient): Promise<st
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error_description || data.error || "Sesión de Microsoft expirada; vuelve a conectar.");
+  if (!res.ok)
+    throw new Error(
+      data.error_description || data.error || "Sesión de Microsoft expirada; vuelve a conectar.",
+    );
   if (data.refresh_token && data.refresh_token !== c.oauth_refresh_token) {
     await sb.from("config_correo").update({ oauth_refresh_token: data.refresh_token }).eq("id", 1);
   }
@@ -238,7 +249,7 @@ function transporte(c: ConfigCorreo): Transporter {
   return nodemailer.createTransport({
     host: c.smtp_host,
     port: c.smtp_port,
-    secure: c.smtp_port === 465,     // 465 = TLS directo; 587 = STARTTLS
+    secure: c.smtp_port === 465, // 465 = TLS directo; 587 = STARTTLS
     requireTLS: c.smtp_port !== 465, // M365 exige cifrar
     auth: { user: c.smtp_user!, pass: c.smtp_pass! },
   });
@@ -248,10 +259,17 @@ function render(plantilla: string, vars: Record<string, string>): string {
   return plantilla.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? "");
 }
 
-const AZUL = "#294466", VERDE = "#7F9D41", TINTA = "#1A1A1A", SUAVE = "#54595F", LINEA = "#e6e8ec";
+const AZUL = "#294466",
+  VERDE = "#7F9D41",
+  TINTA = "#1A1A1A",
+  SUAVE = "#54595F",
+  LINEA = "#e6e8ec";
 
 function escapar(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+  return s.replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string,
+  );
 }
 
 // Envuelve el cuerpo (texto plano con saltos de línea) en el HTML de marca PIMSA.
@@ -281,23 +299,40 @@ ${boton}
 async function enviar(
   c: ConfigCorreo,
   sb: SupabaseClient,
-  msg: { para: string | string[]; asunto: string; cuerpo: string; cta?: { texto: string; url: string } | null },
+  msg: {
+    para: string | string[];
+    asunto: string;
+    cuerpo: string;
+    cta?: { texto: string; url: string } | null;
+  },
 ): Promise<Resultado> {
   // CTA por defecto: el botón "Ver mis reportes" al portal; las funciones que mandan
   // a TI pasan su propio CTA (enlace directo al ticket).
-  const cta = msg.cta === undefined ? (c.sitio_url ? { texto: "Ver mis reportes", url: c.sitio_url } : null) : msg.cta;
+  const cta =
+    msg.cta === undefined
+      ? c.sitio_url
+        ? { texto: "Ver mis reportes", url: c.sitio_url }
+        : null
+      : msg.cta;
   const html = htmlMarca(msg.cuerpo, cta);
   const destinatarios = (Array.isArray(msg.para) ? msg.para : [msg.para]).filter(Boolean);
-  if (destinatarios.length === 0) return { ok: false, motivo: "no_config", detalle: "Sin destinatarios." };
+  if (destinatarios.length === 0)
+    return { ok: false, motivo: "no_config", detalle: "Sin destinatarios." };
   try {
     if (c.metodo === "graph_app") {
       const token = await tokenAppOnly(c);
       const mb = encodeURIComponent(buzon(c));
-      return await enviarGraph(token, `${GRAPH}/users/${mb}/sendMail`, html, { destinatarios, asunto: msg.asunto });
+      return await enviarGraph(token, `${GRAPH}/users/${mb}/sendMail`, html, {
+        destinatarios,
+        asunto: msg.asunto,
+      });
     }
     if (c.metodo === "oauth_interactivo") {
       const token = await tokenInteractivo(c, sb);
-      return await enviarGraph(token, `${GRAPH}/me/sendMail`, html, { destinatarios, asunto: msg.asunto });
+      return await enviarGraph(token, `${GRAPH}/me/sendMail`, html, {
+        destinatarios,
+        asunto: msg.asunto,
+      });
     }
     await transporte(c).sendMail({
       from: `"${c.remitente_nombre}" <${c.remitente || c.smtp_user}>`,
@@ -319,7 +354,11 @@ export function enviarRespuesta(
   d: { para: string; num: number; titulo: string; nombre: string; mensaje: string },
 ): Promise<Resultado> {
   const vars = { folio: folio(d.num), titulo: d.titulo, nombre: d.nombre, mensaje: d.mensaje };
-  return enviar(c, sb, { para: d.para, asunto: render(c.asunto_respuesta, vars), cuerpo: render(c.cuerpo_respuesta, vars) });
+  return enviar(c, sb, {
+    para: d.para,
+    asunto: render(c.asunto_respuesta, vars),
+    cuerpo: render(c.cuerpo_respuesta, vars),
+  });
 }
 
 export function enviarEstado(
@@ -328,7 +367,11 @@ export function enviarEstado(
   d: { para: string; num: number; titulo: string; nombre: string; estado: string },
 ): Promise<Resultado> {
   const vars = { folio: folio(d.num), titulo: d.titulo, nombre: d.nombre, estado: d.estado };
-  return enviar(c, sb, { para: d.para, asunto: render(c.asunto_estado, vars), cuerpo: render(c.cuerpo_estado, vars) });
+  return enviar(c, sb, {
+    para: d.para,
+    asunto: render(c.asunto_estado, vars),
+    cuerpo: render(c.cuerpo_estado, vars),
+  });
 }
 
 // Destinatarios del aviso interno: lista separada por coma, punto y coma o saltos
@@ -349,7 +392,14 @@ export function avisaNuevo(c: ConfigCorreo | null): c is ConfigCorreo {
 export function enviarNuevoTicket(
   c: ConfigCorreo,
   sb: SupabaseClient,
-  d: { num: number; titulo: string; solicitante: string; categoria: string; descripcion: string; enlace: string | null },
+  d: {
+    num: number;
+    titulo: string;
+    solicitante: string;
+    categoria: string;
+    descripcion: string;
+    enlace: string | null;
+  },
 ): Promise<Resultado> {
   const vars = {
     folio: folio(d.num),
@@ -379,13 +429,22 @@ export function enviarTicketCreado(
     `El equipo de TI abrió un ticket de soporte a tu nombre:\n` +
     `${folio(d.num)} — ${d.titulo}\n\n` +
     `Puedes seguir su avance desde el portal de soporte. Te avisaremos cuando haya novedades.`;
-  return enviar(c, sb, { para: d.para, asunto: `Ticket abierto a tu nombre · ${folio(d.num)}`, cuerpo });
+  return enviar(c, sb, {
+    para: d.para,
+    asunto: `Ticket abierto a tu nombre · ${folio(d.num)}`,
+    cuerpo,
+  });
 }
 
-export function enviarPrueba(c: ConfigCorreo, sb: SupabaseClient, para: string): Promise<Resultado> {
+export function enviarPrueba(
+  c: ConfigCorreo,
+  sb: SupabaseClient,
+  para: string,
+): Promise<Resultado> {
   return enviar(c, sb, {
     para,
     asunto: "Correo de prueba · Soporte TI PIMSA",
-    cuerpo: "Hola,\n\nEste es un correo de prueba del portal de soporte de TI. Si lo recibes, la configuración está funcionando correctamente.",
+    cuerpo:
+      "Hola,\n\nEste es un correo de prueba del portal de soporte de TI. Si lo recibes, la configuración está funcionando correctamente.",
   });
 }

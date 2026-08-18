@@ -119,7 +119,7 @@ Deeper detail — the three Supabase clients, the three security layers, the dom
 Three layers for the IT panel, all requiring a Supabase Auth session:
 
 1. **Middleware** — no valid session on `/ti/*` redirects to `/login`.
-2. **Server actions** — verify the user via `getAuthenticatedSupabase()` *before* writing.
+2. **Server actions** — verify the user via `getAuthenticatedSupabase()` _before_ writing.
 3. **RLS** — every policy is `to authenticated`, so the anon key alone cannot read or write any
    table even if someone extracts it from the browser.
 

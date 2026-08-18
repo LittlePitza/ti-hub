@@ -31,11 +31,19 @@ export default async function TareasProyectos() {
     <div className="pagina-head">
       <div>
         <h1 className="pagina-titulo">Tareas y proyectos</h1>
-        <p className="pagina-desc">La agenda de trabajo del equipo de TI: pendientes del día y avance de proyectos</p>
+        <p className="pagina-desc">
+          La agenda de trabajo del equipo de TI: pendientes del día y avance de proyectos
+        </p>
       </div>
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  if (!sb)
+    return (
+      <>
+        {head}
+        <SinConexion />
+      </>
+    );
 
   const [tareasQ, proyectosQ] = await Promise.all([
     sb.from("tareas").select("*").order("created_at", { ascending: false }),
@@ -63,7 +71,9 @@ export default async function TareasProyectos() {
     <>
       <option value="">Bandeja (sin proyecto)</option>
       {proyectosVigentes.map((p) => (
-        <option key={p.id} value={p.id}>{p.nombre}</option>
+        <option key={p.id} value={p.id}>
+          {p.nombre}
+        </option>
       ))}
     </>
   );
@@ -79,7 +89,9 @@ export default async function TareasProyectos() {
           <div className="metrica-label">Pendientes</div>
         </div>
         <div className="metrica">
-          <div className={`metrica-valor ${resumen.vencidas > 0 ? "alerta" : ""}`}>{resumen.vencidas}</div>
+          <div className={`metrica-valor ${resumen.vencidas > 0 ? "alerta" : ""}`}>
+            {resumen.vencidas}
+          </div>
           <div className="metrica-label">Vencidas</div>
         </div>
         <div className="metrica">
@@ -94,14 +106,24 @@ export default async function TareasProyectos() {
 
       {/* Captura rápida: la fricción mínima para anotar un pendiente. */}
       <form className="tarea-rapida" action={crearTarea}>
-        <input name="titulo" required placeholder="Anota un pendiente y presiona Agregar…" className="tarea-rapida-titulo" aria-label="Nueva tarea" />
-        <select name="proyecto_id" aria-label="Proyecto">{opcionesProyecto()}</select>
+        <input
+          name="titulo"
+          required
+          placeholder="Anota un pendiente y presiona Agregar…"
+          className="tarea-rapida-titulo"
+          aria-label="Nueva tarea"
+        />
+        <select name="proyecto_id" aria-label="Proyecto">
+          {opcionesProyecto()}
+        </select>
         <select name="prioridad" defaultValue="normal" aria-label="Prioridad">
           <option value="normal">Normal</option>
           <option value="alta">Alta</option>
         </select>
         <input name="fecha_limite" type="date" aria-label="Fecha límite" />
-        <BotonEnviar className="boton" ocupado="Agregando…">Agregar</BotonEnviar>
+        <BotonEnviar className="boton" ocupado="Agregando…">
+          Agregar
+        </BotonEnviar>
       </form>
 
       <div className="dash-cols">
@@ -124,7 +146,15 @@ export default async function TareasProyectos() {
                   </div>
                   <div className="tareas-lista">
                     {g.tareas.map((t) => (
-                      <TareaFila key={t.id} t={t} hoy={hoy} nombreProyecto={t.proyecto_id ? nombrePorProyecto.get(t.proyecto_id) : undefined} opcionesProyecto={opcionesProyecto} />
+                      <TareaFila
+                        key={t.id}
+                        t={t}
+                        hoy={hoy}
+                        nombreProyecto={
+                          t.proyecto_id ? nombrePorProyecto.get(t.proyecto_id) : undefined
+                        }
+                        opcionesProyecto={opcionesProyecto}
+                      />
                     ))}
                   </div>
                 </div>
@@ -139,7 +169,12 @@ export default async function TareasProyectos() {
                     <div className="tarea hecha" key={t.id}>
                       <form action={alternarTarea} className="tarea-check-form">
                         <input type="hidden" name="id" value={t.id} />
-                        <BotonEnviar className="tarea-check hecha" ocupado="" aria-label="Reabrir tarea" title="Reabrir">
+                        <BotonEnviar
+                          className="tarea-check hecha"
+                          ocupado=""
+                          aria-label="Reabrir tarea"
+                          title="Reabrir"
+                        >
                           <IconoCheck />
                         </BotonEnviar>
                       </form>
@@ -147,14 +182,22 @@ export default async function TareasProyectos() {
                         <span className="tarea-titulo">{t.titulo}</span>
                         <span className="tarea-meta">
                           {t.proyecto_id && nombrePorProyecto.get(t.proyecto_id) && (
-                            <span className="tarea-chip">{nombrePorProyecto.get(t.proyecto_id)}</span>
+                            <span className="tarea-chip">
+                              {nombrePorProyecto.get(t.proyecto_id)}
+                            </span>
                           )}
                           <span className="suave">Completada {fechaCorta(t.completada_at)}</span>
                         </span>
                       </div>
                       <form action={eliminarTarea} className="tarea-acciones">
                         <input type="hidden" name="id" value={t.id} />
-                        <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">Eliminar</BotonEnviar>
+                        <BotonEnviar
+                          className="boton secundario mini"
+                          style={{ color: "var(--critico)" }}
+                          ocupado="…"
+                        >
+                          Eliminar
+                        </BotonEnviar>
                       </form>
                     </div>
                   ))}
@@ -169,7 +212,10 @@ export default async function TareasProyectos() {
           <section className="seccion">
             <h2 className="seccion-titulo">Proyectos</h2>
             {proyectos.length === 0 ? (
-              <div className="vacio">Sin proyectos. Crea uno para agrupar tareas grandes (migraciones, altas, despliegues).</div>
+              <div className="vacio">
+                Sin proyectos. Crea uno para agrupar tareas grandes (migraciones, altas,
+                despliegues).
+              </div>
             ) : (
               <div className="proyectos-lista">
                 {proyectos.map((p) => {
@@ -183,13 +229,23 @@ export default async function TareasProyectos() {
                         <span className={`insignia ${est.tono}`}>{est.etiqueta}</span>
                       </div>
                       {p.descripcion && <p className="proyecto-card-desc">{p.descripcion}</p>}
-                      <div className="proyecto-barra" role="img" aria-label={`${prog.pct}% completado`}>
+                      <div
+                        className="proyecto-barra"
+                        role="img"
+                        aria-label={`${prog.pct}% completado`}
+                      >
                         <div className="proyecto-barra-fill" style={{ width: `${prog.pct}%` }} />
                       </div>
                       <div className="proyecto-card-meta">
-                        <span><b>{prog.hechas}</b>/{prog.total} tareas</span>
-                        {prog.vencidas > 0 && <span className="fecha-vencida">{prog.vencidas} vencidas</span>}
-                        {p.fecha_objetivo && <span className="suave">Objetivo {fechaCorta(p.fecha_objetivo)}</span>}
+                        <span>
+                          <b>{prog.hechas}</b>/{prog.total} tareas
+                        </span>
+                        {prog.vencidas > 0 && (
+                          <span className="fecha-vencida">{prog.vencidas} vencidas</span>
+                        )}
+                        {p.fecha_objetivo && (
+                          <span className="suave">Objetivo {fechaCorta(p.fecha_objetivo)}</span>
+                        )}
                       </div>
                       <details className="plegable interno editar" style={{ marginTop: 8 }}>
                         <summary className="boton secundario mini">Editar</summary>
@@ -203,16 +259,26 @@ export default async function TareasProyectos() {
                             <div>
                               <label className="mini-label">Estado</label>
                               <select name="estado" defaultValue={p.estado}>
-                                {ESTADOS_PROYECTO.map((e) => <option key={e.valor} value={e.valor}>{e.etiqueta}</option>)}
+                                {ESTADOS_PROYECTO.map((e) => (
+                                  <option key={e.valor} value={e.valor}>
+                                    {e.etiqueta}
+                                  </option>
+                                ))}
                               </select>
                             </div>
                             <div>
                               <label className="mini-label">Objetivo</label>
-                              <input name="fecha_objetivo" type="date" defaultValue={p.fecha_objetivo ?? ""} />
+                              <input
+                                name="fecha_objetivo"
+                                type="date"
+                                defaultValue={p.fecha_objetivo ?? ""}
+                              />
                             </div>
                           </div>
                           <div className="fila-acciones" style={{ marginTop: 8 }}>
-                            <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar</BotonEnviar>
+                            <BotonEnviar className="boton mini" ocupado="Guardando…">
+                              Guardar
+                            </BotonEnviar>
                           </div>
                         </form>
                       </details>
@@ -225,13 +291,26 @@ export default async function TareasProyectos() {
             <details className="plegable" style={{ marginTop: 14 }}>
               <summary>Nuevo proyecto</summary>
               <form action={crearProyecto} className="bloque-form" style={{ marginTop: 12 }}>
-                <label className="mini-label" htmlFor="pr-nombre">Nombre</label>
-                <input id="pr-nombre" name="nombre" required placeholder="Migración de correo a M365" />
-                <label className="mini-label" htmlFor="pr-desc">Descripción (opcional)</label>
+                <label className="mini-label" htmlFor="pr-nombre">
+                  Nombre
+                </label>
+                <input
+                  id="pr-nombre"
+                  name="nombre"
+                  required
+                  placeholder="Migración de correo a M365"
+                />
+                <label className="mini-label" htmlFor="pr-desc">
+                  Descripción (opcional)
+                </label>
                 <input id="pr-desc" name="descripcion" placeholder="Objetivo del proyecto" />
-                <label className="mini-label" htmlFor="pr-fecha">Fecha objetivo (opcional)</label>
+                <label className="mini-label" htmlFor="pr-fecha">
+                  Fecha objetivo (opcional)
+                </label>
                 <input id="pr-fecha" name="fecha_objetivo" type="date" />
-                <BotonEnviar className="boton mini" ocupado="Creando…">Crear proyecto</BotonEnviar>
+                <BotonEnviar className="boton mini" ocupado="Creando…">
+                  Crear proyecto
+                </BotonEnviar>
               </form>
             </details>
           </section>
@@ -258,19 +337,30 @@ function TareaFila({
       <form action={alternarTarea} className="tarea-check-form">
         <input type="hidden" name="id" value={t.id} />
         <input type="hidden" name="completar" value="on" />
-        <BotonEnviar className="tarea-check" ocupado="" aria-label="Marcar como completada" title="Completar">
+        <BotonEnviar
+          className="tarea-check"
+          ocupado=""
+          aria-label="Marcar como completada"
+          title="Completar"
+        >
           <span className="tarea-check-circulo" aria-hidden />
         </BotonEnviar>
       </form>
       <div className="tarea-cuerpo">
         <span className="tarea-titulo">
-          {t.prioridad === "alta" && <span className="tarea-alta" title="Prioridad alta" aria-label="Prioridad alta">!</span>}
+          {t.prioridad === "alta" && (
+            <span className="tarea-alta" title="Prioridad alta" aria-label="Prioridad alta">
+              !
+            </span>
+          )}
           {t.titulo}
         </span>
         <span className="tarea-meta">
           {nombreProyecto && <span className="tarea-chip">{nombreProyecto}</span>}
           {t.fecha_limite && (
-            <span className={vencida ? "fecha-vencida" : "suave"}>{fechaCorta(t.fecha_limite)}</span>
+            <span className={vencida ? "fecha-vencida" : "suave"}>
+              {fechaCorta(t.fecha_limite)}
+            </span>
           )}
           {t.notas && <span className="suave tarea-notas">{t.notas}</span>}
         </span>
@@ -287,7 +377,9 @@ function TareaFila({
             <div className="dos-col">
               <div>
                 <label className="mini-label">Proyecto</label>
-                <select name="proyecto_id" defaultValue={t.proyecto_id ?? ""}>{opcionesProyecto(t.proyecto_id)}</select>
+                <select name="proyecto_id" defaultValue={t.proyecto_id ?? ""}>
+                  {opcionesProyecto(t.proyecto_id)}
+                </select>
               </div>
               <div>
                 <label className="mini-label">Prioridad</label>
@@ -299,12 +391,21 @@ function TareaFila({
             </div>
             <label className="mini-label">Fecha límite</label>
             <input name="fecha_limite" type="date" defaultValue={t.fecha_limite ?? ""} />
-            <BotonEnviar className="boton mini" ocupado="Guardando…">Guardar</BotonEnviar>
+            <BotonEnviar className="boton mini" ocupado="Guardando…">
+              Guardar
+            </BotonEnviar>
           </form>
         </details>
         <form action={eliminarTarea}>
           <input type="hidden" name="id" value={t.id} />
-          <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…" title="Eliminar tarea">✕</BotonEnviar>
+          <BotonEnviar
+            className="boton secundario mini"
+            style={{ color: "var(--critico)" }}
+            ocupado="…"
+            title="Eliminar tarea"
+          >
+            ✕
+          </BotonEnviar>
         </form>
       </div>
     </div>
@@ -313,7 +414,17 @@ function TareaFila({
 
 function IconoCheck() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <path d="M20 6 9 17l-5-5" />
     </svg>
   );

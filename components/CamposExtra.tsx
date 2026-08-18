@@ -51,11 +51,23 @@ export default function CamposExtra({
           }
           return (
             <div key={d.clave} className="campo">
-              <label htmlFor={id}>{d.etiqueta}{d.requerido ? " *" : ""}</label>
+              <label htmlFor={id}>
+                {d.etiqueta}
+                {d.requerido ? " *" : ""}
+              </label>
               {d.tipo === "opciones" ? (
-                <select id={id} value={v} required={d.requerido} onChange={(e) => set(d.clave, e.target.value)}>
+                <select
+                  id={id}
+                  value={v}
+                  required={d.requerido}
+                  onChange={(e) => set(d.clave, e.target.value)}
+                >
                   <option value="">— Selecciona —</option>
-                  {d.opciones.map((o) => <option key={o} value={o}>{o}</option>)}
+                  {d.opciones.map((o) => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
+                  ))}
                 </select>
               ) : (
                 <input

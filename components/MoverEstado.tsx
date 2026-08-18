@@ -54,7 +54,11 @@ function SelectEstado({
       >
         {opciones.map((valor) => {
           const meta = ESTADOS_TICKET.find((s) => s.valor === valor);
-          return <option key={valor} value={valor}>{meta?.etiqueta ?? valor}</option>;
+          return (
+            <option key={valor} value={valor}>
+              {meta?.etiqueta ?? valor}
+            </option>
+          );
         })}
       </select>
       {pending && <span className="spinner tk-mover-spinner" aria-hidden />}

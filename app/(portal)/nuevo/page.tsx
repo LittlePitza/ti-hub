@@ -48,12 +48,17 @@ export default async function NuevoReporte({
 
       <AvisoServicios />
 
-
-      {error && <div className="login-error" style={{ marginBottom: 20 }}>{ERRORES[error] ?? ERRORES.guardar}</div>}
+      {error && (
+        <div className="login-error" style={{ marginBottom: 20 }}>
+          {ERRORES[error] ?? ERRORES.guardar}
+        </div>
+      )}
 
       <form action={crearTicketPortal}>
         <section className="paso">
-          <h2 className="paso-titulo"><span className="paso-num">1</span>¿Qué tipo de problema es?</h2>
+          <h2 className="paso-titulo">
+            <span className="paso-num">1</span>¿Qué tipo de problema es?
+          </h2>
           <div className="opciones">
             {CATEGORIAS_PORTAL.map((c) => (
               <label className="opcion" key={c.valor}>
@@ -72,13 +77,17 @@ export default async function NuevoReporte({
 
         {equipos.length > 0 && (
           <section className="paso">
-            <h2 className="paso-titulo"><span className="paso-num">2</span>¿Con cuál de tus equipos?</h2>
+            <h2 className="paso-titulo">
+              <span className="paso-num">2</span>¿Con cuál de tus equipos?
+            </h2>
             <div className="opciones">
               {equipos.map((e) => (
                 <label className="opcion" key={e.id}>
                   <input type="radio" name="equipo_id" value={e.id} />
                   <span className="opcion-cuerpo">
-                    <span className="opcion-icono"><IconoEquipo /></span>
+                    <span className="opcion-icono">
+                      <IconoEquipo />
+                    </span>
                     <span className="opcion-texto">
                       <span className="opcion-titulo">{e.nombre}</span>
                       <span className="opcion-detalle">
@@ -91,10 +100,14 @@ export default async function NuevoReporte({
               <label className="opcion">
                 <input type="radio" name="equipo_id" value="ninguno" defaultChecked />
                 <span className="opcion-cuerpo">
-                  <span className="opcion-icono"><IconoNinguno /></span>
+                  <span className="opcion-icono">
+                    <IconoNinguno />
+                  </span>
                   <span className="opcion-texto">
                     <span className="opcion-titulo">Con ninguno</span>
-                    <span className="opcion-detalle">No tiene que ver con un equipo de la lista</span>
+                    <span className="opcion-detalle">
+                      No tiene que ver con un equipo de la lista
+                    </span>
                   </span>
                 </span>
               </label>
@@ -103,7 +116,9 @@ export default async function NuevoReporte({
         )}
 
         <section className="paso">
-          <h2 className="paso-titulo"><span className="paso-num">{pasoFinal}</span>Cuéntanos qué pasa</h2>
+          <h2 className="paso-titulo">
+            <span className="paso-num">{pasoFinal}</span>Cuéntanos qué pasa
+          </h2>
           <div className="portal-campo">
             <label htmlFor="nr-titulo">Resumen</label>
             <input
@@ -146,37 +161,85 @@ export default async function NuevoReporte({
 // Un ícono por categoría: el empleado reconoce su problema de un vistazo, sin leer.
 const ICONO_CATEGORIA: Record<string, React.ReactNode> = {
   hardware: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <rect x="2" y="4" width="20" height="13" rx="2" />
       <path d="M8 21h8M12 17v4" />
     </svg>
   ),
   software: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <rect x="3" y="3" width="18" height="18" rx="2" />
       <path d="M3 9h18M8 6h.01M11 6h.01" />
     </svg>
   ),
   red: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <path d="M5 12.55a11 11 0 0 1 14 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0" />
       <path d="M12 20h.01" />
     </svg>
   ),
   accesos: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <circle cx="7.5" cy="15.5" r="4.5" />
       <path d="m10.7 12.3 8.3-8.3M16 7l3 3M14 9l2 2" />
     </svg>
   ),
   correo: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <rect x="2" y="4" width="20" height="16" rx="2" />
       <path d="m2 7 10 6 10-6" />
     </svg>
   ),
   otro: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <circle cx="12" cy="12" r="10" />
       <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01" />
     </svg>
@@ -185,7 +248,15 @@ const ICONO_CATEGORIA: Record<string, React.ReactNode> = {
 
 function IconoEquipo() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <rect x="3" y="5" width="18" height="12" rx="2" />
       <path d="M7 21h10M12 17v4" />
     </svg>
@@ -194,7 +265,15 @@ function IconoEquipo() {
 
 function IconoNinguno() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <circle cx="12" cy="12" r="9" />
       <path d="m5.6 5.6 12.8 12.8" />
     </svg>
@@ -203,7 +282,17 @@ function IconoNinguno() {
 
 function IconoVolver() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <path d="M19 12H5M11 18l-6-6 6-6" />
     </svg>
   );
@@ -211,7 +300,17 @@ function IconoVolver() {
 
 function IconoFlecha() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <path d="M5 12h14" />
       <path d="m13 6 6 6-6 6" />
     </svg>

@@ -25,13 +25,23 @@ export default async function FirmaEmpleado({
   const head = (
     <div className="pagina-head">
       <div>
-        <Link href="/ti/empleados" className="portal-volver" style={{ marginBottom: 10 }}>← Empleados</Link>
+        <Link href="/ti/empleados" className="portal-volver" style={{ marginBottom: 10 }}>
+          ← Empleados
+        </Link>
         <h1 className="pagina-titulo">Firma de correo</h1>
-        <p className="pagina-desc">Genera la firma en HTML (ligera y editable) lista para pegar en Outlook o Gmail</p>
+        <p className="pagina-desc">
+          Genera la firma en HTML (ligera y editable) lista para pegar en Outlook o Gmail
+        </p>
       </div>
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  if (!sb)
+    return (
+      <>
+        {head}
+        <SinConexion />
+      </>
+    );
 
   const { data: emp } = await sb
     .from("empleados")
@@ -53,7 +63,7 @@ export default async function FirmaEmpleado({
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const origen = `${host.startsWith("localhost") ? "http" : "https"}://${host}`;
-  const base = (config?.sitio_url?.replace(/\/+$/, "")) || origen;
+  const base = config?.sitio_url?.replace(/\/+$/, "") || origen;
   const logoUrl = `${base}/firma-pimsa.png`;
 
   const initial: DatosFirma = {
@@ -73,7 +83,10 @@ export default async function FirmaEmpleado({
 
       {ajustes ? (
         <div className="banner-exito" style={{ marginBottom: 20 }}>
-          <div><strong>Valores por defecto guardados</strong> Se aplicarán a las firmas que generes a partir de ahora.</div>
+          <div>
+            <strong>Valores por defecto guardados</strong> Se aplicarán a las firmas que generes a
+            partir de ahora.
+          </div>
         </div>
       ) : null}
 
@@ -84,24 +97,41 @@ export default async function FirmaEmpleado({
         <form className="formulario plano" action={guardarAjustesFirma}>
           <input type="hidden" name="id" value={id} />
           <p className="suave" style={{ fontSize: 13, marginBottom: 12 }}>
-            Estos datos prellenan la firma de <strong>todos</strong> los empleados. El nombre, puesto, correo y
-            extensión salen del registro de cada quien.
+            Estos datos prellenan la firma de <strong>todos</strong> los empleados. El nombre,
+            puesto, correo y extensión salen del registro de cada quien.
           </p>
           <div className="campos">
             <div className="campo">
               <label htmlFor="firma_web">Sitio web</label>
-              <input id="firma_web" name="firma_web" defaultValue={empresa.web} placeholder={EMPRESA_DEFAULT.web} />
+              <input
+                id="firma_web"
+                name="firma_web"
+                defaultValue={empresa.web}
+                placeholder={EMPRESA_DEFAULT.web}
+              />
             </div>
             <div className="campo">
               <label htmlFor="firma_direccion">Dirección</label>
-              <input id="firma_direccion" name="firma_direccion" defaultValue={empresa.direccion} placeholder={EMPRESA_DEFAULT.direccion} />
+              <input
+                id="firma_direccion"
+                name="firma_direccion"
+                defaultValue={empresa.direccion}
+                placeholder={EMPRESA_DEFAULT.direccion}
+              />
             </div>
             <div className="campo ancho">
               <label htmlFor="firma_eslogan">Eslogan</label>
-              <input id="firma_eslogan" name="firma_eslogan" defaultValue={empresa.eslogan} placeholder={EMPRESA_DEFAULT.eslogan} />
+              <input
+                id="firma_eslogan"
+                name="firma_eslogan"
+                defaultValue={empresa.eslogan}
+                placeholder={EMPRESA_DEFAULT.eslogan}
+              />
             </div>
           </div>
-          <BotonEnviar className="boton" ocupado="Guardando…">Guardar valores por defecto</BotonEnviar>
+          <BotonEnviar className="boton" ocupado="Guardando…">
+            Guardar valores por defecto
+          </BotonEnviar>
         </form>
       </details>
     </>

@@ -115,7 +115,12 @@ function FilaPersona({
                 <strong>{fila.nombre}</strong>
                 {fila.correo ? <span className="suave mono"> · {fila.correo}</span> : null}
               </span>
-              <button type="button" className="combo-chip-x" aria-label="Quitar persona elegida" onClick={limpiarEleccion}>
+              <button
+                type="button"
+                className="combo-chip-x"
+                aria-label="Quitar persona elegida"
+                onClick={limpiarEleccion}
+              >
                 ✕
               </button>
             </div>
@@ -161,7 +166,9 @@ function FilaPersona({
                       >
                         <span className="combo-opcion-nombre">{e.nombre}</span>
                         <span className="suave mono combo-opcion-correo">{e.correo}</span>
-                        {e.departamento && <span className="suave combo-opcion-depto">{e.departamento}</span>}
+                        {e.departamento && (
+                          <span className="suave combo-opcion-depto">{e.departamento}</span>
+                        )}
                       </li>
                     ))
                   )}
@@ -195,7 +202,9 @@ function FilaPersona({
       </div>
 
       <button type="button" className="boton-texto combo-cambiar" onClick={cambiarModo}>
-        {fila.fuente === "empleado" ? "La persona no está en la lista →" : "← Elegir un empleado registrado"}
+        {fila.fuente === "empleado"
+          ? "La persona no está en la lista →"
+          : "← Elegir un empleado registrado"}
       </button>
     </li>
   );
@@ -232,9 +241,7 @@ export default function PersonasResponsiva({
 
   // Lo que viaja en el form: solo personas con nombre (la server action vuelve a sanear).
   const payload = JSON.stringify(
-    filas
-      .filter((f) => f.nombre.trim())
-      .map(({ key: _key, ...p }) => p),
+    filas.filter((f) => f.nombre.trim()).map(({ key: _key, ...p }) => p),
   );
 
   return (
@@ -242,7 +249,8 @@ export default function PersonasResponsiva({
       <input type="hidden" name="personas" value={payload} />
       <div className="personas-resp-titulo">Personas adicionales</div>
       <p className="suave personas-resp-nota">
-        El resguardatario principal ya aparece arriba. Agrega co-resguardatarios, testigos o quien autoriza; cada uno tendrá su renglón de firma en el documento.
+        El resguardatario principal ya aparece arriba. Agrega co-resguardatarios, testigos o quien
+        autoriza; cada uno tendrá su renglón de firma en el documento.
       </p>
 
       {filas.length === 0 ? (

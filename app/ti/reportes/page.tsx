@@ -25,7 +25,13 @@ import {
 } from "@/lib/reportes";
 import SinConexion from "@/components/SinConexion";
 import BotonImprimir from "@/components/BotonImprimir";
-import { Dona, Barras, Columnas, type DatoGrafica, type PuntoColumnas } from "@/components/Graficas";
+import {
+  Dona,
+  Barras,
+  Columnas,
+  type DatoGrafica,
+  type PuntoColumnas,
+} from "@/components/Graficas";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Reportes" };
@@ -109,7 +115,9 @@ export default async function Reportes({
     <div className="pagina-head no-print">
       <div>
         <h1 className="pagina-titulo">Reportes</h1>
-        <p className="pagina-desc">Corte mensual para KPIs: tickets, SLA, sistemas y mantenimientos</p>
+        <p className="pagina-desc">
+          Corte mensual para KPIs: tickets, SLA, sistemas y mantenimientos
+        </p>
       </div>
       <div className="pagina-head-acciones">
         <nav className="selector-mes" aria-label="Elegir mes del reporte">
@@ -142,10 +150,18 @@ export default async function Reportes({
       </div>
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  if (!sb)
+    return (
+      <>
+        {head}
+        <SinConexion />
+      </>
+    );
 
   const [ticketsQ, incidentesQ, serviciosQ, mantosQ, configCorreo] = await Promise.all([
-    sb.from("tickets").select("estado, prioridad, categoria, created_at, primera_respuesta_at, resuelto_at"),
+    sb
+      .from("tickets")
+      .select("estado, prioridad, categoria, created_at, primera_respuesta_at, resuelto_at"),
     sb.from("incidentes").select("num, servicio_id, titulo, tipo, estado, inicio, fin"),
     sb.from("servicios").select("id, nombre, criticidad"),
     sb.from("mantenimientos").select("tipo, estado, fecha_programada"),
@@ -174,7 +190,10 @@ export default async function Reportes({
     a: p.creados,
     b: p.resueltos,
   }));
-  const tendenciaInc: PuntoColumnas[] = serieMensualIncidentes(incidentes, ultimosMeses(clave, 6)).map((p) => ({
+  const tendenciaInc: PuntoColumnas[] = serieMensualIncidentes(
+    incidentes,
+    ultimosMeses(clave, 6),
+  ).map((p) => ({
     label: etiquetaMesCorta(p.clave),
     a: p.creados,
     b: p.resueltos,
@@ -197,11 +216,13 @@ export default async function Reportes({
     valor: rep.porPrioridad[p],
     tono: PRIORIDAD_TEXTO[p].tono,
   }));
-  const porTipoInc: DatoGrafica[] = TIPOS_INCIDENTE.filter((t) => inc.porTipo[t.valor]).map((t) => ({
-    label: t.etiqueta,
-    valor: inc.porTipo[t.valor],
-    tono: t.tono,
-  }));
+  const porTipoInc: DatoGrafica[] = TIPOS_INCIDENTE.filter((t) => inc.porTipo[t.valor]).map(
+    (t) => ({
+      label: t.etiqueta,
+      valor: inc.porTipo[t.valor],
+      tono: t.tono,
+    }),
+  );
 
   // Delta de disponibilidad en puntos porcentuales, redondeado a centésimas.
   const deltaDisponibilidad =
@@ -255,15 +276,23 @@ export default async function Reportes({
           <div className="metrica">
             <div className="metrica-valor">{rep.creados}</div>
             <div className="metrica-label">Tickets creados</div>
-            <Delta variacion={variacionPct(rep.creados, repAnterior.creados)} buenoCuandoSube={false} />
+            <Delta
+              variacion={variacionPct(rep.creados, repAnterior.creados)}
+              buenoCuandoSube={false}
+            />
           </div>
           <div className="metrica">
             <div className="metrica-valor">{rep.resueltos}</div>
             <div className="metrica-label">Tickets resueltos</div>
-            <Delta variacion={variacionPct(rep.resueltos, repAnterior.resueltos)} buenoCuandoSube={true} />
+            <Delta
+              variacion={variacionPct(rep.resueltos, repAnterior.resueltos)}
+              buenoCuandoSube={true}
+            />
           </div>
           <div className="metrica">
-            <div className={`metrica-valor ${rep.backlogCierre > 0 && rep.backlogCierre > rep.creados ? "alerta" : ""}`}>
+            <div
+              className={`metrica-valor ${rep.backlogCierre > 0 && rep.backlogCierre > rep.creados ? "alerta" : ""}`}
+            >
               {rep.backlogCierre}
             </div>
             <div className="metrica-label">{enCurso ? "Abiertos hoy" : "Backlog al cierre"}</div>
@@ -273,22 +302,41 @@ export default async function Reportes({
             />
           </div>
           <div className="metrica">
-            <div className="metrica-valor">{rep.respuesta.pct === null ? "—" : `${rep.respuesta.pct}%`}</div>
-            <div className="metrica-label">Respuesta en SLA · {rep.respuesta.atendidos} atendidos</div>
-            <Delta variacion={deltaPp(rep.respuesta.pct, repAnterior.respuesta.pct)} buenoCuandoSube={true} sufijo=" pp" />
+            <div className="metrica-valor">
+              {rep.respuesta.pct === null ? "—" : `${rep.respuesta.pct}%`}
+            </div>
+            <div className="metrica-label">
+              Respuesta en SLA · {rep.respuesta.atendidos} atendidos
+            </div>
+            <Delta
+              variacion={deltaPp(rep.respuesta.pct, repAnterior.respuesta.pct)}
+              buenoCuandoSube={true}
+              sufijo=" pp"
+            />
           </div>
           <div className="metrica">
-            <div className="metrica-valor">{rep.resolucion.pct === null ? "—" : `${rep.resolucion.pct}%`}</div>
+            <div className="metrica-valor">
+              {rep.resolucion.pct === null ? "—" : `${rep.resolucion.pct}%`}
+            </div>
             <div className="metrica-label">Resolución en SLA · {rep.resueltos} resueltos</div>
-            <Delta variacion={deltaPp(rep.resolucion.pct, repAnterior.resolucion.pct)} buenoCuandoSube={true} sufijo=" pp" />
+            <Delta
+              variacion={deltaPp(rep.resolucion.pct, repAnterior.resolucion.pct)}
+              buenoCuandoSube={true}
+              sufijo=" pp"
+            />
           </div>
           <div className="metrica">
-            <div className="metrica-valor"><Duracion ms={rep.resolucion.promedioMs} /></div>
+            <div className="metrica-valor">
+              <Duracion ms={rep.resolucion.promedioMs} />
+            </div>
             <div className="metrica-label">Resolución promedio</div>
             <Delta
               variacion={
                 rep.resolucion.promedioMs !== null && repAnterior.resolucion.promedioMs !== null
-                  ? variacionPct(Math.round(rep.resolucion.promedioMs), Math.round(repAnterior.resolucion.promedioMs))
+                  ? variacionPct(
+                      Math.round(rep.resolucion.promedioMs),
+                      Math.round(repAnterior.resolucion.promedioMs),
+                    )
                   : null
               }
               buenoCuandoSube={false}
@@ -328,15 +376,23 @@ export default async function Reportes({
           <div className="metrica">
             <div className="metrica-valor">{inc.iniciados}</div>
             <div className="metrica-label">Incidentes iniciados</div>
-            <Delta variacion={variacionPct(inc.iniciados, incAnterior.iniciados)} buenoCuandoSube={false} />
+            <Delta
+              variacion={variacionPct(inc.iniciados, incAnterior.iniciados)}
+              buenoCuandoSube={false}
+            />
           </div>
           <div className="metrica">
             <div className="metrica-valor">{inc.resueltos}</div>
             <div className="metrica-label">Incidentes resueltos</div>
-            <Delta variacion={variacionPct(inc.resueltos, incAnterior.resueltos)} buenoCuandoSube={true} />
+            <Delta
+              variacion={variacionPct(inc.resueltos, incAnterior.resueltos)}
+              buenoCuandoSube={true}
+            />
           </div>
           <div className="metrica">
-            <div className={`metrica-valor ${inc.abiertosCierre > 0 ? "alerta" : ""}`}>{inc.abiertosCierre}</div>
+            <div className={`metrica-valor ${inc.abiertosCierre > 0 ? "alerta" : ""}`}>
+              {inc.abiertosCierre}
+            </div>
             <div className="metrica-label">{enCurso ? "Abiertos hoy" : "Abiertos al cierre"}</div>
           </div>
           <div className="metrica">
@@ -354,7 +410,9 @@ export default async function Reportes({
             />
           </div>
           <div className="metrica">
-            <div className="metrica-valor"><Duracion ms={inc.mttrMs} /></div>
+            <div className="metrica-valor">
+              <Duracion ms={inc.mttrMs} />
+            </div>
             <div className="metrica-label">Recuperación promedio (MTTR)</div>
             <Delta
               variacion={
@@ -367,9 +425,13 @@ export default async function Reportes({
           </div>
           <div className="metrica">
             <div className="metrica-valor">
-              {inc.disponibilidadPromedio === null ? "—" : `${disponibilidadTexto(inc.disponibilidadPromedio)}%`}
+              {inc.disponibilidadPromedio === null
+                ? "—"
+                : `${disponibilidadTexto(inc.disponibilidadPromedio)}%`}
             </div>
-            <div className="metrica-label">Disponibilidad promedio · {servicios.length} servicios</div>
+            <div className="metrica-label">
+              Disponibilidad promedio · {servicios.length} servicios
+            </div>
             <Delta variacion={deltaDisponibilidad} buenoCuandoSube={true} sufijo=" pp" />
           </div>
         </div>
@@ -377,7 +439,13 @@ export default async function Reportes({
         <div className="tarjetas">
           <div className="tarjeta">
             <h3 className="tarjeta-titulo">Tendencia de incidentes · últimos 6 meses</h3>
-            <Columnas datos={tendenciaInc} serieA="Iniciados" serieB="Resueltos" tonoA="aviso" tonoB="ok" />
+            <Columnas
+              datos={tendenciaInc}
+              serieA="Iniciados"
+              serieB="Resueltos"
+              tonoA="aviso"
+              tonoB="ok"
+            />
           </div>
           <div className="tarjeta">
             <h3 className="tarjeta-titulo">Incidentes del mes por tipo</h3>
@@ -393,7 +461,9 @@ export default async function Reportes({
         ) : (
           <>
             <div className="tarjeta" style={{ padding: 0, marginBottom: 16 }}>
-              <h3 className="tarjeta-titulo" style={{ padding: "16px 16px 0" }}>Afectación por servicio</h3>
+              <h3 className="tarjeta-titulo" style={{ padding: "16px 16px 0" }}>
+                Afectación por servicio
+              </h3>
               <table className="tabla">
                 <thead>
                   <tr>
@@ -424,7 +494,9 @@ export default async function Reportes({
               </table>
             </div>
             <div className="tarjeta" style={{ padding: 0 }}>
-              <h3 className="tarjeta-titulo" style={{ padding: "16px 16px 0" }}>Incidentes del mes</h3>
+              <h3 className="tarjeta-titulo" style={{ padding: "16px 16px 0" }}>
+                Incidentes del mes
+              </h3>
               <table className="tabla">
                 <thead>
                   <tr>
@@ -444,9 +516,15 @@ export default async function Reportes({
                       <tr key={i.num}>
                         <td className="mono">{folioIncidente(i.num)}</td>
                         <td className="suave">{nombreServicio.get(i.servicio_id) ?? "—"}</td>
-                        <td><div className="celda-principal">{i.titulo}</div></td>
-                        <td><span className={`insignia ${tipo.tono}`}>{tipo.etiqueta}</span></td>
-                        <td className="suave mono" style={{ whiteSpace: "nowrap" }}>{fechaHora(i.inicio)}</td>
+                        <td>
+                          <div className="celda-principal">{i.titulo}</div>
+                        </td>
+                        <td>
+                          <span className={`insignia ${tipo.tono}`}>{tipo.etiqueta}</span>
+                        </td>
+                        <td className="suave mono" style={{ whiteSpace: "nowrap" }}>
+                          {fechaHora(i.inicio)}
+                        </td>
                         <td className="mono">{duracion(i.msDuracion)}</td>
                         <td>
                           {i.abierto ? (
@@ -496,7 +574,9 @@ export default async function Reportes({
                   const anterior = disponibilidadAnterior.get(s.servicioId);
                   return (
                     <tr key={s.servicioId}>
-                      <td><div className="celda-principal">{s.nombre}</div></td>
+                      <td>
+                        <div className="celda-principal">{s.nombre}</div>
+                      </td>
                       <td>{etiquetaCriticidad(s.criticidad)}</td>
                       <td className="mono">{duracion(s.msOperativo)}</td>
                       <td className="mono">{s.msCaida > 0 ? duracion(s.msCaida) : "—"}</td>
@@ -544,7 +624,10 @@ export default async function Reportes({
           <div className="metrica">
             <div className="metrica-valor">{manto.completados}</div>
             <div className="metrica-label">Completados</div>
-            <Delta variacion={variacionPct(manto.completados, mantoAnterior.completados)} buenoCuandoSube={true} />
+            <Delta
+              variacion={variacionPct(manto.completados, mantoAnterior.completados)}
+              buenoCuandoSube={true}
+            />
           </div>
           <div className="metrica">
             <div className={`metrica-valor ${manto.pendientes > 0 && !enCurso ? "alerta" : ""}`}>

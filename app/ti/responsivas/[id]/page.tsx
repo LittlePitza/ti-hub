@@ -16,22 +16,25 @@ import {
 import SinConexion from "@/components/SinConexion";
 import BotonEnviar from "@/components/BotonEnviar";
 import PersonasResponsiva from "@/components/PersonasResponsiva";
-import { editarResponsiva, subirFirmada, cambiarEstadoResponsiva, actualizarDesdeInventario } from "../actions";
+import {
+  editarResponsiva,
+  subirFirmada,
+  cambiarEstadoResponsiva,
+  actualizarDesdeInventario,
+} from "../actions";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Responsiva" };
 
-export default async function DetalleResponsiva({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function DetalleResponsiva({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const sb = await getSupabase();
   if (!sb) {
     return (
       <>
-        <div className="pagina-head"><h1 className="pagina-titulo">Responsiva</h1></div>
+        <div className="pagina-head">
+          <h1 className="pagina-titulo">Responsiva</h1>
+        </div>
         <SinConexion />
       </>
     );
@@ -49,7 +52,11 @@ export default async function DetalleResponsiva({
   const empleados = empleadosData ?? [];
   const personas = (r.personas ?? []) as PersonaResp[];
 
-  const overrideQ = await sb.from("plantillas_responsiva").select("*").eq("clave", r.plantilla).maybeSingle();
+  const overrideQ = await sb
+    .from("plantillas_responsiva")
+    .select("*")
+    .eq("clave", r.plantilla)
+    .maybeSingle();
   const pl = fusionarPlantilla(r.plantilla, overrideQ.data);
   const datos = (r.datos ?? {}) as DatosResponsiva;
   const folio = folioResponsiva(pl.prefijoFolio, r.num);
@@ -58,7 +65,9 @@ export default async function DetalleResponsiva({
 
   let urlFirmada: string | null = null;
   if (r.archivo_url) {
-    const { data: signed } = await sb.storage.from("responsivas").createSignedUrl(r.archivo_url, 3600);
+    const { data: signed } = await sb.storage
+      .from("responsivas")
+      .createSignedUrl(r.archivo_url, 3600);
     urlFirmada = signed?.signedUrl ?? null;
   }
 
@@ -69,13 +78,19 @@ export default async function DetalleResponsiva({
     <>
       <div className="pagina-head">
         <div>
-          <Link href="/ti/responsivas" className="portal-volver" style={{ marginBottom: 10 }}>← Responsivas</Link>
+          <Link href="/ti/responsivas" className="portal-volver" style={{ marginBottom: 10 }}>
+            ← Responsivas
+          </Link>
           <h1 className="pagina-titulo mono">{folio}</h1>
-          <p className="pagina-desc">{pl.nombre} · {pl.codigo}</p>
+          <p className="pagina-desc">
+            {pl.nombre} · {pl.codigo}
+          </p>
         </div>
         <div className="fila-acciones">
           <span className={`insignia ${ins.tono}`}>{ins.texto}</span>
-          <Link href={`/ti/responsivas/${r.id}/imprimir`} className="boton">Imprimir</Link>
+          <Link href={`/ti/responsivas/${r.id}/imprimir`} className="boton">
+            Imprimir
+          </Link>
         </div>
       </div>
 
@@ -97,14 +112,17 @@ export default async function DetalleResponsiva({
             <label>Equipo</label>
             <div className="celda-principal">{r.equipo_nombre ?? "—"}</div>
             <span className="suave" style={{ fontSize: 12.5 }}>
-              {[datos.equipo?.marca, datos.equipo?.modelo].filter(Boolean).join(" ") || datos.equipo?.tipo}
+              {[datos.equipo?.marca, datos.equipo?.modelo].filter(Boolean).join(" ") ||
+                datos.equipo?.tipo}
               {datos.equipo?.num_serie ? ` · ${datos.equipo.num_serie}` : ""}
             </span>
           </div>
           <div className="campo">
             <label>Resguardante</label>
             <div className="celda-principal">{r.empleado_nombre}</div>
-            <span className="suave mono" style={{ fontSize: 12.5 }}>{r.empleado_correo}</span>
+            <span className="suave mono" style={{ fontSize: 12.5 }}>
+              {r.empleado_correo}
+            </span>
           </div>
           <div className="campo">
             <label>Generada</label>
@@ -112,13 +130,23 @@ export default async function DetalleResponsiva({
           </div>
         </div>
         {r.equipo_id ? (
-          <form action={actualizarDesdeInventario} className="fila-acciones" style={{ marginTop: 14 }}>
+          <form
+            action={actualizarDesdeInventario}
+            className="fila-acciones"
+            style={{ marginTop: 14 }}
+          >
             <input type="hidden" name="id" value={r.id} />
-            <BotonEnviar className="boton secundario" ocupado="Actualizando…">Actualizar desde inventario</BotonEnviar>
-            <span className="suave" style={{ fontSize: 12.5 }}>Re-lee los datos actuales del equipo en el inventario.</span>
+            <BotonEnviar className="boton secundario" ocupado="Actualizando…">
+              Actualizar desde inventario
+            </BotonEnviar>
+            <span className="suave" style={{ fontSize: 12.5 }}>
+              Re-lee los datos actuales del equipo en el inventario.
+            </span>
           </form>
         ) : (
-          <p className="suave" style={{ fontSize: 12.5, marginTop: 14 }}>El equipo ya no existe en el inventario; no se puede actualizar.</p>
+          <p className="suave" style={{ fontSize: 12.5, marginTop: 14 }}>
+            El equipo ya no existe en el inventario; no se puede actualizar.
+          </p>
         )}
       </div>
 
@@ -133,7 +161,12 @@ export default async function DetalleResponsiva({
             <div className="chequeos">
               {pl.accesorios.map((a) => (
                 <label key={a} className="chequeo">
-                  <input type="checkbox" name="accesorios" value={a} defaultChecked={datos.accesorios?.includes(a)} />
+                  <input
+                    type="checkbox"
+                    name="accesorios"
+                    value={a}
+                    defaultChecked={datos.accesorios?.includes(a)}
+                  />
                   <span>{a}</span>
                 </label>
               ))}
@@ -143,11 +176,20 @@ export default async function DetalleResponsiva({
 
         {tieneSeguridad && (
           <fieldset className="grupo-chequeos">
-            <legend>{r.plantilla === "devolucion" ? "Verificación técnica de baja" : "Configuración de seguridad"}</legend>
+            <legend>
+              {r.plantilla === "devolucion"
+                ? "Verificación técnica de baja"
+                : "Configuración de seguridad"}
+            </legend>
             <div className="chequeos">
               {pl.seguridad.map((s) => (
                 <label key={s} className="chequeo">
-                  <input type="checkbox" name="seguridad" value={s} defaultChecked={datos.seguridad?.includes(s)} />
+                  <input
+                    type="checkbox"
+                    name="seguridad"
+                    value={s}
+                    defaultChecked={datos.seguridad?.includes(s)}
+                  />
                   <span>{s}</span>
                 </label>
               ))}
@@ -157,26 +199,53 @@ export default async function DetalleResponsiva({
 
         <div className="campos">
           <div className="campo">
-            <label htmlFor="fecha_entrega">{r.plantilla === "devolucion" ? "Fecha de devolución" : "Fecha de entrega"}</label>
-            <input id="fecha_entrega" name="fecha_entrega" type="date" defaultValue={r.fecha_entrega ?? r.fecha_generada} />
+            <label htmlFor="fecha_entrega">
+              {r.plantilla === "devolucion" ? "Fecha de devolución" : "Fecha de entrega"}
+            </label>
+            <input
+              id="fecha_entrega"
+              name="fecha_entrega"
+              type="date"
+              defaultValue={r.fecha_entrega ?? r.fecha_generada}
+            />
           </div>
           <div className="campo">
             <label htmlFor="estado_fisico">Estado físico</label>
-            <select id="estado_fisico" name="estado_fisico" defaultValue={datos.estado_fisico ?? ESTADOS_FISICOS[1]}>
-              {ESTADOS_FISICOS.map((e) => <option key={e} value={e}>{e}</option>)}
+            <select
+              id="estado_fisico"
+              name="estado_fisico"
+              defaultValue={datos.estado_fisico ?? ESTADOS_FISICOS[1]}
+            >
+              {ESTADOS_FISICOS.map((e) => (
+                <option key={e} value={e}>
+                  {e}
+                </option>
+              ))}
             </select>
           </div>
           <div className="campo ancho">
             <label htmlFor="observaciones">Observaciones</label>
-            <textarea id="observaciones" name="observaciones" defaultValue={datos.observaciones ?? ""} placeholder="Detalles físicos, condiciones especiales…" />
+            <textarea
+              id="observaciones"
+              name="observaciones"
+              defaultValue={datos.observaciones ?? ""}
+              placeholder="Detalles físicos, condiciones especiales…"
+            />
           </div>
           <div className="campo ancho">
             <label htmlFor="notas">Notas internas (no salen en el documento)</label>
-            <textarea id="notas" name="notas" defaultValue={r.notas ?? ""} placeholder="Notas de TI sobre esta responsiva" />
+            <textarea
+              id="notas"
+              name="notas"
+              defaultValue={r.notas ?? ""}
+              placeholder="Notas de TI sobre esta responsiva"
+            />
           </div>
         </div>
         <PersonasResponsiva personas={personas} empleados={empleados} />
-        <BotonEnviar className="boton" ocupado="Guardando…">Guardar cambios</BotonEnviar>
+        <BotonEnviar className="boton" ocupado="Guardando…">
+          Guardar cambios
+        </BotonEnviar>
       </form>
 
       {/* Ciclo de firma y archivo */}
@@ -184,16 +253,27 @@ export default async function DetalleResponsiva({
         <h2>Firma y archivo</h2>
         <input type="hidden" name="id" value={r.id} />
         <p className="suave" style={{ fontSize: 13.5, marginBottom: 14 }}>
-          Imprime la responsiva, recábala firmada y sube aquí el escaneo (PDF o foto). Al subirlo, el resguardo pasa a <strong>firmada</strong>.
+          Imprime la responsiva, recábala firmada y sube aquí el escaneo (PDF o foto). Al subirlo,
+          el resguardo pasa a <strong>firmada</strong>.
         </p>
         {r.archivo_url && (
           <p style={{ marginBottom: 14, fontSize: 13.5 }}>
-            Archivo actual: {urlFirmada ? (
-              <a href={urlFirmada} target="_blank" rel="noopener noreferrer" style={{ color: "var(--petroleo)", textDecoration: "underline" }}>
+            Archivo actual:{" "}
+            {urlFirmada ? (
+              <a
+                href={urlFirmada}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "var(--petroleo)", textDecoration: "underline" }}
+              >
                 {r.archivo_nombre ?? "descargar firmada"}
               </a>
-            ) : (r.archivo_nombre ?? "—")}
-            {r.fecha_firmada ? <span className="suave"> · firmada {fechaCorta(r.fecha_firmada)}</span> : null}
+            ) : (
+              (r.archivo_nombre ?? "—")
+            )}
+            {r.fecha_firmada ? (
+              <span className="suave"> · firmada {fechaCorta(r.fecha_firmada)}</span>
+            ) : null}
           </p>
         )}
         <div className="campos">
@@ -202,7 +282,9 @@ export default async function DetalleResponsiva({
             <input id="archivo" name="archivo" type="file" accept="application/pdf,image/*" />
           </div>
         </div>
-        <BotonEnviar className="boton" ocupado="Subiendo…">Subir firmada</BotonEnviar>
+        <BotonEnviar className="boton" ocupado="Subiendo…">
+          Subir firmada
+        </BotonEnviar>
       </form>
 
       {/* Cambiar estado manualmente */}
@@ -211,9 +293,15 @@ export default async function DetalleResponsiva({
         <input type="hidden" name="id" value={r.id} />
         <div className="fila-acciones">
           <select name="estado" defaultValue={r.estado}>
-            {ESTADOS_RESP_LISTA.map((e) => <option key={e} value={e}>{ESTADOS_RESP[e].texto}</option>)}
+            {ESTADOS_RESP_LISTA.map((e) => (
+              <option key={e} value={e}>
+                {ESTADOS_RESP[e].texto}
+              </option>
+            ))}
           </select>
-          <BotonEnviar className="boton secundario" ocupado="…">Actualizar estado</BotonEnviar>
+          <BotonEnviar className="boton secundario" ocupado="…">
+            Actualizar estado
+          </BotonEnviar>
         </div>
       </form>
     </>

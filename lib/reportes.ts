@@ -249,7 +249,9 @@ export function reporteIncidentes(
   // MTTR sobre la cohorte de cerrados en el mes: duración completa del incidente
   // (aunque haya arrancado en un mes anterior), igual que la resolución de tickets.
   const mttrMs = promedio(
-    cerradosEnMes.map((i) => Math.max(0, new Date(i.fin!).getTime() - new Date(i.inicio).getTime())),
+    cerradosEnMes.map((i) =>
+      Math.max(0, new Date(i.fin!).getTime() - new Date(i.inicio).getTime()),
+    ),
   );
 
   // Distribución por tipo de todo incidente que pisó el mes (no solo los iniciados).

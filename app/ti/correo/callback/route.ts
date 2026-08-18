@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
 
   const destino = (qs: string) => NextResponse.redirect(new URL(`/ti/correo?${qs}`, url.origin));
 
-  if (errorMs) return destino(`prueba=oautherror&detalle=${encodeURIComponent(errorMs.slice(0, 400))}`);
+  if (errorMs)
+    return destino(`prueba=oautherror&detalle=${encodeURIComponent(errorMs.slice(0, 400))}`);
   if (!code) return destino("prueba=oautherror");
 
   const jar = await cookies();
@@ -30,7 +31,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
-    const proto = request.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+    const proto =
+      request.headers.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
     const redirectUri = `${proto}://${host}/ti/correo/callback`;
     const { refresh_token, cuenta } = await intercambiarCodigo(c, code, redirectUri);
     await sb

@@ -11,7 +11,17 @@ import { useRef, useState, type ReactNode } from "react";
 
 // Iconos de maximizar/minimizar (flechas diagonales), hoisteados fuera del render.
 const ICONO_EXPANDIR = (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
     <polyline points="15 3 21 3 21 9" />
     <polyline points="9 21 3 21 3 15" />
     <line x1="21" y1="3" x2="14" y2="10" />
@@ -19,7 +29,17 @@ const ICONO_EXPANDIR = (
   </svg>
 );
 const ICONO_CONTRAER = (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
     <polyline points="4 14 10 14 10 20" />
     <polyline points="20 10 14 10 14 4" />
     <line x1="14" y1="10" x2="21" y2="3" />
@@ -85,7 +105,11 @@ export default function ModalGestionar({
 
           <div className="modal-gestionar-body">
             <div className="modal-resumen">{resumen}</div>
-            <button type="button" className="boton modal-expandir" onClick={() => setExpandida(true)}>
+            <button
+              type="button"
+              className="boton modal-expandir"
+              onClick={() => setExpandida(true)}
+            >
               {ICONO_EXPANDIR} Expandir para editar
             </button>
             <div className="modal-editor">{children}</div>

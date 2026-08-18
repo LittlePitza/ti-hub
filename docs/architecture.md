@@ -5,14 +5,14 @@ app and one database serving two audiences.
 
 ## Two faces, one app
 
-| | Employee portal | IT panel |
-|---|---|---|
-| Routes | `/`, `/nuevo`, `/reporte/[id]` | `/ti/*` (+ `/login`) |
-| Source | `app/(portal)/` | `app/ti/` |
-| Audience | any PIMSA worker | the systems team |
-| Auth | none — an email in a cookie | Supabase Auth (email + password) |
-| Supabase client | `getPortalSupabase()` (service role) | `getSupabase()` / `getAuthenticatedSupabase()` |
-| Entry point | it *is* the home page | the small "TI" in the portal footer, pointing at `/login` |
+|                 | Employee portal                      | IT panel                                                  |
+| --------------- | ------------------------------------ | --------------------------------------------------------- |
+| Routes          | `/`, `/nuevo`, `/reporte/[id]`       | `/ti/*` (+ `/login`)                                      |
+| Source          | `app/(portal)/`                      | `app/ti/`                                                 |
+| Audience        | any PIMSA worker                     | the systems team                                          |
+| Auth            | none — an email in a cookie          | Supabase Auth (email + password)                          |
+| Supabase client | `getPortalSupabase()` (service role) | `getSupabase()` / `getAuthenticatedSupabase()`            |
+| Entry point     | it _is_ the home page                | the small "TI" in the portal footer, pointing at `/login` |
 
 The portal is deliberately frictionless: a worker never sees IT jargon, a password, or a metric. The
 panel is the operational tool for the department.
@@ -83,7 +83,7 @@ The file is **idempotent**: `create table if not exists` plus an `ALTER` section
 databases. The "DATOS DE EJEMPLO" section is for fresh installs only — never re-run it over real
 data.
 
-Apply a schema change by writing the DDL into this file *and* applying it to the remote project via
+Apply a schema change by writing the DDL into this file _and_ applying it to the remote project via
 the Supabase MCP (`apply_migration`). Then regenerate `types/database.ts`.
 
 Several states are **derived rather than stored** — a deliberate pattern:
@@ -103,7 +103,7 @@ Reuse these before writing anything new.
 **`lib/domain/inventory.ts`** — inventory is a **single `equipos` table** partitioned by `categoria`
 (`computo` | `celular` | `linea` | `software`). Generic columns change meaning per category — `marca`
 is the phone carrier on a line, for instance — and the per-category labels and visible fields are
-declared here. A line or phone with no `asignado_email` is *free*.
+declared here. A line or phone with no `asignado_email` is _free_.
 
 **`lib/domain/tickets.ts`** — statuses (a help-desk cycle: `abierto`, `en_proceso`, `en_espera`,
 `resuelto`, `cerrado`, `reabierto`), priorities, categories and **SLA per priority** (response and
@@ -125,8 +125,8 @@ exception is the new-ticket notice, which is automatic. `config_correo` is also 
 configuration row for the panel as a whole, which is why `resolveSla` lives alongside it.
 
 **`lib/domain/reports.ts`** — the monthly KPI cut for `/ti/reportes`. Standard help-desk cohorts:
-*created* (`created_at` in the month), *responded* (`primera_respuesta_at`, giving the response SLA),
-*resolved* (`resuelto_at`, giving the resolution SLA) and *backlog at close*. Plus incident overlap
+_created_ (`created_at` in the month), _responded_ (`primera_respuesta_at`, giving the response SLA),
+_resolved_ (`resuelto_at`, giving the resolution SLA) and _backlog at close_. Plus incident overlap
 with the month, per-service availability, maintenance completion and variation against the previous
 month. Entirely derived; for the current month the cut is "now".
 

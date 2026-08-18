@@ -37,7 +37,10 @@ const num = (v: number | string | null | undefined) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-export function resumenCaja(movimientos: MovimientoCaja[], limite: number | string | null): ResumenCaja {
+export function resumenCaja(
+  movimientos: MovimientoCaja[],
+  limite: number | string | null,
+): ResumenCaja {
   const lim = limite === null || limite === undefined ? null : num(limite);
   let gastado = 0;
   let reembolsado = 0;

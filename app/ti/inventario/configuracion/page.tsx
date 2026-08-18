@@ -20,25 +20,46 @@ function CamposForm({ campo }: { campo: CampoInv | null }) {
     <div className="campos">
       <div className="campo">
         <label htmlFor={`${p}-etiqueta`}>Etiqueta</label>
-        <input id={`${p}-etiqueta`} name="etiqueta" defaultValue={campo?.etiqueta ?? ""} placeholder="N° de serie" required />
+        <input
+          id={`${p}-etiqueta`}
+          name="etiqueta"
+          defaultValue={campo?.etiqueta ?? ""}
+          placeholder="N° de serie"
+          required
+        />
       </div>
       <div className="campo">
         <label htmlFor={`${p}-tipo`}>Tipo de dato</label>
         <select id={`${p}-tipo`} name="tipo" defaultValue={campo?.tipo ?? "texto"}>
-          {TIPOS_CAMPO.map((t) => <option key={t.valor} value={t.valor}>{t.label}</option>)}
+          {TIPOS_CAMPO.map((t) => (
+            <option key={t.valor} value={t.valor}>
+              {t.label}
+            </option>
+          ))}
         </select>
       </div>
       <div className="campo">
         <label htmlFor={`${p}-placeholder`}>Texto de ayuda</label>
-        <input id={`${p}-placeholder`} name="placeholder" defaultValue={campo?.placeholder ?? ""} placeholder="Opcional" />
+        <input
+          id={`${p}-placeholder`}
+          name="placeholder"
+          defaultValue={campo?.placeholder ?? ""}
+          placeholder="Opcional"
+        />
       </div>
       <div className="campo">
         <label htmlFor={`${p}-orden`}>Orden</label>
         <input id={`${p}-orden`} name="orden" type="number" defaultValue={campo?.orden ?? 0} />
       </div>
       <div className="campo ancho">
-        <label htmlFor={`${p}-opciones`}>Opciones · una por línea (solo para tipo «Lista de opciones»)</label>
-        <textarea id={`${p}-opciones`} name="opciones" defaultValue={(campo?.opciones ?? []).join("\n")} />
+        <label htmlFor={`${p}-opciones`}>
+          Opciones · una por línea (solo para tipo «Lista de opciones»)
+        </label>
+        <textarea
+          id={`${p}-opciones`}
+          name="opciones"
+          defaultValue={(campo?.opciones ?? []).join("\n")}
+        />
       </div>
       <label className="campo campo-check">
         <input type="checkbox" name="requerido" defaultChecked={campo?.requerido ?? false} />
@@ -59,13 +80,23 @@ export default async function ConfigInventario() {
   const head = (
     <div className="pagina-head">
       <div>
-        <Link href="/ti/inventario" className="portal-volver" style={{ marginBottom: 10 }}>← Inventario</Link>
+        <Link href="/ti/inventario" className="portal-volver" style={{ marginBottom: 10 }}>
+          ← Inventario
+        </Link>
         <h1 className="pagina-titulo">Campos del inventario</h1>
-        <p className="pagina-desc">Agrega campos personalizados por categoría. Aparecen al registrar y editar equipos.</p>
+        <p className="pagina-desc">
+          Agrega campos personalizados por categoría. Aparecen al registrar y editar equipos.
+        </p>
       </div>
     </div>
   );
-  if (!sb) return <>{head}<SinConexion /></>;
+  if (!sb)
+    return (
+      <>
+        {head}
+        <SinConexion />
+      </>
+    );
 
   const { data } = await sb.from("campos_inventario").select("*").order("categoria").order("orden");
   const campos = (data ?? []).map(campoDeFila);
@@ -97,7 +128,9 @@ export default async function ConfigInventario() {
                     <details key={c.id} className="plantilla-fila">
                       <summary>
                         <span className="plantilla-nombre">{c.etiqueta}</span>
-                        <span className="suave mono" style={{ fontSize: 12.5 }}>{ETIQUETA_TIPO[c.tipo] ?? c.tipo} · {c.clave}</span>
+                        <span className="suave mono" style={{ fontSize: 12.5 }}>
+                          {ETIQUETA_TIPO[c.tipo] ?? c.tipo} · {c.clave}
+                        </span>
                         {c.requerido ? <span className="insignia info">obligatorio</span> : null}
                         {!c.activo ? <span className="insignia neutro">oculto</span> : null}
                       </summary>
@@ -106,13 +139,19 @@ export default async function ConfigInventario() {
                         <input type="hidden" name="id" value={c.id} />
                         <CamposForm campo={c} />
                         <div className="fila-acciones">
-                          <BotonEnviar className="boton" ocupado="Guardando…">Guardar campo</BotonEnviar>
+                          <BotonEnviar className="boton" ocupado="Guardando…">
+                            Guardar campo
+                          </BotonEnviar>
                         </div>
                       </form>
 
                       <form action={eliminarCampo} style={{ marginTop: 8 }}>
                         <input type="hidden" name="id" value={c.id} />
-                        <BotonEnviar className="boton secundario mini" style={{ color: "var(--critico)" }} ocupado="…">
+                        <BotonEnviar
+                          className="boton secundario mini"
+                          style={{ color: "var(--critico)" }}
+                          ocupado="…"
+                        >
                           Eliminar campo
                         </BotonEnviar>
                       </form>
@@ -126,7 +165,9 @@ export default async function ConfigInventario() {
                 <form className="formulario plano" action={crearCampo}>
                   <input type="hidden" name="categoria" value={cat.valor} />
                   <CamposForm campo={null} />
-                  <BotonEnviar className="boton" ocupado="Agregando…">Agregar campo</BotonEnviar>
+                  <BotonEnviar className="boton" ocupado="Agregando…">
+                    Agregar campo
+                  </BotonEnviar>
                 </form>
               </details>
             </section>

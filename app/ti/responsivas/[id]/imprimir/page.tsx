@@ -5,7 +5,12 @@ import { Poppins } from "next/font/google";
 import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folioResponsiva } from "@/lib/format";
 import { categoriaInv } from "@/lib/inventario";
-import { fusionarPlantilla, CAMPOS_EQUIPO_TODOS, type DatosResponsiva, type PersonaResp } from "@/lib/responsivas";
+import {
+  fusionarPlantilla,
+  CAMPOS_EQUIPO_TODOS,
+  type DatosResponsiva,
+  type PersonaResp,
+} from "@/lib/responsivas";
 import BotonImprimir from "@/components/BotonImprimir";
 
 export const dynamic = "force-dynamic";
@@ -31,7 +36,12 @@ function FilasDatos({ pares }: { pares: [string, string][] }) {
                 <td>{v || " "}</td>
               </Fragment>
             ))}
-            {fila.length === 1 && <><th /><td /></>}
+            {fila.length === 1 && (
+              <>
+                <th />
+                <td />
+              </>
+            )}
           </tr>
         ))}
       </tbody>
@@ -52,11 +62,7 @@ function Casillas({ items, marcados }: { items: string[]; marcados: string[] }) 
   );
 }
 
-export default async function ImprimirResponsiva({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function ImprimirResponsiva({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const sb = await getSupabase();
   if (!sb) notFound();
@@ -64,7 +70,11 @@ export default async function ImprimirResponsiva({
   const { data: r } = await sb.from("responsivas").select("*").eq("id", id).maybeSingle();
   if (!r) notFound();
 
-  const overrideQ = await sb.from("plantillas_responsiva").select("*").eq("clave", r.plantilla).maybeSingle();
+  const overrideQ = await sb
+    .from("plantillas_responsiva")
+    .select("*")
+    .eq("clave", r.plantilla)
+    .maybeSingle();
   const pl = fusionarPlantilla(r.plantilla, overrideQ.data);
   const datos = (r.datos ?? {}) as DatosResponsiva;
   const personas = (r.personas ?? []) as PersonaResp[];
@@ -80,7 +90,10 @@ export default async function ImprimirResponsiva({
     ["Puesto", r.empleado_puesto ?? ""],
     ["Área / Departamento", r.empleado_departamento ?? ""],
     ["Correo institucional", r.empleado_correo ?? ""],
-    [esDevolucion ? "Fecha de devolución" : "Fecha de entrega", fechaCorta(r.fecha_entrega ?? r.fecha_generada)],
+    [
+      esDevolucion ? "Fecha de devolución" : "Fecha de entrega",
+      fechaCorta(r.fecha_entrega ?? r.fecha_generada),
+    ],
   ];
 
   // Identificación del activo. El nombre siempre sale; el resto de campos sólo
@@ -91,16 +104,23 @@ export default async function ImprimirResponsiva({
   ];
   if (c.marca && visibles.has("marca")) paresActivo.push([c.marca.label, eq?.marca ?? ""]);
   if (c.modelo && visibles.has("modelo")) paresActivo.push([c.modelo.label, eq?.modelo ?? ""]);
-  if (c.num_serie && visibles.has("num_serie")) paresActivo.push([c.num_serie.label, eq?.num_serie ?? ""]);
-  if (c.telefono && visibles.has("telefono")) paresActivo.push([c.telefono.label, eq?.telefono ?? ""]);
-  if (c.ubicacion && visibles.has("ubicacion")) paresActivo.push(["Ubicación", eq?.ubicacion ?? ""]);
-  if (c.fechas && visibles.has("fecha_compra")) paresActivo.push(["Fecha de compra", fechaCorta(eq?.fecha_compra)]);
-  if (c.fechas && visibles.has("garantia_hasta")) paresActivo.push([c.garantiaLabel, fechaCorta(eq?.garantia_hasta)]);
+  if (c.num_serie && visibles.has("num_serie"))
+    paresActivo.push([c.num_serie.label, eq?.num_serie ?? ""]);
+  if (c.telefono && visibles.has("telefono"))
+    paresActivo.push([c.telefono.label, eq?.telefono ?? ""]);
+  if (c.ubicacion && visibles.has("ubicacion"))
+    paresActivo.push(["Ubicación", eq?.ubicacion ?? ""]);
+  if (c.fechas && visibles.has("fecha_compra"))
+    paresActivo.push(["Fecha de compra", fechaCorta(eq?.fecha_compra)]);
+  if (c.fechas && visibles.has("garantia_hasta"))
+    paresActivo.push([c.garantiaLabel, fechaCorta(eq?.garantia_hasta)]);
 
   return (
     <div className={`responsiva-doc ${signika.className}`}>
       <div className="barra-print no-print">
-        <Link href={`/ti/responsivas/${r.id}`} className="boton secundario">← Volver</Link>
+        <Link href={`/ti/responsivas/${r.id}`} className="boton secundario">
+          ← Volver
+        </Link>
         <BotonImprimir />
       </div>
 
@@ -113,18 +133,26 @@ export default async function ImprimirResponsiva({
             <div className="sub">{RAZON_SOCIAL}</div>
           </div>
           <div className="titulo">
-            <h1>{esDevolucion ? "Acta de Devolución de Activos" : "Carta Responsiva de Resguardo"}</h1>
+            <h1>
+              {esDevolucion ? "Acta de Devolución de Activos" : "Carta Responsiva de Resguardo"}
+            </h1>
             <div className="tipo">{pl.titulo}</div>
           </div>
           <div className="control">
-            <span className="et">Código</span><span>{pl.codigo}</span>
-            <span className="et">Versión</span><span>{overrideQ.data?.version ?? "1.0"}</span>
-            <span className="et">Vigencia</span><span>{anio}</span>
-            <span className="et">Hoja</span><span>1 de 1</span>
+            <span className="et">Código</span>
+            <span>{pl.codigo}</span>
+            <span className="et">Versión</span>
+            <span>{overrideQ.data?.version ?? "1.0"}</span>
+            <span className="et">Vigencia</span>
+            <span>{anio}</span>
+            <span className="et">Hoja</span>
+            <span>1 de 1</span>
           </div>
         </header>
 
-        <p className="folio">FOLIO DE RESGUARDO: <span>{folio}</span></p>
+        <p className="folio">
+          FOLIO DE RESGUARDO: <span>{folio}</span>
+        </p>
 
         <section className="seccion">
           <h2>1. Datos del colaborador responsable</h2>
@@ -139,7 +167,9 @@ export default async function ImprimirResponsiva({
                 {personas.map((p, i) => (
                   <tr key={i}>
                     <th>{p.rol || "Persona"}</th>
-                    <td>{[p.nombre, p.puesto, p.departamento].filter(Boolean).join(" · ") || " "}</td>
+                    <td>
+                      {[p.nombre, p.puesto, p.departamento].filter(Boolean).join(" · ") || " "}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -161,7 +191,9 @@ export default async function ImprimirResponsiva({
 
         {pl.seguridad.length > 0 && (
           <section className="seccion">
-            <h2>{esDevolucion ? "Verificación técnica de baja" : "Configuración de seguridad (A.8.1)"}</h2>
+            <h2>
+              {esDevolucion ? "Verificación técnica de baja" : "Configuración de seguridad (A.8.1)"}
+            </h2>
             <Casillas items={pl.seguridad} marcados={datos.seguridad ?? []} />
           </section>
         )}
@@ -170,8 +202,14 @@ export default async function ImprimirResponsiva({
           <h2>Estado físico y observaciones</h2>
           <table className="datos">
             <tbody>
-              <tr><th>Estado físico</th><td>{datos.estado_fisico || " "}</td></tr>
-              <tr><th>Observaciones</th><td style={{ height: 30 }}>{datos.observaciones || " "}</td></tr>
+              <tr>
+                <th>Estado físico</th>
+                <td>{datos.estado_fisico || " "}</td>
+              </tr>
+              <tr>
+                <th>Observaciones</th>
+                <td style={{ height: 30 }}>{datos.observaciones || " "}</td>
+              </tr>
             </tbody>
           </table>
         </section>
@@ -182,7 +220,9 @@ export default async function ImprimirResponsiva({
             <div className="clausulas">
               <ol>
                 {pl.clausulas.map((cl) => (
-                  <li key={cl.titulo}><b>{cl.titulo}.</b> {cl.texto}</li>
+                  <li key={cl.titulo}>
+                    <b>{cl.titulo}.</b> {cl.texto}
+                  </li>
                 ))}
               </ol>
               {pl.aviso && <div className="aviso">{pl.aviso}</div>}
@@ -223,7 +263,9 @@ export default async function ImprimirResponsiva({
         </section>
 
         <footer className="pie">
-          <div className="iso"><b>{pl.iso}</b></div>
+          <div className="iso">
+            <b>{pl.iso}</b>
+          </div>
           <div>{pl.codigo} · Conservar copia firmada en el expediente del colaborador.</div>
         </footer>
       </div>

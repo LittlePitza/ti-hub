@@ -13,7 +13,17 @@ type Extra = { key: number; etiqueta: string; usuario: string; secreto: string }
 
 // Icono estático fuera del componente para no recrearlo en cada render.
 const CANDADO = (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
     <rect x="3" y="11" width="18" height="11" rx="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
@@ -35,9 +45,12 @@ function CampoSecreto({
   const [copiado, setCopiado] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
   const copiar = async () => {
     if (!valor) return;
@@ -63,7 +76,12 @@ function CampoSecreto({
         spellCheck={false}
         aria-label={etiqueta}
       />
-      <button type="button" className="boton-texto" onClick={() => setVisible((v) => !v)} aria-pressed={visible}>
+      <button
+        type="button"
+        className="boton-texto"
+        onClick={() => setVisible((v) => !v)}
+        aria-pressed={visible}
+      >
         {visible ? "Ocultar" : "Mostrar"}
       </button>
       <button type="button" className="boton-texto" onClick={copiar} disabled={!valor}>
@@ -84,11 +102,19 @@ export default function AccesosEquipo({ valor }: { valor?: AccesosInv | null }) 
   }));
   const keyRef = useRef(0);
   const [extra, setExtra] = useState<Extra[]>(() =>
-    (valor?.extra ?? []).map((e) => ({ key: keyRef.current++, etiqueta: e.etiqueta, usuario: e.usuario, secreto: e.secreto })),
+    (valor?.extra ?? []).map((e) => ({
+      key: keyRef.current++,
+      etiqueta: e.etiqueta,
+      usuario: e.usuario,
+      secreto: e.secreto,
+    })),
   );
 
   const agregar = () =>
-    setExtra((prev) => [...prev, { key: keyRef.current++, etiqueta: "", usuario: "", secreto: "" }]);
+    setExtra((prev) => [
+      ...prev,
+      { key: keyRef.current++, etiqueta: "", usuario: "", secreto: "" },
+    ]);
   const quitar = (key: number) => setExtra((prev) => prev.filter((e) => e.key !== key));
   const editar = (key: number, campo: keyof Omit<Extra, "key">, v: string) =>
     setExtra((prev) => prev.map((e) => (e.key === key ? { ...e, [campo]: v } : e)));
@@ -176,7 +202,11 @@ export default function AccesosEquipo({ valor }: { valor?: AccesosInv | null }) 
                   etiqueta="Contraseña del acceso"
                   placeholder="Contraseña / clave"
                 />
-                <button type="button" className="boton-texto acceso-quitar" onClick={() => quitar(e.key)}>
+                <button
+                  type="button"
+                  className="boton-texto acceso-quitar"
+                  onClick={() => quitar(e.key)}
+                >
                   Quitar
                 </button>
               </li>

@@ -45,8 +45,8 @@ export default function SelectorSolicitante({
   }, [query, empleados]);
 
   // Valores que se envían en el form, según el modo.
-  const nombre = modo === "empleado" ? elegido?.nombre ?? "" : nombreManual.trim();
-  const correo = modo === "empleado" ? elegido?.correo ?? "" : correoManual.trim().toLowerCase();
+  const nombre = modo === "empleado" ? (elegido?.nombre ?? "") : nombreManual.trim();
+  const correo = modo === "empleado" ? (elegido?.correo ?? "") : correoManual.trim().toLowerCase();
 
   const elegir = (e: EmpleadoOpcion) => {
     setElegido(e);
@@ -64,7 +64,7 @@ export default function SelectorSolicitante({
     setModo(m);
     setAbierto(false);
     // Reporta el correo vigente del modo destino para sincronizar la casilla de aviso.
-    onCorreo?.(m === "empleado" ? elegido?.correo ?? "" : correoManual.trim().toLowerCase());
+    onCorreo?.(m === "empleado" ? (elegido?.correo ?? "") : correoManual.trim().toLowerCase());
   };
 
   const teclas = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -98,7 +98,12 @@ export default function SelectorSolicitante({
               <strong>{elegido.nombre}</strong>
               <span className="suave mono"> · {elegido.correo}</span>
             </span>
-            <button type="button" className="combo-chip-x" aria-label="Quitar solicitante" onClick={limpiarEleccion}>
+            <button
+              type="button"
+              className="combo-chip-x"
+              aria-label="Quitar solicitante"
+              onClick={limpiarEleccion}
+            >
               ✕
             </button>
           </div>
@@ -146,7 +151,9 @@ export default function SelectorSolicitante({
                     >
                       <span className="combo-opcion-nombre">{e.nombre}</span>
                       <span className="suave mono combo-opcion-correo">{e.correo}</span>
-                      {e.departamento && <span className="suave combo-opcion-depto">{e.departamento}</span>}
+                      {e.departamento && (
+                        <span className="suave combo-opcion-depto">{e.departamento}</span>
+                      )}
                     </li>
                   ))
                 )}
@@ -179,7 +186,9 @@ export default function SelectorSolicitante({
         className="boton-texto combo-cambiar"
         onClick={() => cambiarModo(modo === "empleado" ? "manual" : "empleado")}
       >
-        {modo === "empleado" ? "El solicitante no está en la lista →" : "← Elegir un empleado registrado"}
+        {modo === "empleado"
+          ? "El solicitante no está en la lista →"
+          : "← Elegir un empleado registrado"}
       </button>
     </div>
   );

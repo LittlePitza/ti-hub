@@ -27,26 +27,42 @@ const TINTA = "#1a1a1a";
 const SUAVE = "#54595f";
 
 function escapar(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
+  return s.replace(
+    /[&<>"]/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string,
+  );
 }
 
 // Texto de la web sin protocolo (para mostrar) y href normalizado a https.
 function web(raw: string): { txt: string; href: string } {
-  const limpio = raw.trim().replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+  const limpio = raw
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/+$/, "");
   return { txt: limpio, href: limpio ? `https://${limpio}` : "" };
 }
 
 // Firma como fragmento HTML (una tabla). Es lo que se pega en el cliente de correo.
 export function firmaCorreoHtml(d: DatosFirma, logoUrl: string): string {
   const e = escapar;
-  const sub = [d.puesto, d.departamento].map((s) => s.trim()).filter(Boolean).map(e).join(" &middot; ");
+  const sub = [d.puesto, d.departamento]
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map(e)
+    .join(" &middot; ");
   const w = web(d.web);
 
   const filas: string[] = [];
   const correo = d.correo.trim();
-  if (correo) filas.push(`<a href="mailto:${e(correo)}" style="color:${AZUL};text-decoration:none;">${e(correo)}</a>`);
+  if (correo)
+    filas.push(
+      `<a href="mailto:${e(correo)}" style="color:${AZUL};text-decoration:none;">${e(correo)}</a>`,
+    );
   if (d.extension.trim()) filas.push(`Ext. ${e(d.extension.trim())}`);
-  if (w.txt) filas.push(`<a href="${e(w.href)}" style="color:${VERDE};text-decoration:none;">${e(w.txt)}</a>`);
+  if (w.txt)
+    filas.push(
+      `<a href="${e(w.href)}" style="color:${VERDE};text-decoration:none;">${e(w.txt)}</a>`,
+    );
   if (d.direccion.trim()) filas.push(e(d.direccion.trim()));
   const contacto = filas.map((f) => `<span style="display:block;">${f}</span>`).join("");
 
@@ -75,9 +91,21 @@ export function documentoFirma(fragmento: string): string {
 
 // Versión en texto plano (para el portapapeles y clientes sin HTML).
 export function firmaTextoPlano(d: DatosFirma): string {
-  const sub = [d.puesto, d.departamento].map((s) => s.trim()).filter(Boolean).join(" · ");
+  const sub = [d.puesto, d.departamento]
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(" · ");
   const ext = d.extension.trim() ? `Ext. ${d.extension.trim()}` : "";
-  return [d.nombre.trim(), sub, "Plásticos PIMSA", d.correo.trim(), ext, d.web.trim(), d.direccion.trim(), d.eslogan.trim()]
+  return [
+    d.nombre.trim(),
+    sub,
+    "Plásticos PIMSA",
+    d.correo.trim(),
+    ext,
+    d.web.trim(),
+    d.direccion.trim(),
+    d.eslogan.trim(),
+  ]
     .filter(Boolean)
     .join("\n");
 }

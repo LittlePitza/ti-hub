@@ -29,7 +29,12 @@ export function Dona({ datos, unidad }: { datos: DatoGrafica[]; unidad?: string 
 
   return (
     <div className="dona">
-      <svg className="dona-svg" viewBox="0 0 100 100" role="img" aria-label={datos.map((d) => `${d.label}: ${d.valor}`).join(", ")}>
+      <svg
+        className="dona-svg"
+        viewBox="0 0 100 100"
+        role="img"
+        aria-label={datos.map((d) => `${d.label}: ${d.valor}`).join(", ")}
+      >
         {segmentos.map((s) => (
           <circle
             key={s.label}
@@ -44,8 +49,14 @@ export function Dona({ datos, unidad }: { datos: DatoGrafica[]; unidad?: string 
             transform="rotate(-90 50 50)"
           />
         ))}
-        <text x="50" y={unidad ? 49 : 54} textAnchor="middle" className="dona-total">{total}</text>
-        {unidad && <text x="50" y="61" textAnchor="middle" className="dona-unidad">{unidad}</text>}
+        <text x="50" y={unidad ? 49 : 54} textAnchor="middle" className="dona-total">
+          {total}
+        </text>
+        {unidad && (
+          <text x="50" y="61" textAnchor="middle" className="dona-unidad">
+            {unidad}
+          </text>
+        )}
       </svg>
       <ul className="dona-leyenda">
         {datos.map((d) => (
@@ -110,12 +121,29 @@ export function Columnas({
           const hB = altura(d.b);
           return (
             <g key={d.label + i}>
-              <rect x={cx - barra - 1.5} y={BASE - hA} width={barra} height={hA} rx="3" fill={colorA} />
+              <rect
+                x={cx - barra - 1.5}
+                y={BASE - hA}
+                width={barra}
+                height={hA}
+                rx="3"
+                fill={colorA}
+              />
               <rect x={cx + 1.5} y={BASE - hB} width={barra} height={hB} rx="3" fill={colorB} />
-              <text x={cx - barra / 2 - 1.5} y={BASE - hA - 5} textAnchor="middle" className="columnas-valor">
+              <text
+                x={cx - barra / 2 - 1.5}
+                y={BASE - hA - 5}
+                textAnchor="middle"
+                className="columnas-valor"
+              >
                 {d.a}
               </text>
-              <text x={cx + barra / 2 + 1.5} y={BASE - hB - 5} textAnchor="middle" className="columnas-valor">
+              <text
+                x={cx + barra / 2 + 1.5}
+                y={BASE - hB - 5}
+                textAnchor="middle"
+                className="columnas-valor"
+              >
                 {d.b}
               </text>
               <text x={cx} y={BASE + 20} textAnchor="middle" className="columnas-mes">
@@ -148,7 +176,9 @@ export function Barras({ datos }: { datos: DatoGrafica[] }) {
     <div className="barras">
       {datos.map((d) => (
         <div className="barra-fila" key={d.label}>
-          <span className="barra-label" title={d.label}>{d.label}</span>
+          <span className="barra-label" title={d.label}>
+            {d.label}
+          </span>
           <div className="barra-pista">
             <div
               className="barra-relleno"

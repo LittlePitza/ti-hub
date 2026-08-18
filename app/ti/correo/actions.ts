@@ -60,21 +60,22 @@ export async function guardarConfigCorreo(formData: FormData) {
     asunto_respuesta: txt("asunto_respuesta") || "Respuesta a tu reporte {{folio}}",
     cuerpo_respuesta: txt("cuerpo_respuesta") || "Hola {{nombre}},\n\n{{mensaje}}",
     asunto_estado: txt("asunto_estado") || "Tu reporte {{folio}} ahora está: {{estado}}",
-    cuerpo_estado: txt("cuerpo_estado") || "Hola {{nombre}},\n\nTu reporte {{folio}} cambió a: {{estado}}.",
+    cuerpo_estado:
+      txt("cuerpo_estado") || "Hola {{nombre}},\n\nTu reporte {{folio}} cambió a: {{estado}}.",
     asunto_nuevo: txt("asunto_nuevo") || "Nuevo reporte {{folio}} · {{titulo}}",
     cuerpo_nuevo:
       txt("cuerpo_nuevo") ||
       "Nuevo reporte de {{solicitante}}.\n\nFolio: {{folio}}\nAsunto: {{titulo}}\nCategoría: {{categoria}}\n\n{{descripcion}}",
     // SLA configurable (null = predeterminado del código).
-    sla_critica_respuesta:  horas("sla_critica_respuesta"),
+    sla_critica_respuesta: horas("sla_critica_respuesta"),
     sla_critica_resolucion: horas("sla_critica_resolucion"),
-    sla_alta_respuesta:     horas("sla_alta_respuesta"),
-    sla_alta_resolucion:    horas("sla_alta_resolucion"),
-    sla_media_respuesta:    horas("sla_media_respuesta"),
-    sla_media_resolucion:   horas("sla_media_resolucion"),
-    sla_baja_respuesta:     horas("sla_baja_respuesta"),
-    sla_baja_resolucion:    horas("sla_baja_resolucion"),
-    sla_por_vencer_pct:     pct("sla_por_vencer_pct", 80),
+    sla_alta_respuesta: horas("sla_alta_respuesta"),
+    sla_alta_resolucion: horas("sla_alta_resolucion"),
+    sla_media_respuesta: horas("sla_media_respuesta"),
+    sla_media_resolucion: horas("sla_media_resolucion"),
+    sla_baja_respuesta: horas("sla_baja_respuesta"),
+    sla_baja_resolucion: horas("sla_baja_resolucion"),
+    sla_por_vencer_pct: pct("sla_por_vencer_pct", 80),
     updated_at: new Date().toISOString(),
   };
 
@@ -122,7 +123,10 @@ export async function conectarMicrosoft() {
 export async function desconectarMicrosoft() {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  const { error } = await sb.from("config_correo").update({ oauth_refresh_token: null, oauth_cuenta: null }).eq("id", 1);
+  const { error } = await sb
+    .from("config_correo")
+    .update({ oauth_refresh_token: null, oauth_cuenta: null })
+    .eq("id", 1);
   if (error) {
     console.error("[correo] desconectar Microsoft:", error.message);
     return;
@@ -143,8 +147,7 @@ export async function enviarPruebaCorreo(formData: FormData) {
   const r: { ok: boolean; detalle?: string } = await enviarPrueba(c, sb, para);
   // Pasa el error crudo de Microsoft (el 535 …) al panel para diagnosticar sin
   // tener que abrir los logs del servidor. Se recorta para no inflar la URL.
-  const detalle = !r.ok && r.detalle
-    ? `&detalle=${encodeURIComponent(r.detalle.slice(0, 400))}`
-    : "";
+  const detalle =
+    !r.ok && r.detalle ? `&detalle=${encodeURIComponent(r.detalle.slice(0, 400))}` : "";
   redirect(`/ti/correo?prueba=${r.ok ? "ok" : "error"}${detalle}`);
 }
