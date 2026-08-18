@@ -6,13 +6,11 @@ import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseAutenticado } from "@/lib/supabase";
 import {
-  ESTADOS_RESUELTOS,
-  ESTADOS_SIN_ATENDER,
-  PRIORIDADES,
-  CATEGORIAS_TK,
   type EstadoTicket,
   esEstadoSinAtender,
   esEstadoResuelto,
+  esCategoriaTicket,
+  esPrioridad,
 } from "@/lib/tickets";
 import { ESTADO_PORTAL, correoValido, nombreDeCorreo } from "@/lib/portal";
 import {
@@ -109,12 +107,12 @@ export async function crearTicket(_prev: EstadoCrear, formData: FormData): Promi
   if (!titulo) return { ok: false, error: "Falta el asunto del ticket." };
   if (!solicitante) return { ok: false, error: "Indica quién es el solicitante." };
 
-  const categoria = CATEGORIAS_TK.includes(limpiar(formData, "categoria") as never)
-    ? limpiar(formData, "categoria")
-    : "hardware";
-  const prioridad = PRIORIDADES.includes(limpiar(formData, "prioridad") as never)
-    ? limpiar(formData, "prioridad")
-    : "media";
+  // Hoisted so the membership test narrows the value: reading twice needed an
+  // `as never` cast, which switched checking off rather than narrowing.
+  const categoriaRaw = limpiar(formData, "categoria");
+  const categoria = categoriaRaw && esCategoriaTicket(categoriaRaw) ? categoriaRaw : "hardware";
+  const prioridadRaw = limpiar(formData, "prioridad");
+  const prioridad = prioridadRaw && esPrioridad(prioridadRaw) ? prioridadRaw : "media";
 
   // El correo del solicitante liga el ticket a su portal y habilita los avisos; se
   // guarda solo si tiene forma válida (de lo contrario queda NULL).
@@ -179,19 +177,22 @@ export async function editarTicket(formData: FormData) {
   const titulo = limpiar(formData, "titulo");
   if (!titulo) return;
 
-  const categoria = CATEGORIAS_TK.includes(limpiar(formData, "categoria") as never)
-    ? limpiar(formData, "categoria")
-    : "hardware";
-  const prioridad = PRIORIDADES.includes(limpiar(formData, "prioridad") as never)
-    ? limpiar(formData, "prioridad")
-    : "media";
+  const categoriaRaw = limpiar(formData, "categoria");
+  const categoria = categoriaRaw && esCategoriaTicket(categoriaRaw) ? categoriaRaw : "hardware";
+  const prioridadRaw = limpiar(formData, "prioridad");
+  const prioridad = prioridadRaw && esPrioridad(prioridadRaw) ? prioridadRaw : "media";
+
+  // `solicitante` is NOT NULL: clearing the field used to send null, which
+  // Postgres rejected and the catch swallowed, so the edit silently did nothing.
+  const solicitante = limpiar(formData, "solicitante");
+  if (!solicitante) return;
 
   const { error } = await sb
     .from("tickets")
     .update({
       titulo,
       descripcion: limpiar(formData, "descripcion"),
-      solicitante: limpiar(formData, "solicitante"),
+      solicitante,
       categoria,
       prioridad,
       asignado_a: limpiar(formData, "asignado_a"),

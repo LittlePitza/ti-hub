@@ -52,9 +52,9 @@ function camposProveedor(formData: FormData) {
 export async function crearProveedor(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
-  const campos = camposProveedor(formData);
-  if (!campos.nombre) return;
-  const { error } = await sb.from("proveedores").insert(campos);
+  const { nombre, ...resto } = camposProveedor(formData);
+  if (!nombre) return;
+  const { error } = await sb.from("proveedores").insert({ nombre, ...resto });
   if (error) {
     console.error("[proveedores] crear:", error.message);
     return;
@@ -66,9 +66,12 @@ export async function editarProveedor(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
   const id = formData.get("id") as string;
-  const campos = camposProveedor(formData);
-  if (!id || !campos.nombre) return;
-  const { error } = await sb.from("proveedores").update(campos).eq("id", id);
+  const { nombre, ...resto } = camposProveedor(formData);
+  if (!id || !nombre) return;
+  const { error } = await sb
+    .from("proveedores")
+    .update({ nombre, ...resto })
+    .eq("id", id);
   if (error) {
     console.error("[proveedores] editar:", error.message);
     return;

@@ -135,9 +135,9 @@ export async function crearTicketPortal(formData: FormData) {
   const v = lector(formData);
   const titulo = v("titulo");
   if (!titulo) redirect("/nuevo?error=resumen");
-  const categoria = CATEGORIAS_PORTAL.some((c) => c.valor === v("categoria"))
-    ? v("categoria")
-    : "otro";
+  const categoriaRaw = v("categoria");
+  const categoria =
+    categoriaRaw && CATEGORIAS_PORTAL.some((c) => c.valor === categoriaRaw) ? categoriaRaw : "otro";
 
   // El equipo elegido debe pertenecer al correo del empleado; si no, se descarta.
   let equipoId = v("equipo_id");

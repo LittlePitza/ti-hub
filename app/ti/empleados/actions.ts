@@ -44,9 +44,10 @@ export async function crearEmpleado(formData: FormData) {
   if (!sb) return;
   const v = lector(formData);
   const correo = v("correo")?.toLowerCase();
-  if (!v("nombre") || !correo) return;
+  const nombre = v("nombre");
+  if (!nombre || !correo) return;
   const { error } = await sb.from("empleados").insert({
-    nombre: v("nombre"),
+    nombre,
     correo,
     departamento: v("departamento"),
     puesto: v("puesto"),

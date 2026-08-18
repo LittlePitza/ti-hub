@@ -2,16 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAutenticado } from "@/lib/supabase";
-import { lector } from "@/lib/form";
+import { lector, lectorOpc } from "@/lib/form";
 
 export async function crearMantenimiento(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
   const v = lector(formData);
+  const o = lectorOpc(formData);
+  // titulo and fecha_programada are NOT NULL without a default: an empty field
+  // used to send null, which Postgres rejected and the catch below swallowed --
+  // the form simply appeared to do nothing. The edit path already guarded.
+  const titulo = v("titulo");
+  const fechaProgramada = v("fecha_programada");
+  if (!titulo || !fechaProgramada) return;
   const { error } = await sb.from("mantenimientos").insert({
-    titulo: v("titulo"),
-    tipo: v("tipo"),
-    fecha_programada: v("fecha_programada"),
+    titulo,
+    tipo: o("tipo"),
+    fecha_programada: fechaProgramada,
     responsable: v("responsable"),
     equipo_id: v("equipo_id"),
     notas: v("notas"),
@@ -43,14 +50,17 @@ export async function editarMantenimiento(formData: FormData) {
   const sb = await getSupabaseAutenticado();
   if (!sb) return;
   const v = lector(formData);
+  const o = lectorOpc(formData);
   const id = formData.get("id") as string;
-  if (!id || !v("titulo") || !v("fecha_programada")) return;
+  const titulo = v("titulo");
+  const fechaProgramada = v("fecha_programada");
+  if (!id || !titulo || !fechaProgramada) return;
   const { error } = await sb
     .from("mantenimientos")
     .update({
-      titulo: v("titulo"),
-      tipo: v("tipo"),
-      fecha_programada: v("fecha_programada"),
+      titulo,
+      tipo: o("tipo"),
+      fecha_programada: fechaProgramada,
       responsable: v("responsable"),
       equipo_id: v("equipo_id"),
       notas: v("notas"),

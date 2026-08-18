@@ -4,9 +4,6 @@ import { fechaCorta, folio, duracion } from "@/lib/format";
 import {
   ESTADOS_TICKET,
   ESTADOS_SELECCIONABLES,
-  ESTADOS_ACTIVOS,
-  ESTADOS_CERRADOS,
-  ESTADOS_ARCHIVADOS,
   PRIORIDADES,
   ORDEN_PRIORIDAD,
   evaluarRespuesta,

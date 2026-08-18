@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabasePortal } from "@/lib/supabase";
 import { getCorreoPortal, nombreDeCorreo } from "@/lib/portal";
-import { ESTADOS_RESUELTOS, esEstadoResuelto } from "@/lib/tickets";
+import { esEstadoResuelto } from "@/lib/tickets";
 
 // Respuesta del solicitante desde el portal: se guarda como evento `mensaje_cliente`,
 // que TI ve en la bitácora y el empleado en su hilo. Si el reporte ya estaba archivado

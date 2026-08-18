@@ -133,6 +133,14 @@ export function esEstadoSinAtender(valor: string): boolean {
   return incluye(ESTADOS_SIN_ATENDER, valor);
 }
 
+export function esCategoriaTicket(valor: string): boolean {
+  return CATEGORIAS_TK.includes(valor as CategoriaTicket);
+}
+
+export function esPrioridad(valor: string): boolean {
+  return PRIORIDADES.includes(valor as Prioridad);
+}
+
 // Semáforo del SLA. `pausado` aplica a tickets en espera (el reloj se detiene, como en
 // las mesas de ayuda); `na` cuando no hay objetivo aplicable.
 export type SemaforoSla = "cumplido" | "en_tiempo" | "por_vencer" | "incumplido" | "pausado" | "na";

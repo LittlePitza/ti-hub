@@ -53,7 +53,8 @@ export async function crearEquipo(
   const v = lector(formData);
 
   const cat = categoriaInv(v("categoria") ?? undefined);
-  const tipo = cat.tipos.includes(v("tipo") ?? "") ? v("tipo") : cat.tipos[0];
+  const tipoRaw = v("tipo");
+  const tipo = tipoRaw && cat.tipos.includes(tipoRaw) ? tipoRaw : cat.tipos[0];
   const telefono = v("telefono");
   // Las líneas pueden no llevar etiqueta: el número hace de nombre.
   const nombre = v("nombre") ?? (telefono ? `Línea ${telefono}` : null);
@@ -124,7 +125,8 @@ export async function editarEquipo(formData: FormData) {
   if (!id) return;
 
   const cat = categoriaInv(v("categoria") ?? undefined);
-  const tipo = cat.tipos.includes(v("tipo") ?? "") ? v("tipo") : cat.tipos[0];
+  const tipoRaw = v("tipo");
+  const tipo = tipoRaw && cat.tipos.includes(tipoRaw) ? tipoRaw : cat.tipos[0];
   const telefono = v("telefono");
   const nombre = v("nombre") ?? (telefono ? `Línea ${telefono}` : null);
   if (!nombre) return;

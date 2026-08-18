@@ -1,12 +1,7 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folio, duracionPartes, moneda } from "@/lib/format";
-import {
-  ESTADOS_ACTIVOS,
-  evaluarRespuesta,
-  evaluarResolucion,
-  esEstadoActivo,
-} from "@/lib/tickets";
+import { evaluarRespuesta, evaluarResolucion, esEstadoActivo } from "@/lib/tickets";
 import { calendarioPagos, pendienteDelMes, montos, hoyISO } from "@/lib/facturas";
 import { serviciosConEstado, type Servicio, type Incidente } from "@/lib/servicios";
 import { getConfigCorreo, resolverSla } from "@/lib/correo";
