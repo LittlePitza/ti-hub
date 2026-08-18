@@ -22,7 +22,7 @@ import {
   cambiarEstadoResponsiva,
   actualizarDesdeInventario,
 } from "../actions";
-import { jsonbObject } from "@/lib/utils/jsonb";
+import { jsonbObject, jsonbList } from "@/lib/utils/jsonb";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Responsiva" };
@@ -44,20 +44,18 @@ export default async function DetalleResponsiva({ params }: { params: Promise<{ 
   const { data: r } = await sb.from("responsivas").select("*").eq("id", id).maybeSingle();
   if (!r) notFound();
 
+  // Both queries depend only on `r`, not on each other, so they run together.
   // Catálogo para el selector de personas adicionales (combobox del editor).
-  const { data: empleadosData } = await sb
-    .from("empleados")
-    .select("nombre, correo, puesto, departamento")
-    .eq("estado", "activo")
-    .order("nombre");
+  const [{ data: empleadosData }, overrideQ] = await Promise.all([
+    sb
+      .from("empleados")
+      .select("nombre, correo, puesto, departamento")
+      .eq("estado", "activo")
+      .order("nombre"),
+    sb.from("plantillas_responsiva").select("*").eq("clave", r.plantilla).maybeSingle(),
+  ]);
   const empleados = empleadosData ?? [];
-  const personas = (r.personas ?? []) as PersonaResp[];
-
-  const overrideQ = await sb
-    .from("plantillas_responsiva")
-    .select("*")
-    .eq("clave", r.plantilla)
-    .maybeSingle();
+  const personas = jsonbList<PersonaResp>(r.personas);
   const pl = fusionarPlantilla(r.plantilla, overrideQ.data);
   const datos = jsonbObject<DatosResponsiva>(r.datos, {} as DatosResponsiva);
   const folio = folioResponsiva(pl.prefijoFolio, r.num);
