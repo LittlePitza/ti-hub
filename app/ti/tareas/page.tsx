@@ -20,7 +20,6 @@ import {
   eliminarTarea,
   crearProyecto,
   editarProyecto,
-  eliminarProyecto,
 } from "./actions";
 
 export const dynamic = "force-dynamic";

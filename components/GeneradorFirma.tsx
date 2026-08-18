@@ -115,7 +115,7 @@ export default function GeneradorFirma({ initial, logoUrl }: { initial: DatosFir
           </button>
         </div>
         <p className="suave" style={{ fontSize: 12.5 }}>
-          "Copiar firma" la deja lista para pegar formateada en Outlook o Gmail. El logo carga desde el sitio,
+          “Copiar firma” la deja lista para pegar formateada en Outlook o Gmail. El logo carga desde el sitio,
           así que se ve cuando el correo permite imágenes.
         </p>
       </div>

@@ -154,7 +154,6 @@ export default function SelectorImagenes() {
         <ul className="adjuntos-grid">
           {fotos.map((f) => (
             <li key={f.url} className="adjunto-mini">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={f.url} alt={f.file.name} />
               <button
                 type="button"

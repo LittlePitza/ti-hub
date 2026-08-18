@@ -347,11 +347,11 @@ export default async function ConfigCorreo({
             </label>
             <label className="config-switch">
               <input type="checkbox" name="notif_respuesta_def" defaultChecked={c?.notif_respuesta_def ?? true} />
-              <span>Al responder a un cliente, <strong>precargar</strong> la casilla "enviar por correo".</span>
+              <span>Al responder a un cliente, <strong>precargar</strong> la casilla “enviar por correo”.</span>
             </label>
             <label className="config-switch">
               <input type="checkbox" name="notif_estado_def" defaultChecked={c?.notif_estado_def ?? false} />
-              <span>Al cambiar el estado, <strong>precargar</strong> la casilla "notificar por correo".</span>
+              <span>Al cambiar el estado, <strong>precargar</strong> la casilla “notificar por correo”.</span>
             </label>
           </div>
         </details>
@@ -409,7 +409,7 @@ export default async function ConfigCorreo({
             </div>
 
             <div className="campo" style={{ maxWidth: 260, marginTop: 16 }}>
-              <label htmlFor="sla_por_vencer_pct">Umbral "por vencer" (%)</label>
+              <label htmlFor="sla_por_vencer_pct">Umbral “por vencer” (%)</label>
               <input
                 id="sla_por_vencer_pct"
                 name="sla_por_vencer_pct"

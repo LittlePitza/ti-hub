@@ -179,7 +179,6 @@ export default async function DetalleTicket({
                   {fotos.map((f) => (
                     <li key={f.url}>
                       <a href={f.url} target="_blank" rel="noreferrer" title={f.nombre}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={f.url} alt={f.nombre} loading="lazy" />
                       </a>
                     </li>
