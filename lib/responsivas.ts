@@ -1,3 +1,5 @@
+import { jsonbList } from "@/lib/jsonb";
+import type { Tables } from "@/types/database";
 // Responsivas (cartas de resguardo de activos) · fuente de verdad del módulo.
 // Cada equipo asignado a un empleado genera una responsiva con la plantilla
 // correcta según su categoría/tipo. El contenido base de las 8 plantillas vive
@@ -593,20 +595,55 @@ export function plantillaDefault(clave: string): Plantilla {
   return PLANTILLAS_DEFAULT[clave as ClavePlantilla] ?? PLANTILLAS_DEFAULT.laptop;
 }
 
-// Mezcla el override de la BD (parcial) sobre el contenido base en código.
+// A partial override row as stored in `plantillas_responsiva`. jsonb columns
+// arrive as `Json`, and two column names are snake_case where the domain type is
+// camelCase, so the merge below maps field by field rather than spreading.
+export type PlantillaOverride = Partial<Tables<"plantillas_responsiva">>;
+
+// Merge the (partial) database override over the base content held in code.
 export function fusionarPlantilla(
   clave: string,
-  override: (Partial<Plantilla> & { campos_equipo?: unknown }) | null | undefined,
+  override: PlantillaOverride | null | undefined,
 ): Plantilla {
   const base = plantillaDefault(clave);
   if (!override) return base;
-  const merged = { ...base, ...limpiar(override) };
-  // La columna de la BD es snake_case y no coincide con el campo camelCase;
-  // las demás columnas sí coinciden por nombre, así que solo esta se mapea.
+
+  // Columns whose name and type already match the domain field.
+  const merged: Plantilla = { ...base, ...limpiar(pick(override)) };
+
+  // jsonb columns: narrow to the domain shape, keeping the base when absent.
+  if (override.clausulas !== undefined && override.clausulas !== null) {
+    merged.clausulas = jsonbList<ClausulaPlantilla>(override.clausulas);
+  }
+  if (override.accesorios !== undefined && override.accesorios !== null) {
+    merged.accesorios = jsonbList<string>(override.accesorios);
+  }
+  if (override.seguridad !== undefined && override.seguridad !== null) {
+    merged.seguridad = jsonbList<string>(override.seguridad);
+  }
+  if (override.firmas !== undefined && override.firmas !== null) {
+    merged.firmas = jsonbList<FirmaPlantilla>(override.firmas);
+  }
+
+  // These two columns are snake_case; the spread above cannot reach them.
+  if (override.prefijo_folio) merged.prefijoFolio = override.prefijo_folio;
   if (Array.isArray(override.campos_equipo)) {
     merged.camposEquipo = override.campos_equipo as CampoEquipoResp[];
   }
+
   return merged;
+}
+
+// The subset of override columns that map onto Plantilla one-to-one by name.
+function pick(o: PlantillaOverride) {
+  return {
+    clave: o.clave as ClavePlantilla | undefined,
+    nombre: o.nombre,
+    codigo: o.codigo,
+    titulo: o.titulo,
+    aviso: o.aviso ?? undefined,
+    iso: o.iso ?? undefined,
+  };
 }
 
 function limpiar<T extends object>(obj: T): Partial<T> {

@@ -107,8 +107,30 @@ export function metaEstado(valor: string) {
   return ESTADOS_TICKET.find((e) => e.valor === valor) ?? ESTADOS_TICKET[0];
 }
 
+// Membership tests for a status that arrives from Postgres as plain text.
+// The cast is confined to these predicates: call sites pass a string and get a
+// boolean, so no caller needs `as EstadoTicket` (or the `as never` that had
+// crept into a few of them, which disables checking altogether).
+const incluye = (lista: EstadoTicket[], valor: string) => lista.includes(valor as EstadoTicket);
+
 export function esEstadoActivo(valor: string): boolean {
-  return ESTADOS_ACTIVOS.includes(valor as EstadoTicket);
+  return incluye(ESTADOS_ACTIVOS, valor);
+}
+
+export function esEstadoResuelto(valor: string): boolean {
+  return incluye(ESTADOS_RESUELTOS, valor);
+}
+
+export function esEstadoCerrado(valor: string): boolean {
+  return incluye(ESTADOS_CERRADOS, valor);
+}
+
+export function esEstadoArchivado(valor: string): boolean {
+  return incluye(ESTADOS_ARCHIVADOS, valor);
+}
+
+export function esEstadoSinAtender(valor: string): boolean {
+  return incluye(ESTADOS_SIN_ATENDER, valor);
 }
 
 // Semáforo del SLA. `pausado` aplica a tickets en espera (el reloj se detiene, como en
@@ -179,7 +201,7 @@ export function evaluarResolucion(
       pendiente: false,
     };
   }
-  if (!ESTADOS_ACTIVOS.includes(t.estado as EstadoTicket)) {
+  if (!esEstadoActivo(t.estado)) {
     return { ms: 0, objetivoMs, semaforo: "na" as SemaforoSla, pendiente: false };
   }
   if (t.estado === "en_espera") {

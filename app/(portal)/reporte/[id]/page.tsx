@@ -7,6 +7,7 @@ import { fechaCorta, folio } from "@/lib/format";
 import Ruta from "@/components/Ruta";
 import BotonEnviar from "@/components/BotonEnviar";
 import { responderTicketPortal } from "./actions";
+import { jsonbList } from "@/lib/jsonb";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +44,7 @@ export default async function DetalleReporte({ params }: { params: Promise<{ id:
 
   // Fotos del reporte: el bucket es privado, así que se firman URLs temporales
   // (service role) para mostrarlas. Si una falla, simplemente no se incluye.
-  const adjuntos: Adjunto[] = Array.isArray(t.adjuntos) ? t.adjuntos : [];
+  const adjuntos = jsonbList<Adjunto>(t.adjuntos);
   const fotos = (
     await Promise.all(
       adjuntos.map(async (a) => {

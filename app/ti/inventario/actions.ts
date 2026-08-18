@@ -13,6 +13,7 @@ import {
 } from "@/lib/inventario";
 import { generarResponsiva, sincronizarResponsivasEquipo } from "@/app/ti/responsivas/actions";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { toJsonb } from "@/lib/jsonb";
 
 function refrescar(cat: string) {
   revalidatePath(`/ti/inventario`);
@@ -83,8 +84,8 @@ export async function crearEquipo(
       fecha_compra: v("fecha_compra"),
       garantia_hasta: v("garantia_hasta"),
       notas: v("notas"),
-      accesos: sanitizarAccesos(formData.get("accesos")),
-      extras: sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras")),
+      accesos: toJsonb(sanitizarAccesos(formData.get("accesos"))),
+      extras: toJsonb(sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras"))),
     })
     .select("id")
     .single();
@@ -143,8 +144,8 @@ export async function editarEquipo(formData: FormData) {
       fecha_compra: v("fecha_compra"),
       garantia_hasta: v("garantia_hasta"),
       notas: v("notas"),
-      accesos: sanitizarAccesos(formData.get("accesos")),
-      extras: sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras")),
+      accesos: toJsonb(sanitizarAccesos(formData.get("accesos"))),
+      extras: toJsonb(sanitizarExtras(await defsCategoria(sb, cat.valor), formData.get("extras"))),
     })
     .eq("id", id);
   if (error) {

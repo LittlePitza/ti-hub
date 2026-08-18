@@ -10,6 +10,8 @@ import {
   type DatosResponsiva,
 } from "@/lib/responsivas";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { TablesUpdate } from "@/types/database";
+import { jsonbObject, toJsonb } from "@/lib/jsonb";
 
 function refrescar(id?: string) {
   revalidatePath("/ti/responsivas");
@@ -64,7 +66,7 @@ export async function generarResponsiva(equipoId: string, correo: string): Promi
       empleado_puesto: emp?.puesto ?? null,
       empleado_departamento: emp?.departamento ?? null,
       equipo_nombre: eq.nombre,
-      datos,
+      datos: toJsonb(datos),
     })
     .select("id")
     .single();
@@ -100,7 +102,7 @@ export async function editarResponsiva(formData: FormData) {
 
   const { data: r } = await sb.from("responsivas").select("datos").eq("id", id).single();
   const datos = {
-    ...(r?.datos ?? {}),
+    ...jsonbObject<DatosResponsiva>(r?.datos, {} as DatosResponsiva),
     accesorios: formData.getAll("accesorios").map(String),
     seguridad: formData.getAll("seguridad").map(String),
     observaciones: ((formData.get("observaciones") as string) ?? "").trim(),
@@ -172,7 +174,10 @@ export async function actualizarDesdeInventario(formData: FormData) {
   const { data: eq } = await sb.from("equipos").select("*").eq("id", r.equipo_id).maybeSingle();
   if (!eq) return;
 
-  const datos = { ...(r.datos ?? {}), equipo: snapshotEquipo(eq) };
+  const datos = {
+    ...jsonbObject<DatosResponsiva>(r.datos, {} as DatosResponsiva),
+    equipo: snapshotEquipo(eq),
+  };
   const { error } = await sb
     .from("responsivas")
     .update({ datos, equipo_nombre: eq.nombre })
@@ -224,7 +229,7 @@ export async function cambiarEstadoResponsiva(formData: FormData) {
   if (!sb) return;
   const id = formData.get("id") as string;
   const estado = formData.get("estado") as string;
-  const update: Record<string, unknown> = { estado };
+  const update: TablesUpdate<"responsivas"> = { estado };
   if (estado === "firmada") update.fecha_firmada = new Date().toISOString().slice(0, 10);
   const { error } = await sb.from("responsivas").update(update).eq("id", id);
   if (error) {

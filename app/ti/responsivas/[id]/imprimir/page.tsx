@@ -12,6 +12,7 @@ import {
   type PersonaResp,
 } from "@/lib/responsivas";
 import BotonImprimir from "@/components/BotonImprimir";
+import { jsonbObject } from "@/lib/jsonb";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Imprimir responsiva" };
@@ -76,7 +77,7 @@ export default async function ImprimirResponsiva({ params }: { params: Promise<{
     .eq("clave", r.plantilla)
     .maybeSingle();
   const pl = fusionarPlantilla(r.plantilla, overrideQ.data);
-  const datos = (r.datos ?? {}) as DatosResponsiva;
+  const datos = jsonbObject<DatosResponsiva>(r.datos, {} as DatosResponsiva);
   const personas = (r.personas ?? []) as PersonaResp[];
   const eq = datos.equipo;
   const folio = folioResponsiva(pl.prefijoFolio, r.num);

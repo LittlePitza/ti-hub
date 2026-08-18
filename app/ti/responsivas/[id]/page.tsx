@@ -22,6 +22,7 @@ import {
   cambiarEstadoResponsiva,
   actualizarDesdeInventario,
 } from "../actions";
+import { jsonbObject } from "@/lib/jsonb";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Responsiva" };
@@ -58,7 +59,7 @@ export default async function DetalleResponsiva({ params }: { params: Promise<{ 
     .eq("clave", r.plantilla)
     .maybeSingle();
   const pl = fusionarPlantilla(r.plantilla, overrideQ.data);
-  const datos = (r.datos ?? {}) as DatosResponsiva;
+  const datos = jsonbObject<DatosResponsiva>(r.datos, {} as DatosResponsiva);
   const folio = folioResponsiva(pl.prefijoFolio, r.num);
   const ins = ESTADOS_RESP[r.estado as EstadoResponsiva] ?? ESTADOS_RESP.borrador;
   const hechos = hitosCumplidos(r.estado, !!r.archivo_url);

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabasePortal } from "@/lib/supabase";
 import { getCorreoPortal, nombreDeCorreo } from "@/lib/portal";
-import { ESTADOS_RESUELTOS } from "@/lib/tickets";
+import { ESTADOS_RESUELTOS, esEstadoResuelto } from "@/lib/tickets";
 
 // Respuesta del solicitante desde el portal: se guarda como evento `mensaje_cliente`,
 // que TI ve en la bitácora y el empleado en su hilo. Si el reporte ya estaba archivado
@@ -48,7 +48,7 @@ export async function responderTicketPortal(formData: FormData) {
   }
 
   // Reabrir si estaba archivado/resuelto: el cliente sigue necesitando ayuda.
-  if (ESTADOS_RESUELTOS.includes(t.estado as never)) {
+  if (esEstadoResuelto(t.estado)) {
     await sb
       .from("tickets")
       .update({ estado: "reabierto", resuelto_at: null, updated_at: new Date().toISOString() })

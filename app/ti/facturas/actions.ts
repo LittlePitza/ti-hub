@@ -6,6 +6,7 @@ import { getSupabaseAutenticado } from "@/lib/supabase";
 import { lector } from "@/lib/form";
 import { hoyISO, MONEDAS, type Moneda } from "@/lib/facturas";
 import type { Adjunto } from "@/lib/adjuntos";
+import { jsonbList } from "@/lib/jsonb";
 
 function refrescar() {
   revalidatePath("/ti/facturas");
@@ -130,7 +131,7 @@ export async function editarFactura(formData: FormData) {
   const nuevos = await subirAdjuntos(sb, id, formData);
   if (nuevos.length) {
     const { data: f } = await sb.from("facturas").select("adjuntos").eq("id", id).maybeSingle();
-    const actuales: Adjunto[] = Array.isArray(f?.adjuntos) ? f.adjuntos : [];
+    const actuales = jsonbList<Adjunto>(f?.adjuntos);
     const { error: errAdj } = await sb
       .from("facturas")
       .update({ adjuntos: [...actuales, ...nuevos] })
@@ -196,7 +197,7 @@ export async function eliminarFactura(formData: FormData) {
 
   // Primero los archivos del bucket, luego la fila (patrón de responsivas).
   const { data: f } = await sb.from("facturas").select("adjuntos").eq("id", id).maybeSingle();
-  const adjuntos: Adjunto[] = Array.isArray(f?.adjuntos) ? f.adjuntos : [];
+  const adjuntos = jsonbList<Adjunto>(f?.adjuntos);
   if (adjuntos.length) {
     await sb.storage.from("facturas").remove(adjuntos.map((a) => a.path));
   }
@@ -216,7 +217,7 @@ export async function quitarAdjunto(formData: FormData) {
   if (!id || !path) return;
 
   const { data: f } = await sb.from("facturas").select("adjuntos").eq("id", id).maybeSingle();
-  const adjuntos: Adjunto[] = Array.isArray(f?.adjuntos) ? f.adjuntos : [];
+  const adjuntos = jsonbList<Adjunto>(f?.adjuntos);
   await sb.storage.from("facturas").remove([path]);
   const { error } = await sb
     .from("facturas")

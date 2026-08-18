@@ -10,12 +10,12 @@ import {
 import Link from "next/link";
 import { folio, duracion } from "@/lib/format";
 import {
-  ESTADOS_ACTIVOS,
-  ESTADOS_ARCHIVADOS,
   ORDEN_PRIORIDAD,
   evaluarRespuesta,
   evaluarResolucion,
   type SlaTabla,
+  esEstadoActivo,
+  esEstadoArchivado,
 } from "@/lib/tickets";
 import Insignia from "./Insignia";
 import PildoraSla from "./PildoraSla";
@@ -120,10 +120,8 @@ export default function TableroTickets({
     evaluarRespuesta(t, ahora, sla, porVencerPct).semaforo === "incumplido" ||
     evaluarResolucion(t, ahora, sla, porVencerPct).semaforo === "incumplido";
 
-  const activos = efectivo.filter((t) => ESTADOS_ACTIVOS.includes(t.estado as never));
-  const archivados = efectivo
-    .filter((t) => ESTADOS_ARCHIVADOS.includes(t.estado as never))
-    .sort(porResueltoReciente);
+  const activos = efectivo.filter((t) => esEstadoActivo(t.estado));
+  const archivados = efectivo.filter((t) => esEstadoArchivado(t.estado)).sort(porResueltoReciente);
   const fueraSla = activos.filter(fueraDeSla).length;
   const sinAsignar = activos.filter((t) => !t.asignado_a).length;
   const porPrioridad = (a: Tk, b: Tk) =>

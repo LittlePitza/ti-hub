@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseAutenticado } from "@/lib/supabase";
 import { lector } from "@/lib/form";
+import type { TablesUpdate } from "@/types/database";
 import {
   getConfigCorreo,
   enviarPrueba,
@@ -42,7 +43,7 @@ export async function guardarConfigCorreo(formData: FormData) {
     return Number.isFinite(v) && v >= 1 && v <= 99 ? Math.round(v) : def;
   };
 
-  const patch: Record<string, unknown> = {
+  const patch: TablesUpdate<"config_correo"> = {
     activo: activado("activo"),
     metodo,
     smtp_host: txt("smtp_host") || "smtp.office365.com",

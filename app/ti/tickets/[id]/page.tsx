@@ -18,6 +18,7 @@ import Insignia from "@/components/Insignia";
 import PildoraSla from "@/components/PildoraSla";
 import SinConexion from "@/components/SinConexion";
 import BotonEnviar from "@/components/BotonEnviar";
+import { jsonbList } from "@/lib/jsonb";
 import {
   editarTicket,
   cambiarEstadoTicket,
@@ -80,7 +81,7 @@ export default async function DetalleTicket({ params }: { params: Promise<{ id: 
   const eventos = eventosData ?? [];
 
   // Fotos que adjuntó el solicitante al reportar: bucket privado, URLs firmadas.
-  const adjuntos: Adjunto[] = Array.isArray(t.adjuntos) ? t.adjuntos : [];
+  const adjuntos = jsonbList<Adjunto>(t.adjuntos);
   const fotos = (
     await Promise.all(
       adjuntos.map(async (a) => {

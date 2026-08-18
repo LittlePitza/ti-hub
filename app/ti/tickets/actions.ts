@@ -11,6 +11,8 @@ import {
   PRIORIDADES,
   CATEGORIAS_TK,
   type EstadoTicket,
+  esEstadoSinAtender,
+  esEstadoResuelto,
 } from "@/lib/tickets";
 import { ESTADO_PORTAL, correoValido, nombreDeCorreo } from "@/lib/portal";
 import {
@@ -22,6 +24,7 @@ import {
 } from "@/lib/correo";
 import { recomprimirArchivado } from "@/lib/imagen";
 import type { Adjunto } from "@/lib/adjuntos";
+import type { TablesUpdate } from "@/types/database";
 
 function refrescar(id?: string) {
   revalidatePath("/ti/tickets");
@@ -227,14 +230,14 @@ export async function cambiarEstadoTicket(formData: FormData) {
   }
 
   const ahora = new Date().toISOString();
-  const patch: Record<string, unknown> = { estado: nuevo, updated_at: ahora };
+  const patch: TablesUpdate<"tickets"> = { estado: nuevo, updated_at: ahora };
 
   // Primera respuesta: se marca al salir de un estado "sin atender" si aún no existía.
-  if (!actual.primera_respuesta_at && !ESTADOS_SIN_ATENDER.includes(nuevo)) {
+  if (!actual.primera_respuesta_at && !esEstadoSinAtender(nuevo)) {
     patch.primera_respuesta_at = ahora;
   }
   // Resolución: se marca al pasar a resuelto/cerrado; se limpia al reabrir.
-  if (ESTADOS_RESUELTOS.includes(nuevo) && !actual.resuelto_at) {
+  if (esEstadoResuelto(nuevo) && !actual.resuelto_at) {
     patch.resuelto_at = ahora;
   } else if (nuevo === "reabierto" || nuevo === "abierto") {
     patch.resuelto_at = null;

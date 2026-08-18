@@ -7,6 +7,7 @@ import {
   campoDeFila,
   type CampoInv,
   type ExtrasInv,
+  ACCESOS_VACIO,
 } from "@/lib/inventario";
 import { ESTADOS_RESP, plantillaDefault, type EstadoResponsiva } from "@/lib/responsivas";
 import Insignia from "@/components/Insignia";
@@ -18,6 +19,7 @@ import ModalGestionar from "@/components/ModalGestionar";
 import NuevoEquipo from "@/components/NuevoEquipo";
 import { asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
 import { generarResponsivaEquipo } from "../responsivas/actions";
+import { jsonbObject } from "@/lib/jsonb";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Inventario" };
@@ -571,7 +573,7 @@ export default async function Inventario({
                         )}
                         <label className="mini-label">Notas</label>
                         <textarea name="notas" defaultValue={e.notas ?? ""} rows={2} />
-                        <AccesosEquipo valor={e.accesos} />
+                        <AccesosEquipo valor={jsonbObject(e.accesos, ACCESOS_VACIO)} />
                         <CamposExtra
                           definiciones={camposCat}
                           valor={(e.extras ?? {}) as ExtrasInv}

@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { getSupabase } from "@/lib/supabase";
 import { fechaCorta, folio, duracionPartes, moneda } from "@/lib/format";
-import { ESTADOS_ACTIVOS, evaluarRespuesta, evaluarResolucion } from "@/lib/tickets";
+import {
+  ESTADOS_ACTIVOS,
+  evaluarRespuesta,
+  evaluarResolucion,
+  esEstadoActivo,
+} from "@/lib/tickets";
 import { calendarioPagos, pendienteDelMes, montos, hoyISO } from "@/lib/facturas";
 import { serviciosConEstado, type Servicio, type Incidente } from "@/lib/servicios";
 import { getConfigCorreo, resolverSla } from "@/lib/correo";
@@ -132,7 +137,7 @@ export default async function Resumen() {
 
   // Métricas
   const enReparacion = equipos.filter((e) => e.estado === "en_reparacion").length;
-  const ticketsActivos = tickets.filter((t) => ESTADOS_ACTIVOS.includes(t.estado));
+  const ticketsActivos = tickets.filter((t) => esEstadoActivo(t.estado));
   const vencidos = mantos.filter((m) => m.fecha_programada < hoy);
   const proximos = mantos.filter((m) => m.fecha_programada >= hoy);
 
