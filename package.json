@@ -2,7 +2,7 @@
   "name": "ti-hub",
   "version": "1.0.0",
   "private": true,
-  "description": "Sitio interno del departamento de TI: inventario de equipos, mantenimientos y tickets",
+  "description": "Internal IT department site: device inventory, maintenance scheduling, help-desk tickets and an employee self-service portal",
   "engines": {
     "node": ">=20"
   },

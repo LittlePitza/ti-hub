@@ -1,2 +1,14 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Auto-detect text files and normalize to LF in the repository.
+# eol=lf is explicit: this repo is worked on from Windows (and lives under
+# OneDrive), so without it a formatting pass rewrites every file with CRLF.
+* text=auto eol=lf
+
+# Binary assets — never normalize.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary

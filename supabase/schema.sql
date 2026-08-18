@@ -1,13 +1,13 @@
 -- ============================================================
--- TI Hub · Esquema de base de datos
--- Pegar completo en: Supabase -> SQL Editor -> New query -> Run
+-- TI Hub · database schema
+-- Paste the whole file into: Supabase -> SQL Editor -> New query -> Run
 -- ============================================================
 
 create extension if not exists "pgcrypto";
 
--- ---------- EMPLEADOS ----------
--- Fuente de asignación: cada empleado se identifica por su correo (único);
--- el inventario y el portal ligan equipos y tickets a ese correo.
+-- ---------- EMPLOYEES ----------
+-- The assignment key: each employee is identified by their email (unique);
+-- inventory and the portal both link devices and tickets to that email.
 create table if not exists empleados (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
@@ -19,14 +19,14 @@ create table if not exists empleados (
   created_at timestamptz not null default now()
 );
 
--- ---------- INVENTARIO ----------
--- Una sola tabla para todo el inventario, dividida por `categoria`:
---   computo  -> laptops, desktops, monitores, impresoras, red, servidores, periféricos
---   celular  -> smartphones y tablets (num_serie = IMEI, telefono = línea que trae)
---   linea    -> líneas telefónicas (telefono = número, marca = compañía, modelo = plan);
---               una línea sin asignado_email está "libre"
---   software -> licencias (marca = proveedor, modelo = versión/plan, num_serie = clave,
---               garantia_hasta = renovación)
+-- ---------- INVENTORY ----------
+-- A single table for the whole inventory, partitioned by `categoria`:
+--   computo  -> laptops, desktops, monitors, printers, network gear, servers, peripherals
+--   celular  -> smartphones and tablets (num_serie = IMEI, telefono = the line it carries)
+--   linea    -> phone lines (telefono = number, marca = carrier, modelo = plan);
+--               a line with no asignado_email is "free"
+--   software -> licences (marca = vendor, modelo = version/plan, num_serie = key,
+--               garantia_hasta = renewal date)
 create table if not exists equipos (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
@@ -38,38 +38,38 @@ create table if not exists equipos (
   marca text,
   modelo text,
   num_serie text,
-  telefono text, -- número de la línea (categorías celular y linea)
+  telefono text, -- the line number (categories celular and linea)
   asignado_a text,
-  asignado_email text, -- correo del empleado (empleados.correo); vincula sus equipos en el portal
+  asignado_email text, -- employee email (empleados.correo); links their devices in the portal
   ubicacion text,
   estado text not null default 'activo'
     check (estado in ('activo','en_reparacion','almacen','baja')),
   fecha_compra date,
   garantia_hasta date,
   notas text,
-  -- credenciales y accesos del equipo (RustDesk, admin local y otros).
-  -- forma: { rustdesk:{id,pass}, admin:{usuario,pass}, extra:[{etiqueta,usuario,secreto}] }
-  -- SOLO panel de TI: nunca seleccionar esta columna desde el portal del empleado.
+  -- device credentials and access details (RustDesk, local admin and others).
+  -- shape: { rustdesk:{id,pass}, admin:{usuario,pass}, extra:[{etiqueta,usuario,secreto}] }
+  -- IT PANEL ONLY: never select this column from the employee portal.
   accesos jsonb not null default '{}'::jsonb,
-  -- valores de los campos personalizados por categoría (ver tabla campos_inventario).
-  -- forma: { [clave]: valor }. SOLO panel de TI: no seleccionar desde el portal.
+  -- values of the per-category custom fields (see the campos_inventario table).
+  -- shape: { [clave]: value }. IT PANEL ONLY: do not select from the portal.
   extras jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 
--- ---------- CAMPOS PERSONALIZADOS DEL INVENTARIO ----------
--- Definiciones editables desde /ti/inventario/configuracion: TI agrega campos
--- nuevos por categoría sin tocar código. Los valores capturados viven en
--- equipos.extras ({ [clave]: valor }); aquí solo está el catálogo de campos.
+-- ---------- INVENTORY CUSTOM FIELDS ----------
+-- Definitions editable from /ti/inventario/configuracion: IT adds new fields
+-- per category without touching code. The captured values live in
+-- equipos.extras ({ [clave]: value }); this table is only the field catalogue.
 create table if not exists campos_inventario (
   id uuid primary key default gen_random_uuid(),
   categoria text not null
     check (categoria in ('computo','celular','linea','software')),
-  clave text not null,                 -- slug estable; key dentro de equipos.extras
-  etiqueta text not null,              -- lo que ve TI ("N° de serie")
+  clave text not null,                 -- stable slug; the key inside equipos.extras
+  etiqueta text not null,              -- what IT sees ("N° de serie")
   tipo text not null default 'texto'
     check (tipo in ('texto','numero','fecha','opciones','booleano')),
-  opciones jsonb not null default '[]'::jsonb,  -- para tipo 'opciones': ["A","B"]
+  opciones jsonb not null default '[]'::jsonb,  -- for tipo 'opciones': ["A","B"]
   placeholder text,
   requerido boolean not null default false,
   orden int not null default 0,
@@ -78,7 +78,7 @@ create table if not exists campos_inventario (
   unique (categoria, clave)
 );
 
--- ---------- MANTENIMIENTOS ----------
+-- ---------- MAINTENANCE ----------
 create table if not exists mantenimientos (
   id uuid primary key default gen_random_uuid(),
   equipo_id uuid references equipos(id) on delete set null,
@@ -93,22 +93,22 @@ create table if not exists mantenimientos (
 );
 
 -- ---------- TICKETS ----------
--- Ciclo de vida tipo mesa de ayuda (Jira-like):
---   abierto -> en_proceso <-> en_espera -> archivado ; reabierto regresa al flujo.
---   `archivado` es el estado terminal: al resolver, el ticket se archiva y sale del
---   tablero activo. (resuelto/cerrado quedan permitidos por compatibilidad con datos
---   antiguos y la bitácora, pero el flujo nuevo archiva directamente.)
--- Tiempos de atención: `primera_respuesta_at` (primer contacto de TI) y `resuelto_at`
---   (paso a resuelto/cerrado) permiten medir respuesta y resolución contra el SLA por
---   prioridad definido en `lib/tickets.ts`.
+-- Help-desk lifecycle (Jira-like):
+--   abierto -> en_proceso <-> en_espera -> archivado ; reabierto rejoins the flow.
+--   `archivado` is the terminal status: on resolution the ticket is archived and leaves
+--   the active board. (resuelto/cerrado remain allowed for compatibility with older
+--   data and the activity log, but the current flow archives directly.)
+-- Service times: `primera_respuesta_at` (first contact from IT) and `resuelto_at`
+--   (transition to resolved/closed) allow measuring response and resolution against the
+--   per-priority SLA defined in `lib/domain/tickets.ts`.
 create table if not exists tickets (
   id uuid primary key default gen_random_uuid(),
   num serial,
   titulo text not null,
   descripcion text,
   solicitante text not null,
-  solicitante_email text,                                    -- correo del empleado (portal)
-  equipo_id uuid references equipos(id) on delete set null,  -- equipo relacionado (portal)
+  solicitante_email text,                                    -- employee email (portal)
+  equipo_id uuid references equipos(id) on delete set null,  -- the related device (portal)
   categoria text not null default 'hardware'
     check (categoria in ('hardware','software','red','accesos','correo','otro')),
   prioridad text not null default 'media'
@@ -116,60 +116,62 @@ create table if not exists tickets (
   estado text not null default 'abierto'
     check (estado in ('abierto','en_proceso','en_espera','resuelto','cerrado','reabierto','archivado')),
   asignado_a text,
-  asignado_email text,                -- correo del técnico de TI responsable (opcional)
-  primera_respuesta_at timestamptz,   -- primer contacto de TI; base del tiempo de respuesta
-  resuelto_at timestamptz,            -- paso a resuelto/cerrado; base del tiempo de resolución
-  adjuntos jsonb not null default '[]'::jsonb, -- fotos del reporte (portal): [{path,nombre,tipo}] en bucket 'tickets'
+  asignado_email text,                -- email of the IT technician responsible (optional)
+  primera_respuesta_at timestamptz,   -- first contact from IT; the basis of response time
+  resuelto_at timestamptz,            -- transition to resolved/closed; the basis of resolution time
+  adjuntos jsonb not null default '[]'::jsonb, -- report photos (portal): [{path,nombre,tipo}] in the 'tickets' bucket
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
--- ---------- BITÁCORA DE TICKETS ----------
--- Historial por ticket: comentarios internos de TI, cambios de estado, reasignaciones,
--- eventos del sistema (creación, edición), `respuesta` (mensaje de TI al solicitante) y
--- `mensaje_cliente` (respuesta que el solicitante escribe desde el portal).
--- Casi todo es interno (RLS `to authenticated`); el portal del empleado lee/escribe solo
--- `respuesta` y `mensaje_cliente` (filtrados por su correo vía service role) para el hilo.
+-- ---------- TICKET ACTIVITY LOG ----------
+-- Per-ticket history: internal IT comments, status changes, reassignments, system events
+-- (creation, edits), `respuesta` (a message from IT to the requester) and
+-- `mensaje_cliente` (the reply the requester writes from the portal).
+-- Almost all of it is internal (RLS `to authenticated`); the employee portal reads and
+-- writes only `respuesta` and `mensaje_cliente` (filtered by their email via the service
+-- role) to render the thread.
 create table if not exists ticket_eventos (
   id uuid primary key default gen_random_uuid(),
   ticket_id uuid not null references tickets(id) on delete cascade,
   tipo text not null default 'comentario'
     check (tipo in ('comentario','estado','asignacion','sistema','respuesta','mensaje_cliente')),
-  autor text,                -- correo o nombre de quien generó el evento
-  cuerpo text,               -- texto del comentario o detalle del cambio
+  autor text,                -- email or name of whoever produced the event
+  cuerpo text,               -- the comment text, or the detail of the change
   estado_anterior text,
   estado_nuevo text,
   created_at timestamptz not null default now()
 );
 
--- ---------- CONFIGURACIÓN DE CORREO ----------
--- Una sola fila (id = 1) con el SMTP y las plantillas de notificación al solicitante.
--- Se administra desde el panel (/ti/correo), no por variables de entorno. La envía
--- TI a voluntad (no automático). Solo la leen/escriben usuarios autenticados (RLS).
+-- ---------- EMAIL CONFIGURATION ----------
+-- A single row (id = 1) holding the SMTP settings and the requester notification
+-- templates. Managed from the panel (/ti/correo), not through environment variables.
+-- IT triggers the send on demand (not automatic). Only authenticated users read or
+-- write it (RLS).
 create table if not exists config_correo (
   id int primary key default 1 check (id = 1),
   activo boolean not null default false,
-  -- Método de envío: SMTP básico (legado), app-only Graph o login interactivo OAuth.
+  -- Send method: basic SMTP (legacy), app-only Graph, or interactive OAuth login.
   metodo text not null default 'smtp_basico'
     check (metodo in ('smtp_basico','graph_app','oauth_interactivo')),
   smtp_host text not null default 'smtp.office365.com',
   smtp_port int not null default 587,
   smtp_user text,
   smtp_pass text,
-  -- Credenciales OAuth2 / Microsoft Entra ID (Azure) para graph_app y oauth_interactivo.
+  -- OAuth2 / Microsoft Entra ID (Azure) credentials for graph_app and oauth_interactivo.
   azure_tenant_id text,
   azure_client_id text,
   azure_client_secret text,
-  oauth_refresh_token text,            -- solo oauth_interactivo: token de actualización
-  oauth_cuenta text,                   -- correo de la cuenta conectada (para mostrar)
+  oauth_refresh_token text,            -- oauth_interactivo only: the refresh token
+  oauth_cuenta text,                   -- email of the connected account (for display)
   remitente text,
   remitente_nombre text not null default 'Soporte TI · Plásticos PIMSA',
   sitio_url text,
-  notif_respuesta_def boolean not null default true,  -- casilla precargada al responder
-  notif_estado_def boolean not null default false,    -- casilla precargada al cambiar estado
-  -- Aviso interno a TI cuando entra un ticket nuevo desde el portal del empleado.
+  notif_respuesta_def boolean not null default true,  -- checkbox pre-ticked when replying
+  notif_estado_def boolean not null default false,    -- checkbox pre-ticked when changing status
+  -- Internal notice to IT when a new ticket arrives from the employee portal.
   notif_nuevo boolean not null default true,
-  notif_nuevo_destinos text,                          -- correos destino (coma/salto de línea)
+  notif_nuevo_destinos text,                          -- destination addresses (comma or newline separated)
   asunto_nuevo text not null default 'Nuevo reporte {{folio}} · {{titulo}}',
   cuerpo_nuevo text not null default 'Nuevo reporte de {{solicitante}}.
 
@@ -188,7 +190,7 @@ El equipo de TI respondió a tu reporte {{folio}} · {{titulo}}:
   cuerpo_estado text not null default 'Hola {{nombre}},
 
 El estado de tu reporte {{folio}} · {{titulo}} cambió a: {{estado}}.',
-  -- Valores por defecto de la firma de correo de empleados (editables en el panel).
+  -- Defaults for the employee email signature (editable from the panel).
   firma_web text,
   firma_direccion text,
   firma_eslogan text,
@@ -200,103 +202,104 @@ drop policy if exists "config_correo_autenticados" on config_correo;
 create policy "config_correo_autenticados" on config_correo
   for all to authenticated using (true) with check (true);
 
--- ---------- RESPONSIVAS (cartas de resguardo) ----------
--- Documento de custodia que nace al asignar un equipo a un empleado.
--- Es un documento legal: guarda un SNAPSHOT congelado de los datos del
--- empleado y del equipo al momento de generarse (no se rompe si luego cambian).
--- `plantilla` elige el formato (ver lib/responsivas.ts y plantillas_responsiva);
--- `num` (serial global) + prefijo de la plantilla forman el folio (RES-LAP-0001).
--- Ciclo de vida: borrador -> pendiente_firma -> firmada -> devuelta (o cancelada).
+-- ---------- CUSTODY LETTERS (responsivas) ----------
+-- The custody document created when a device is assigned to an employee.
+-- It is a legal document: it stores a FROZEN SNAPSHOT of the employee and device data
+-- as of the moment it was generated (so it does not break if either later changes).
+-- `plantilla` picks the format (see lib/domain/custody.ts and plantillas_responsiva);
+-- `num` (a global serial) plus the template prefix form the folio (RES-LAP-0001).
+-- Lifecycle: borrador -> pendiente_firma -> firmada -> devuelta (or cancelada).
 create table if not exists responsivas (
   id uuid primary key default gen_random_uuid(),
   num serial,
   equipo_id uuid references equipos(id) on delete set null,
   plantilla text not null default 'laptop',
-  -- snapshot del empleado (resguardante principal)
+  -- employee snapshot (the primary custodian)
   empleado_correo text,
   empleado_nombre text,
   empleado_puesto text,
   empleado_departamento text,
-  -- personas adicionales del documento (co-resguardatarios, testigos, etc.), congeladas.
-  -- forma: [{ nombre, rol, puesto, departamento, correo, fuente:'empleado'|'manual' }]
+  -- additional people on the document (co-custodians, witnesses, etc.), frozen.
+  -- shape: [{ nombre, rol, puesto, departamento, correo, fuente:'empleado'|'manual' }]
   personas jsonb not null default '[]'::jsonb,
-  -- snapshot del equipo + datos editables del documento
+  -- device snapshot plus the editable document fields
   equipo_nombre text,
   datos jsonb not null default '{}'::jsonb, -- { equipo:{...}, accesorios:[], seguridad:[], observaciones, estado_fisico }
   estado text not null default 'borrador'
     check (estado in ('borrador','pendiente_firma','firmada','devuelta','cancelada')),
-  archivo_url text,   -- ruta del escaneo firmado en el bucket 'responsivas' de Storage
+  archivo_url text,   -- path of the signed scan in the 'responsivas' Storage bucket
   archivo_nombre text,
   fecha_generada date not null default current_date,
-  fecha_entrega date,  -- fecha real de entrega/devolución (editable); si null, cae a fecha_generada
+  fecha_entrega date,  -- actual handover/return date (editable); falls back to fecha_generada when null
   fecha_firmada date,
   notas text,
   created_at timestamptz not null default now()
 );
 
--- ---------- PLANTILLAS DE RESPONSIVA ----------
--- Formatos editables desde el panel (cláusulas, accesorios, seguridad, firmas).
--- Arranca VACÍA: el contenido base de las 8 plantillas vive en código
--- (PLANTILLAS_DEFAULT, lib/responsivas.ts). Editar una plantilla en el panel
--- hace upsert de la fila aquí; las lecturas mezclan este override sobre el default.
+-- ---------- CUSTODY LETTER TEMPLATES ----------
+-- Formats editable from the panel (clauses, accessories, security, signatures).
+-- Starts EMPTY: the base content of the 8 templates lives in code
+-- (DEFAULT_TEMPLATES, lib/domain/custody.ts). Editing a template in the panel
+-- upserts a row here; reads merge this override over the default.
 create table if not exists plantillas_responsiva (
   clave text primary key,            -- laptop|pc|movil|monitor|impresora|servidor|software|devolucion
   nombre text not null,              -- "Laptop / Portátil"
   codigo text not null,              -- "TI-RES-01"
-  titulo text not null,              -- subtítulo del documento
+  titulo text not null,              -- document subtitle
   prefijo_folio text not null,       -- "LAP"
   clausulas jsonb not null default '[]'::jsonb,  -- [{ titulo, texto }]
   accesorios jsonb not null default '[]'::jsonb, -- ["Cargador", ...]
   seguridad jsonb not null default '[]'::jsonb,  -- ["Cifrado de disco", ...]
   firmas jsonb not null default '[]'::jsonb,     -- [{ nombre, rol }]
-  aviso text,                        -- texto del recuadro de aviso
-  iso text,                          -- pie con controles ISO
-  campos_equipo jsonb,               -- ["marca","modelo",...]; null = mostrar todos
+  aviso text,                        -- text of the notice box
+  iso text,                          -- footer listing the ISO controls
+  campos_equipo jsonb,               -- ["marca","modelo",...]; null = show all
   version text not null default '1.0',
   updated_at timestamptz not null default now()
 );
 
--- ---------- PROVEEDORES ----------
--- Servicios recurrentes del departamento (internet, licencias, telefonía).
--- `proximo_pago` es el ancla del calendario: lib/facturas.ts proyecta los
--- vencimientos futuros a partir de esa fecha según `periodicidad` (no se
--- materializan filas). Al registrar el pago desde el panel, la action crea la
--- factura correspondiente y avanza `proximo_pago` al siguiente periodo.
+-- ---------- VENDORS ----------
+-- Recurring department services (internet, licences, telephony).
+-- `proximo_pago` anchors the calendar: lib/domain/invoices.ts projects future due
+-- dates forward from it according to `periodicidad` (no rows are materialised).
+-- When a payment is recorded from the panel, the action creates the matching
+-- invoice and advances `proximo_pago` to the next period.
 create table if not exists proveedores (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
-  servicio text,                 -- qué provee: "Internet dedicado", "Microsoft 365"
+  servicio text,                 -- what they supply: "Internet dedicado", "Microsoft 365"
   contacto text,
   telefono text,
   correo text,
-  costo numeric(12,2),           -- costo por periodo; null = variable
+  costo numeric(12,2),           -- cost per period; null = variable
   moneda text not null default 'MXN' check (moneda in ('MXN','USD')),
   periodicidad text not null default 'mensual'
     check (periodicidad in ('mensual','bimestral','trimestral','semestral','anual','unico')),
-  proximo_pago date,             -- siguiente vencimiento; null = sin calendario
+  proximo_pago date,             -- next due date; null = not on a schedule
   activo boolean not null default true,
   notas text,
   created_at timestamptz not null default now()
 );
 
--- ---------- FACTURAS ----------
--- Facturas y pagos del departamento (se administran desde /ti/facturas).
--- `vencida` NO se guarda: se deriva en la UI (pendiente + fecha_vencimiento < hoy),
--- así ningún proceso tiene que mover estados. Adjuntos PDF/XML en el bucket
--- 'facturas': [{path,nombre,tipo}]. Folio interno = 'FAC-' + num (lib/format.ts).
+-- ---------- INVOICES ----------
+-- Department invoices and payments (managed from /ti/facturas).
+-- `vencida` is NOT stored: it is derived in the UI (pendiente + fecha_vencimiento < today),
+-- so no background process has to move statuses. PDF/XML attachments live in the
+-- 'facturas' bucket: [{path,nombre,tipo}]. Internal folio = 'FAC-' + num
+-- (lib/utils/format.ts).
 create table if not exists facturas (
   id uuid primary key default gen_random_uuid(),
   num serial,
   proveedor_id uuid references proveedores(id) on delete set null,
   concepto text not null,
-  folio_proveedor text,          -- folio/serie que trae la factura del proveedor
-  uuid_cfdi text,                -- folio fiscal del CFDI (opcional)
+  folio_proveedor text,          -- the folio/series printed on the vendor invoice
+  uuid_cfdi text,                -- CFDI tax folio (optional)
   monto numeric(12,2) not null default 0,
   moneda text not null default 'MXN' check (moneda in ('MXN','USD')),
   fecha_emision date,
   fecha_vencimiento date not null,
-  fecha_pago date,               -- se sella al marcar pagada
-  metodo_pago text,              -- transferencia, tarjeta, domiciliado…
+  fecha_pago date,               -- stamped when marked as paid
+  metodo_pago text,              -- transfer, card, direct debit…
   estado text not null default 'pendiente'
     check (estado in ('pendiente','pagada','cancelada')),
   adjuntos jsonb not null default '[]'::jsonb,
@@ -304,35 +307,35 @@ create table if not exists facturas (
   created_at timestamptz not null default now()
 );
 
--- ---------- CAJA CHICA ----------
--- Fondo fijo del departamento (se administra desde /ti/caja). El límite del
--- fondo vive en config_correo.caja_limite (fila única de configuración).
--- Bitácora simple: las compras drenan el fondo y los reembolsos lo rellenan;
--- saldo = límite - compras + reembolsos (lib/caja.ts). No es registro fiscal
--- (eso vive en SAP): solo control interno.
+-- ---------- PETTY CASH ----------
+-- The department imprest fund (managed from /ti/caja). The fund limit lives in
+-- config_correo.caja_limite (the single configuration row).
+-- A simple ledger: purchases drain the fund and reimbursements refill it;
+-- balance = limit - purchases + reimbursements (lib/domain/pettyCash.ts). This is not
+-- a tax record (that lives in SAP): internal control only.
 create table if not exists caja_movimientos (
   id uuid primary key default gen_random_uuid(),
   tipo text not null check (tipo in ('compra','reembolso')),
   fecha date not null,
   concepto text not null,
   monto numeric(12,2) not null check (monto > 0),
-  comprador text,                -- quién hizo la compra (libre)
+  comprador text,                -- who made the purchase (free text)
   notas text,
   created_at timestamptz not null default now()
 );
 
--- ---------- SERVICIOS (estado de sistemas) ----------
--- Catálogo de los servicios que la empresa usa a diario (internet, Microsoft 365,
--- SAP, red interna…). Su estado NO se guarda: se deriva de los incidentes abiertos
--- (lib/servicios.ts), igual que `vencida` en facturas. `visible_portal` controla si
--- las caídas del servicio se anuncian en el portal del empleado.
+-- ---------- SERVICES (systems status) ----------
+-- Catalogue of the services the company uses daily (internet, Microsoft 365, SAP,
+-- internal network…). Their status is NOT stored: it is derived from the open incidents
+-- (lib/domain/services.ts), the same way `vencida` works for invoices. `visible_portal`
+-- controls whether outages of the service are announced in the employee portal.
 create table if not exists servicios (
   id uuid primary key default gen_random_uuid(),
   nombre text not null unique,
   descripcion text,
   categoria text not null default 'plataforma'
     check (categoria in ('conectividad','plataforma','infraestructura','otro')),
-  proveedor text,                -- quién lo provee: Telmex, Microsoft, SAP…
+  proveedor text,                -- who supplies it: Telmex, Microsoft, SAP…
   criticidad text not null default 'normal'
     check (criticidad in ('critica','alta','normal')),
   visible_portal boolean not null default true,
@@ -341,7 +344,7 @@ create table if not exists servicios (
   created_at timestamptz not null default now()
 );
 
--- Catálogo inicial (idempotente: `nombre` es único y el conflicto se ignora).
+-- Initial catalogue (idempotent: `nombre` is unique and conflicts are ignored).
 insert into servicios (nombre, categoria, proveedor, criticidad, orden) values
   ('Internet',       'conectividad',    null,        'critica', 1),
   ('Microsoft 365',  'plataforma',      'Microsoft', 'critica', 2),
@@ -351,11 +354,11 @@ insert into servicios (nombre, categoria, proveedor, criticidad, orden) values
   ('Impresión',      'infraestructura', null,        'normal',  6)
 on conflict (nombre) do nothing;
 
--- ---------- INCIDENTES ----------
--- Registro de caídas, fallas y mantenimientos por servicio. Folio INC-#### con
--- `num` (lib/format.ts). Ciclo: activo -> vigilando -> resuelto (al resolver se
--- sella `fin`; la duración es fin − inicio). Un incidente sin resolver mantiene
--- al servicio "afectado" en el tablero y en el aviso del portal.
+-- ---------- INCIDENTS ----------
+-- A record of outages, faults and maintenance per service. Folio INC-#### from `num`
+-- (lib/utils/format.ts). Cycle: activo -> vigilando -> resuelto (resolving stamps `fin`;
+-- duration is fin − inicio). An unresolved incident keeps the service marked as
+-- "affected" both on the board and in the portal notice.
 create table if not exists incidentes (
   id uuid primary key default gen_random_uuid(),
   num serial,
@@ -367,15 +370,15 @@ create table if not exists incidentes (
   estado text not null default 'activo'
     check (estado in ('activo','vigilando','resuelto')),
   inicio timestamptz not null default now(),
-  fin timestamptz,               -- se sella al resolver
-  resolucion text,               -- nota de cierre: qué se hizo
+  fin timestamptz,               -- stamped on resolution
+  resolucion text,               -- closing note: what was done
   created_at timestamptz not null default now()
 );
 
--- ---------- PROYECTOS Y TAREAS ----------
--- Agenda de trabajo del equipo de TI (/ti/tareas). Un proyecto agrupa tareas;
--- una tarea sin proyecto vive en la "bandeja". Completada = `completada_at`
--- sellado (estado derivado, sin columna booleana extra).
+-- ---------- PROJECTS AND TASKS ----------
+-- The IT team work agenda (/ti/tareas). A project groups tasks; a task with no project
+-- lives in the "inbox". Done = `completada_at` is stamped (a derived status, with no
+-- extra boolean column).
 create table if not exists proyectos (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
@@ -390,11 +393,11 @@ create table if not exists tareas (
   id uuid primary key default gen_random_uuid(),
   titulo text not null,
   notas text,
-  proyecto_id uuid references proyectos(id) on delete set null, -- null = bandeja
+  proyecto_id uuid references proyectos(id) on delete set null, -- null = inbox
   prioridad text not null default 'normal'
     check (prioridad in ('alta','normal')),
   fecha_limite date,
-  completada_at timestamptz,     -- null = pendiente
+  completada_at timestamptz,     -- null = still pending
   created_at timestamptz not null default now()
 );
 
@@ -419,8 +422,8 @@ create index if not exists idx_incidentes_estado on incidentes(estado);
 create index if not exists idx_tareas_proyecto on tareas(proyecto_id);
 create index if not exists idx_tareas_completada on tareas(completada_at);
 
--- ---------- MIGRACIÓN (bases creadas antes) ----------
--- `create table if not exists` no agrega columnas a tablas existentes; estas líneas sí.
+-- ---------- MIGRATION (for databases created earlier) ----------
+-- `create table if not exists` does not add columns to existing tables; these lines do.
 alter table equipos add column if not exists asignado_email text;
 alter table tickets add column if not exists solicitante_email text;
 alter table tickets add column if not exists equipo_id uuid references equipos(id) on delete set null;
@@ -436,7 +439,7 @@ alter table equipos drop constraint if exists equipos_tipo_check;
 alter table equipos add constraint equipos_tipo_check
   check (tipo in ('laptop','desktop','monitor','impresora','red','servidor','perifericos','otro',
                   'celular','tablet','linea','software'));
--- Tickets: tiempos de atención, técnico asignado y estados ampliados.
+-- Tickets: service times, assigned technician and the widened status set.
 alter table tickets add column if not exists asignado_email text;
 alter table tickets add column if not exists primera_respuesta_at timestamptz;
 alter table tickets add column if not exists resuelto_at timestamptz;
@@ -444,18 +447,18 @@ alter table tickets add column if not exists adjuntos jsonb not null default '[]
 alter table tickets drop constraint if exists tickets_estado_check;
 alter table tickets add constraint tickets_estado_check
   check (estado in ('abierto','en_proceso','en_espera','resuelto','cerrado','reabierto','archivado'));
--- Bitácora: tipos `respuesta` (TI -> solicitante) y `mensaje_cliente` (solicitante -> TI),
--- ambos visibles en el hilo del portal.
+-- Activity log: the `respuesta` (IT -> requester) and `mensaje_cliente` (requester -> IT)
+-- types, both visible in the portal thread.
 alter table ticket_eventos drop constraint if exists ticket_eventos_tipo_check;
 alter table ticket_eventos add constraint ticket_eventos_tipo_check
   check (tipo in ('comentario','estado','asignacion','sistema','respuesta','mensaje_cliente'));
--- Migración única: todos los tickets ya resueltos/cerrados pasan a archivado (sale del
--- tablero activo). Sella resuelto_at si faltaba para conservar la métrica de resolución.
+-- One-off migration: every already resolved/closed ticket moves to archivado (leaving the
+-- active board). Stamps resuelto_at where it was missing so the resolution metric survives.
 update tickets set resuelto_at = coalesce(resuelto_at, updated_at, created_at)
   where estado in ('resuelto','cerrado') and resuelto_at is null;
 update tickets set estado = 'archivado'
   where estado in ('resuelto','cerrado');
--- Correo: métodos OAuth2 (Microsoft Graph app-only y login interactivo).
+-- Email: the OAuth2 methods (Microsoft Graph app-only and interactive login).
 alter table config_correo add column if not exists metodo text not null default 'smtp_basico';
 alter table config_correo drop constraint if exists config_correo_metodo_check;
 alter table config_correo add constraint config_correo_metodo_check
@@ -465,11 +468,11 @@ alter table config_correo add column if not exists azure_client_id text;
 alter table config_correo add column if not exists azure_client_secret text;
 alter table config_correo add column if not exists oauth_refresh_token text;
 alter table config_correo add column if not exists oauth_cuenta text;
--- Valores por defecto de la firma de correo de empleados.
+-- Defaults for the employee email signature.
 alter table config_correo add column if not exists firma_web text;
 alter table config_correo add column if not exists firma_direccion text;
 alter table config_correo add column if not exists firma_eslogan text;
--- Aviso interno a TI al entrar un ticket nuevo desde el portal (destinatarios configurables).
+-- Internal notice to IT when a new ticket arrives from the portal (recipients configurable).
 alter table config_correo add column if not exists notif_nuevo boolean not null default true;
 alter table config_correo add column if not exists notif_nuevo_destinos text;
 alter table config_correo add column if not exists asunto_nuevo text not null default 'Nuevo reporte {{folio}} · {{titulo}}';
@@ -482,9 +485,10 @@ Categoría: {{categoria}}
 {{descripcion}}';
 update config_correo set notif_nuevo_destinos = 'sistemas@plasticospimsa.com'
   where notif_nuevo_destinos is null;
--- SLA configurable por prioridad (horas de reloj). NULL = usar predeterminado del código.
--- Se administra desde /ti/correo (sección "Tiempos de respuesta"). Valores ITIL 4 para
--- empresa manufacturera (turnos continuos): crítica 1h/4h, alta 4h/24h, media 8h/48h, baja 24h/96h.
+-- Configurable SLA per priority (clock hours). NULL = fall back to the code default.
+-- Managed from /ti/correo (the "Tiempos de respuesta" section). ITIL 4 values for a
+-- manufacturer running continuous shifts: critical 1h/4h, high 4h/24h, medium 8h/48h,
+-- low 24h/96h.
 alter table config_correo add column if not exists sla_critica_respuesta  int;
 alter table config_correo add column if not exists sla_critica_resolucion int;
 alter table config_correo add column if not exists sla_alta_respuesta     int;
@@ -494,16 +498,16 @@ alter table config_correo add column if not exists sla_media_resolucion   int;
 alter table config_correo add column if not exists sla_baja_respuesta     int;
 alter table config_correo add column if not exists sla_baja_resolucion    int;
 alter table config_correo add column if not exists sla_por_vencer_pct int not null default 80;
--- Límite (fondo fijo) de la caja chica. NULL = sin configurar; se captura en /ti/caja.
+-- Petty cash limit (the imprest fund). NULL = not configured; captured at /ti/caja.
 alter table config_correo add column if not exists caja_limite numeric(12,2);
 
--- ---------- SEGURIDAD (RLS) ----------
--- Solo usuarios autenticados (Supabase Auth) pueden leer y escribir.
--- La anon key sin sesión NO tiene acceso a ninguna tabla.
--- Los usuarios se crean a mano en: Supabase -> Authentication -> Users -> Add user.
--- El portal del empleado (app/portal) NO usa Supabase Auth: el servidor accede con la
--- service role key (SUPABASE_SERVICE_ROLE_KEY, solo en el servidor) y filtra por el
--- correo del empleado; por eso no se agregan políticas `to anon`.
+-- ---------- SECURITY (RLS) ----------
+-- Only authenticated users (Supabase Auth) can read and write.
+-- The anon key without a session has NO access to any table.
+-- Users are created by hand at: Supabase -> Authentication -> Users -> Add user.
+-- The employee portal (app/(portal)) does NOT use Supabase Auth: the server reads with
+-- the service role key (SUPABASE_SERVICE_ROLE_KEY, server-only) and filters by the
+-- employee email. That is why no `to anon` policies are added.
 alter table equipos enable row level security;
 alter table mantenimientos enable row level security;
 alter table tickets enable row level security;
@@ -520,7 +524,7 @@ alter table incidentes enable row level security;
 alter table proyectos enable row level security;
 alter table tareas enable row level security;
 
--- Si vienes del esquema anterior (acceso abierto), estas líneas retiran esas políticas.
+-- Coming from the previous schema (open access)? These lines drop those policies.
 drop policy if exists "acceso_total_equipos" on equipos;
 drop policy if exists "acceso_total_mantenimientos" on mantenimientos;
 drop policy if exists "acceso_total_tickets" on tickets;
@@ -555,15 +559,16 @@ create policy "facturas_autenticados" on facturas
 drop policy if exists "caja_movimientos_autenticados" on caja_movimientos;
 create policy "caja_movimientos_autenticados" on caja_movimientos
   for all to authenticated using (true) with check (true);
--- Estado de sistemas: servicios e incidentes son globales; solo el panel (autenticados)
--- los administra. El portal los lee con la service role (salta RLS), sin políticas anon.
+-- Systems status: services and incidents are global; only the panel (authenticated users)
+-- manages them. The portal reads them with the service role (bypassing RLS), no anon
+-- policies.
 drop policy if exists "servicios_autenticados" on servicios;
 create policy "servicios_autenticados" on servicios
   for all to authenticated using (true) with check (true);
 drop policy if exists "incidentes_autenticados" on incidentes;
 create policy "incidentes_autenticados" on incidentes
   for all to authenticated using (true) with check (true);
--- Tareas y proyectos: uso interno de TI, solo autenticados.
+-- Tasks and projects: internal IT use, authenticated only.
 drop policy if exists "proyectos_autenticados" on proyectos;
 create policy "proyectos_autenticados" on proyectos
   for all to authenticated using (true) with check (true);
@@ -571,9 +576,9 @@ drop policy if exists "tareas_autenticados" on tareas;
 create policy "tareas_autenticados" on tareas
   for all to authenticated using (true) with check (true);
 
--- ---------- STORAGE: bucket de responsivas firmadas ----------
--- Guarda el escaneo/PDF firmado de cada responsiva. Privado: solo el panel
--- (usuarios autenticados) sube y descarga; el portal del empleado no lo toca.
+-- ---------- STORAGE: signed custody letters bucket ----------
+-- Holds the signed scan/PDF of each custody letter. Private: only the panel
+-- (authenticated users) uploads and downloads; the employee portal never touches it.
 insert into storage.buckets (id, name, public)
   values ('responsivas', 'responsivas', false)
   on conflict (id) do nothing;
@@ -584,10 +589,10 @@ create policy "responsivas_storage_rw" on storage.objects
   using (bucket_id = 'responsivas')
   with check (bucket_id = 'responsivas');
 
--- ---------- STORAGE: bucket de fotos de reportes ----------
--- Imágenes que el empleado adjunta al levantar un reporte desde el portal.
--- Privado: el portal SUBE con la service role (salta RLS) y el panel de TI
--- (usuarios autenticados) las LEE para mostrarlas en el detalle del ticket.
+-- ---------- STORAGE: report photos bucket ----------
+-- Images the employee attaches when filing a report from the portal.
+-- Private: the portal UPLOADS with the service role (bypassing RLS) and the IT panel
+-- (authenticated users) READS them to show in the ticket detail.
 insert into storage.buckets (id, name, public)
   values ('tickets', 'tickets', false)
   on conflict (id) do nothing;
@@ -598,9 +603,9 @@ create policy "tickets_storage_rw" on storage.objects
   using (bucket_id = 'tickets')
   with check (bucket_id = 'tickets');
 
--- ---------- STORAGE: bucket de facturas (PDF/XML) ----------
--- Archivos de cada factura (PDF y XML del CFDI). Privado: solo el panel de TI
--- (usuarios autenticados) sube y descarga; el portal del empleado no lo toca.
+-- ---------- STORAGE: invoices bucket (PDF/XML) ----------
+-- The files for each invoice (the CFDI PDF and XML). Private: only the IT panel
+-- (authenticated users) uploads and downloads; the employee portal never touches it.
 insert into storage.buckets (id, name, public)
   values ('facturas', 'facturas', false)
   on conflict (id) do nothing;
@@ -612,8 +617,8 @@ create policy "facturas_storage_rw" on storage.objects
   with check (bucket_id = 'facturas');
 
 -- ---------- DATOS DE EJEMPLO ----------
--- Solo para instalaciones nuevas: NO re-ejecutar esta sección sobre una base con datos
--- (los inserts se duplicarían).
+-- Fresh installs only: do NOT re-run this section against a database that already has
+-- data (the inserts would be duplicated).
 insert into empleados (nombre, correo, departamento, puesto, extension) values
   ('María López', 'maria.lopez@plasticospimsa.com', 'Edición', 'Editora', '102'),
   ('Carlos Ruiz', 'carlos.ruiz@plasticospimsa.com', 'Administración', 'Contador', '110');
@@ -637,8 +642,8 @@ insert into tickets (titulo, descripcion, solicitante, categoria, prioridad, est
   ('No imprime desde piso 2', 'La impresora marca atasco pero no hay papel atorado.', 'Carlos (Admon)', 'hardware', 'media', 'en_proceso', 'Lalo'),
   ('Acceso a carpeta de obras finalizadas', 'Necesito permiso de lectura en Finalizadas/2025.', 'Ana (Proyectos)', 'accesos', 'baja', 'resuelto', 'TI');
 
--- Tiempos de atención de ejemplo para que el tablero muestre métricas de SLA desde el
--- inicio. Idempotente (solo rellena valores nulos): no duplica al re-ejecutarse.
+-- Sample service times so the board shows SLA metrics from the start. Idempotent (it
+-- only fills null values): re-running does not duplicate anything.
 update tickets set primera_respuesta_at = created_at + interval '35 minutes'
   where estado in ('en_proceso','en_espera','resuelto','cerrado','reabierto') and primera_respuesta_at is null;
 update tickets set resuelto_at = created_at + interval '3 hours'
