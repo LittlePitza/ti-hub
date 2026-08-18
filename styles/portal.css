@@ -1,0 +1,983 @@
+/* ============================================================
+   Portal del empleado (app/(portal)) · identidad PIMSA
+   Mobile-first: la mayoría de los reportes llegan desde el celular.
+   Voz visual: calma y confianza. Tipografía Poppins (familia visual
+   compartida con el Portal de Mantenimiento); azul marino como superficie
+   protagonista (hero) y el isotipo de olas como firma. Una sola acción por
+   pantalla.
+   ============================================================ */
+.portal-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--papel);
+  font-family: var(--font-poppins), system-ui, sans-serif;
+}
+
+/* Cabecera: superficie clara con filo verde de marca */
+.portal-header {
+  background: var(--superficie);
+  border-bottom: 3px solid var(--pimsa-verde);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.portal-header-inner {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 11px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.portal-marca { display: flex; align-items: center; gap: 10px; }
+.portal-marca img { height: 30px; width: auto; display: block; }
+.portal-marca-nombre {
+  font-weight: 600;
+  font-size: 15.5px;
+  color: var(--petroleo);
+  line-height: 1.15;
+}
+.portal-marca-sub { font-size: 11.5px; color: var(--tinta-suave); }
+
+.portal-main {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 22px 18px 80px;
+  flex: 1;
+}
+
+.portal-pie {
+  border-top: 1px solid var(--linea);
+  text-align: center;
+  font-size: 12px;
+  color: var(--tinta-suave);
+  padding: 18px;
+}
+/* Acceso discreto al panel de TI desde el pie del portal */
+.pie-ti { color: inherit; opacity: 0.75; }
+.pie-ti:hover { text-decoration: underline; opacity: 1; }
+
+/* ---------- Identificación (solo el correo) ---------- */
+.portal-bienvenida {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding-top: 5vh;
+}
+.portal-bienvenida-logo { margin-bottom: 6px; }
+.portal-bienvenida-logo img { width: min(216px, 60vw); height: auto; }
+.portal-bienvenida-titulo {
+  font-size: clamp(30px, 9vw, 38px);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  color: var(--petroleo);
+}
+.portal-bienvenida-texto {
+  font-size: 15px;
+  color: var(--tinta-suave);
+  line-height: 1.55;
+  max-width: 360px;
+}
+.portal-form-correo {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+  text-align: left;
+}
+.portal-form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tinta);
+}
+
+/* Campos grandes (16px evita el zoom automático de iOS) */
+.portal-input {
+  width: 100%;
+  padding: 14px 15px;
+  font-size: 16px;
+  border: 1.5px solid var(--linea-fuerte);
+  border-radius: 12px;
+  background: var(--superficie);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.portal-input::placeholder { color: var(--tinta-suave); opacity: 0.75; }
+.portal-input:focus {
+  outline: none;
+  border-color: var(--pimsa-azul);
+  box-shadow: 0 0 0 3px var(--petroleo-tenue);
+}
+
+/* Campo de correo fusionado del portal: usuario editable + dominio fijo de marca.
+   El borde/anillo de foco viven en el wrapper; el input interno es transparente. */
+.portal-correo-campo {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  border: 1.5px solid var(--linea-fuerte);
+  border-radius: 12px;
+  background: var(--superficie);
+  overflow: hidden;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.portal-correo-campo:focus-within {
+  border-color: var(--pimsa-azul);
+  box-shadow: 0 0 0 3px var(--petroleo-tenue);
+}
+/* Selector con `.portal-correo-campo` para ganarle en especificidad a
+   `.campo input` (que si no, le impone borde, radio, padding y 14px → zoom iOS). */
+.portal-correo-campo .portal-correo-usuario {
+  flex: 1 1 auto;
+  min-width: 0;                /* permite encoger en móvil sin desbordar el segmento */
+  padding: 14px 14px;
+  font-size: 16px;             /* evita el zoom automático de iOS */
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--tinta);
+}
+.portal-correo-campo .portal-correo-usuario:focus { outline: none; border: none; box-shadow: none; }
+.portal-correo-campo .portal-correo-usuario::placeholder { color: var(--tinta-suave); opacity: 0.75; }
+.portal-correo-dominio {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 13px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--pimsa-verde);
+  background: var(--ok-tenue);
+  border-left: 1.5px solid var(--linea-fuerte);
+  white-space: nowrap;
+  user-select: none;
+}
+/* En pantallas angostas "@plasticospimsa.com" no cabe junto al usuario sin
+   recortar el placeholder "nombre.apellido". Se apila: el input ocupa todo el
+   ancho (con su propio borde/anillo) y el dominio pasa a una pista debajo. */
+@media (max-width: 480px) {
+  .portal-correo-campo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+    border: none;
+    background: transparent;
+    overflow: visible;
+  }
+  .portal-correo-campo:focus-within { box-shadow: none; }
+  .portal-correo-campo .portal-correo-usuario {
+    padding: 13px 14px;
+    border: 1.5px solid var(--linea-fuerte);
+    border-radius: 12px;
+    background: var(--superficie);
+  }
+  .portal-correo-campo:focus-within .portal-correo-usuario {
+    border-color: var(--pimsa-azul);
+    box-shadow: 0 0 0 3px var(--petroleo-tenue);
+  }
+  .portal-correo-dominio {
+    padding: 0 2px;
+    background: transparent;
+    border-left: none;
+    font-size: 12.5px;
+    color: var(--tinta-suave);
+    font-weight: 500;
+  }
+  .portal-correo-dominio::before {
+    content: "Le agregamos ";
+    color: var(--tinta-suave);
+    font-weight: 400;
+  }
+}
+
+.portal-boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  padding: 15px 20px;
+  border: none;
+  border-radius: 12px;
+  background: var(--pimsa-azul);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 4px;
+  transition: background 120ms ease, transform 80ms ease;
+}
+.portal-boton:hover { background: var(--pimsa-azul-profundo); }
+.portal-boton:active { transform: translateY(1px); }
+.portal-boton svg { transition: transform 140ms ease; }
+.portal-boton:hover svg { transform: translateX(3px); }
+
+/* ---------- Inicio: hero azul con saludo + acción principal ---------- */
+.banner-exito {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--ok-tenue);
+  color: var(--ok);
+  border: 1px solid var(--pimsa-verde-claro);
+  border-radius: 14px;
+  padding: 15px 17px;
+  font-size: 14px;
+  line-height: 1.45;
+  margin-bottom: 18px;
+}
+.banner-exito svg { flex-shrink: 0; margin-top: 1px; }
+.banner-exito strong { display: block; font-size: 14.5px; margin-bottom: 1px; }
+
+.portal-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--pimsa-azul);
+  color: #fff;
+  border-radius: 20px;
+  padding: 26px 24px 22px;
+  margin-bottom: 34px;
+}
+[data-theme="dark"] .portal-hero {
+  background: var(--navy);
+  border: 1px solid var(--linea-fuerte);
+}
+/* Marca de agua: olas/flechas del isotipo (economía circular) */
+.portal-hero-onda {
+  position: absolute;
+  right: -38px;
+  bottom: -54px;
+  width: 260px;
+  height: auto;
+  color: #fff;
+  opacity: 0.08;
+  pointer-events: none;
+}
+.portal-hero-saludo {
+  position: relative;
+  font-size: clamp(28px, 8vw, 34px);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.portal-hero-sub {
+  position: relative;
+  font-size: 15px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.82);
+  margin-top: 8px;
+  max-width: 38ch;
+}
+.portal-hero-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 20px;
+  padding: 14px 22px;
+  border-radius: 12px;
+  /* Verde de marca oscurecido: alcanza contraste AA con texto blanco (≈4.8:1) */
+  background: #5d7a2c;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  transition: background 120ms ease, transform 80ms ease;
+}
+.portal-hero-cta:hover { background: #4f6926; }
+.portal-hero-cta:active { transform: translateY(1px); }
+.portal-hero-cta svg { transition: transform 140ms ease; }
+.portal-hero-cta:hover svg { transform: translateX(3px); }
+.portal-hero-pie {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 18px;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.62);
+}
+.portal-hero-correo { word-break: break-all; }
+.portal-hero-cambiar {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.85;
+}
+.portal-hero-cambiar:hover { opacity: 1; }
+
+.portal-seccion { margin-bottom: 32px; }
+.portal-seccion-titulo {
+  font-size: 12.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tinta-suave);
+  margin-bottom: 12px;
+}
+
+/* Estado vacío amable */
+.portal-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  border: 1px dashed var(--linea-fuerte);
+  border-radius: 16px;
+  padding: 34px 24px;
+  color: var(--tinta-suave);
+}
+.portal-vacio svg { color: var(--pimsa-verde); margin-bottom: 8px; }
+.portal-vacio strong { color: var(--tinta); font-size: 15px; }
+.portal-vacio span { font-size: 13.5px; line-height: 1.5; max-width: 30ch; }
+
+/* Equipos vinculados al correo */
+.equipos-lista { display: flex; flex-direction: column; gap: 8px; }
+.equipo-chip {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-campo);
+  box-shadow: var(--sombra-tarjeta);
+  padding: 12px 14px;
+}
+.equipo-chip-nombre { font-size: 14px; font-weight: 600; }
+.equipo-chip-detalle { font-size: 12.5px; color: var(--tinta-suave); margin-top: 1px; }
+.equipo-chip > svg {
+  color: var(--pimsa-verde);
+  flex-shrink: 0;
+  background: var(--ok-tenue);
+  border-radius: 9px;
+  padding: 7px;
+  width: 34px;
+  height: 34px;
+  box-sizing: content-box;
+}
+
+/* Mis reportes: tarjetas con la ruta del reporte */
+.tickets-lista { display: flex; flex-direction: column; gap: 12px; }
+.ticket-card {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-tarjeta);
+  box-shadow: var(--sombra-tarjeta);
+  padding: 17px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--tinta);
+  transition: border-color 130ms ease, box-shadow 130ms ease, transform 130ms ease;
+  position: relative;
+}
+.ticket-card:hover {
+  border-color: var(--pimsa-verde);
+  box-shadow: 0 6px 20px -12px rgba(41, 68, 102, 0.4);
+  transform: translateY(-1px);
+}
+/* Toda la tarjeta es clicable: el título lleva el enlace y se estira sobre ella. */
+.ticket-card-link { color: inherit; }
+.ticket-card-link::after { content: ""; position: absolute; inset: 0; }
+.ticket-card:has(.ticket-card-link:focus-visible) {
+  outline: 2px solid var(--pimsa-azul);
+  outline-offset: 2px;
+}
+/* El botón archivar va por encima del enlace estirado para poder pulsarlo. */
+.ticket-card-archivar { margin-left: auto; position: relative; z-index: 1; }
+.ticket-card-archivar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  background: transparent;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 9px;
+  padding: 6px 11px;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+.ticket-card-archivar button:hover {
+  border-color: var(--pimsa-verde);
+  color: var(--ok);
+  background: var(--ok-tenue);
+}
+.ticket-card-archivar svg { flex-shrink: 0; }
+
+/* Pestaña de archivados del portal (acordeón colapsado) */
+.portal-archivados {
+  border: 1px solid var(--linea);
+  border-radius: 16px;
+  background: var(--superficie);
+  overflow: hidden;
+}
+.portal-archivados > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 17px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--tinta);
+}
+.portal-archivados > summary::-webkit-details-marker { display: none; }
+.portal-archivados-resumen { display: inline-flex; align-items: center; gap: 9px; }
+.portal-archivados-resumen svg { color: var(--tinta-suave); }
+.portal-archivados-num {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tinta-suave);
+  background: var(--neutro-tenue);
+  border-radius: 99px;
+  padding: 1px 9px;
+  min-width: 22px;
+  text-align: center;
+}
+.portal-archivados-chevron { color: var(--tinta-suave); display: inline-flex; transition: transform 160ms ease; }
+.portal-archivados[open] .portal-archivados-chevron { transform: rotate(180deg); }
+.portal-archivados-lista { list-style: none; margin: 0; padding: 0 8px 8px; display: flex; flex-direction: column; }
+.portal-archivado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 9px;
+  border-top: 1px solid var(--linea);
+}
+.portal-archivado-cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; color: var(--tinta); }
+.portal-archivado-titulo { font-size: 14px; font-weight: 600; line-height: 1.3; }
+.portal-archivado-meta { font-size: 11.5px; color: var(--tinta-suave); }
+.portal-archivado-reactivar {
+  flex-shrink: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--petroleo);
+  background: transparent;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 9px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.portal-archivado-reactivar:hover { border-color: var(--pimsa-azul); background: var(--petroleo-tenue); }
+.ticket-card-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ticket-card-titulo { font-size: 15.5px; font-weight: 600; line-height: 1.35; }
+.ticket-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--tinta-suave);
+  margin-top: -4px;
+}
+
+/* Pie de la tarjeta del reporte: aviso de respuestas + invitación a ver el detalle */
+.ticket-card-pie {
+  border-top: 1px solid var(--linea);
+  padding-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ticket-card-respuestas {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ok);
+}
+.ticket-card-respuestas svg { color: var(--pimsa-verde); flex-shrink: 0; }
+.ticket-card-pie-vacio { font-size: 12.5px; color: var(--tinta-suave); }
+.ticket-card-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--petroleo);
+  margin-left: auto;
+}
+.ticket-card-ver svg { transition: transform 140ms ease; }
+a.ticket-card:hover .ticket-card-ver svg { transform: translateX(3px); }
+
+/* Ruta del reporte: stepper Recibido → En atención → Resuelto (la firma) */
+.ruta {
+  display: flex;
+  list-style: none;
+  margin-top: 2px;
+}
+.ruta-paso {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  position: relative;
+  min-width: 0;
+}
+/* Conector hacia el nodo anterior */
+.ruta-paso::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--linea-fuerte);
+}
+.ruta-paso:first-child::before { display: none; }
+.ruta-paso.completo::before,
+.ruta-paso.actual::before { background: var(--pimsa-verde); }
+.ruta-nodo {
+  position: relative;
+  z-index: 1;
+  width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  background: var(--superficie);
+  border: 2px solid var(--linea-fuerte);
+  color: #fff;
+}
+.ruta-punto { width: 7px; height: 7px; border-radius: 99px; background: var(--linea-fuerte); }
+.ruta-paso.completo .ruta-nodo {
+  background: var(--pimsa-verde);
+  border-color: var(--pimsa-verde);
+}
+.ruta-paso.actual .ruta-nodo {
+  border-color: var(--pimsa-verde);
+  box-shadow: 0 0 0 3px var(--ok-tenue);
+}
+.ruta-paso.actual .ruta-punto { background: var(--pimsa-verde); }
+.ruta-label {
+  font-size: 11.5px;
+  color: var(--tinta-suave);
+  text-align: center;
+  line-height: 1.25;
+}
+.ruta-paso.actual .ruta-label { color: var(--ok); font-weight: 600; }
+.ruta-paso.completo .ruta-label { color: var(--tinta); }
+
+/* ---------- Detalle del reporte (expediente del empleado) ---------- */
+.reporte-cabecera {
+  position: relative;
+  overflow: hidden;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 18px;
+  padding: 20px 20px 24px;
+  margin-bottom: 28px;
+}
+.reporte-cabecera::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--pimsa-verde);
+}
+.reporte-onda {
+  position: absolute;
+  right: -40px;
+  top: -28px;
+  width: 220px;
+  height: auto;
+  color: var(--pimsa-verde);
+  opacity: 0.06;
+  pointer-events: none;
+}
+.reporte-cabecera-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  position: relative;
+}
+.reporte-folio { font-size: 13px; color: var(--tinta-suave); font-weight: 600; letter-spacing: 0.02em; }
+.reporte-titulo {
+  font-size: clamp(20px, 5.5vw, 25px);
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+  position: relative;
+}
+.reporte-cabecera-ruta { position: relative; }
+
+.reporte-datos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 16px;
+  padding: 18px;
+}
+.reporte-dato.ancho { grid-column: 1 / -1; }
+.reporte-dato dt {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tinta-suave);
+  margin-bottom: 3px;
+}
+.reporte-dato dd { font-size: 14.5px; color: var(--tinta); line-height: 1.45; }
+
+/* Seguimiento: hilo vertical sobre una espina verde→azul. Tu reporte es el origen;
+   debajo fluyen las respuestas de TI, como una continuación de la ruta. */
+.seguimiento {
+  list-style: none;
+  position: relative;
+  padding-left: 0;
+  margin-top: 4px;
+}
+.seguimiento::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 6px;
+  bottom: 14px;
+  width: 2px;
+  background: linear-gradient(var(--pimsa-verde), var(--pimsa-azul));
+  border-radius: 2px;
+}
+.seg-item {
+  position: relative;
+  padding-left: 42px;
+  padding-bottom: 20px;
+}
+.seg-item:last-child { padding-bottom: 0; }
+.seg-nodo {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #fff;
+  z-index: 1;
+  box-shadow: 0 0 0 4px var(--papel);
+}
+.seg-item.es-tuyo .seg-nodo { background: var(--pimsa-verde); }
+.seg-item.es-ti .seg-nodo { background: var(--pimsa-azul); }
+.seg-item.es-espera .seg-nodo { background: var(--superficie); border: 2px solid var(--linea-fuerte); color: var(--tinta-suave); }
+.seg-item.es-listo .seg-nodo { background: var(--ok); }
+.seg-cab {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 7px;
+  min-height: 28px;
+}
+.seg-cab strong { font-size: 14px; font-weight: 600; color: var(--tinta); }
+.seg-fecha { font-size: 12px; color: var(--tinta-suave); }
+.seg-burbuja {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--tinta);
+  border-radius: 13px;
+  padding: 12px 14px;
+  white-space: pre-wrap;
+}
+.seg-burbuja.tuyo {
+  background: var(--ok-tenue);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--pimsa-verde);
+}
+.seg-burbuja.ti {
+  background: var(--petroleo-tenue);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--pimsa-azul);
+}
+.seg-espera { font-size: 13.5px; line-height: 1.55; color: var(--tinta-suave); max-width: 46ch; }
+
+/* Cuadro para responder, al pie del hilo: tu voz (verde), continúa la conversación. */
+.seg-redactar { padding-bottom: 0; }
+.seg-redactar .seg-nodo { background: var(--pimsa-verde); }
+.seg-responder {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-left: 3px solid var(--pimsa-verde);
+  border-radius: 13px;
+  padding: 13px 14px;
+}
+.seg-responder-label { font-size: 13.5px; font-weight: 600; color: var(--tinta); }
+.seg-responder textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 74px;
+  font: inherit;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--tinta);
+  background: var(--papel);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.seg-responder textarea::placeholder { color: var(--tinta-suave); }
+.seg-responder textarea:focus-visible {
+  outline: none;
+  border-color: var(--pimsa-verde);
+  box-shadow: 0 0 0 3px var(--ok-tenue);
+}
+.seg-responder-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.seg-responder-hint { font-size: 12px; color: var(--tinta-suave); }
+.seg-enviar {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  background: var(--pimsa-verde);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 17px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 140ms ease, transform 120ms ease;
+}
+.seg-enviar:hover { filter: brightness(1.06); }
+.seg-enviar:active { transform: translateY(1px); }
+.seg-enviar svg { transition: transform 140ms ease; }
+.seg-enviar:hover svg { transform: translate(2px, -2px); }
+
+.reporte-cta-nuevo {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--petroleo);
+}
+.reporte-cta-nuevo svg { transition: transform 140ms ease; }
+.reporte-cta-nuevo:hover svg { transform: translateX(3px); }
+
+/* ---------- Crear reporte: pasos numerados ---------- */
+.portal-volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tinta-suave);
+  margin-bottom: 18px;
+}
+.portal-volver:hover { color: var(--petroleo); }
+
+.portal-titulo-pagina { font-size: clamp(25px, 7vw, 30px); font-weight: 400; letter-spacing: -0.01em; margin-bottom: 5px; }
+.portal-desc-pagina { font-size: 14.5px; color: var(--tinta-suave); line-height: 1.5; margin-bottom: 28px; }
+
+.paso { margin-bottom: 30px; }
+.paso-titulo {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.paso-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--pimsa-azul);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Tarjetas de opción (radios ocultos accesibles), con ícono */
+.opciones { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 480px) { .opciones { grid-template-columns: 1fr 1fr; } }
+.opcion { position: relative; cursor: pointer; }
+.opcion input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.opcion-cuerpo {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  height: 100%;
+  background: var(--superficie);
+  border: 1.5px solid var(--linea-fuerte);
+  border-radius: 14px;
+  padding: 14px 15px;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.opcion-icono {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--petroleo-tenue);
+  color: var(--petroleo);
+  transition: background 120ms ease, color 120ms ease;
+}
+.opcion-icono svg { width: 22px; height: 22px; }
+.opcion-texto { min-width: 0; }
+.opcion:hover .opcion-cuerpo { border-color: var(--pimsa-verde-claro); }
+.opcion input:checked + .opcion-cuerpo {
+  border-color: var(--pimsa-verde);
+  background: var(--ok-tenue);
+  box-shadow: inset 0 0 0 1px var(--pimsa-verde);
+}
+.opcion input:checked + .opcion-cuerpo .opcion-icono {
+  background: var(--pimsa-verde);
+  color: #fff;
+}
+.opcion input:checked + .opcion-cuerpo .opcion-titulo { color: var(--ok); }
+.opcion input:focus-visible + .opcion-cuerpo {
+  outline: 2px solid var(--petroleo);
+  outline-offset: 2px;
+}
+.opcion-titulo { display: block; font-size: 14.5px; font-weight: 600; }
+.opcion-detalle { display: block; font-size: 12px; color: var(--tinta-suave); line-height: 1.35; margin-top: 2px; }
+
+.portal-campo { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+.portal-campo label { font-size: 13.5px; font-weight: 600; color: var(--tinta); }
+.portal-campo textarea.portal-input { resize: vertical; min-height: 110px; line-height: 1.5; }
+
+.portal-nota {
+  font-size: 12.5px;
+  color: var(--tinta-suave);
+  line-height: 1.55;
+  text-align: center;
+  margin-top: 16px;
+}
+
+/* ---------- Adjuntar fotos al reporte (mismo idioma que .opcion) ---------- */
+.adjuntos { display: flex; flex-direction: column; gap: 12px; }
+.adjuntos-zona {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1.5px dashed var(--linea-fuerte);
+  border-radius: 14px;
+  padding: 14px 15px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.adjuntos-zona:hover { border-color: var(--pimsa-verde-claro); }
+.adjuntos-zona.activa {
+  border-color: var(--pimsa-verde);
+  border-style: solid;
+  background: var(--ok-tenue);
+}
+.adjuntos-zona:focus-visible { outline: 2px solid var(--petroleo); outline-offset: 2px; }
+.adjuntos-zona-icono {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--petroleo-tenue);
+  color: var(--petroleo);
+}
+.adjuntos-zona-icono svg { width: 22px; height: 22px; }
+.adjuntos-zona-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.adjuntos-zona-texto strong { font-size: 14.5px; font-weight: 600; }
+.adjuntos-zona-texto span { font-size: 12px; color: var(--tinta-suave); }
+
+.adjuntos-error { font-size: 12.5px; color: var(--critico); line-height: 1.4; margin: 0; }
+
+.adjuntos-grid { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; }
+.adjunto-mini {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid var(--linea-fuerte);
+}
+.adjunto-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.adjunto-quitar {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.adjunto-quitar:hover { background: rgba(0, 0, 0, 0.8); }
+.adjunto-quitar svg { width: 13px; height: 13px; }
+
+/* ---------- Galería de fotos ya guardadas (portal y panel TI) ---------- */
+.galeria-adjuntos { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 0; padding: 0; }
+.galeria-adjuntos li { width: 88px; height: 88px; }
+.galeria-adjuntos a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid var(--linea-fuerte);
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+.galeria-adjuntos a:hover { border-color: var(--pimsa-verde); transform: translateY(-1px); }
+.galeria-adjuntos img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+  /* El spinner deja de girar; la etiqueta "…ando" sigue comunicando el estado. */
+  .spinner { animation: none; opacity: 0.55; }
+  .esqueleto { animation: none; }
+}
+

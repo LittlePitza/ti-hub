@@ -1,0 +1,528 @@
+/* ============================================================
+   Consola de operaciones · dashboard bento + tablero de tickets
+   (riel marino arriba; estas piezas distribuyen el trabajo diario)
+   ============================================================ */
+
+/* ---------- Eyebrow de sección (banda) ---------- */
+.banda-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--tinta-suave);
+  margin: 0 0 12px;
+}
+.banda-titulo .conteo { font-family: var(--font-mono); color: var(--tinta); letter-spacing: 0; }
+
+/* ---------- Dashboard: principal + columna de actividad ---------- */
+.dash-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 358px;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 40px;
+}
+.dash-main { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
+.dash-aside { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+/* Métricas: el dashboard usa una variante más viva con acento superior */
+.metricas.compacta { margin-bottom: 0; }
+.metrica { position: relative; }
+.dash-main .tarjetas { margin-bottom: 0; grid-template-columns: 1fr 1fr; }
+
+/* ---------- Panel de actividad (lista compacta en aside) ---------- */
+.panel {
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: var(--superficie);
+  overflow: hidden;
+}
+.panel-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--linea);
+}
+.panel-cab-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tinta-suave);
+}
+.panel-cab a { font-size: 12.5px; color: var(--petroleo); font-weight: 500; }
+.panel-cab a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.panel-cuerpo { padding: 4px 16px 8px; }
+.panel-vacio { padding: 22px 16px; text-align: center; color: var(--tinta-suave); font-size: 13px; }
+
+.fila-compacta {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--linea);
+}
+.fila-compacta:last-child { border-bottom: none; }
+.fila-compacta-main { flex: 1; min-width: 0; }
+.fila-compacta-titulo {
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fila-compacta-titulo:hover { color: var(--petroleo); }
+.fila-compacta-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 12px;
+  color: var(--tinta-suave);
+  margin-top: 3px;
+}
+.fila-compacta-fin { flex-shrink: 0; text-align: right; }
+.fila-compacta-fecha { font-family: var(--font-mono); font-size: 11.5px; color: var(--tinta-suave); }
+
+/* ---------- Resumen: hero "Rendimiento de la mesa" ----------
+   Empareja velocidad (tiempo promedio) con calidad (% dentro de SLA) en una
+   barra real-vs-objetivo: la firma del dashboard, específica de una mesa con SLA. */
+.resumen-hero {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-top: 3px solid var(--pimsa-verde);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.resumen-hero-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 22px;
+  border-bottom: 1px solid var(--linea);
+}
+.resumen-hero-cab h2 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tinta-suave);
+}
+.resumen-hero-sub { font-size: 12.5px; color: var(--tinta-suave); }
+
+.resumen-hero-cuerpo { display: grid; grid-template-columns: 1fr 1fr 0.9fr; }
+.tiempo-metrica { display: flex; flex-direction: column; padding: 20px 24px; }
+.tiempo-metrica + .tiempo-metrica { border-left: 1px solid var(--linea); }
+.tiempo-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tinta-suave);
+}
+/* Tiempo: cifra grande + unidad chica pegada, sin espacios mono que la separen. */
+.tiempo-valor {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+.tiempo-parte { display: inline-flex; align-items: baseline; gap: 2px; }
+.tiempo-cifra {
+  font-family: var(--font-mono);
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--tinta);
+}
+.tiempo-cifra.apagado { color: var(--tinta-suave); }
+.tiempo-u { font-size: 15px; font-weight: 500; color: var(--tinta-suave); }
+.tiempo-track {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--neutro-tenue);
+  overflow: hidden;
+  margin-top: 18px;
+}
+.tiempo-track-fill { height: 100%; border-radius: 99px; transition: width 400ms ease; }
+.tiempo-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--tinta-suave);
+  margin-top: 10px;
+}
+.tiempo-pie b { color: var(--tinta); font-weight: 600; }
+.tiempo-metrica.destacada { background: linear-gradient(180deg, var(--pimsa-verde-claro-tenue, rgba(176,205,117,0.07)), transparent 70%); }
+
+/* Tercera columna: carga viva de la bandeja (alertas plegadas aquí dentro). */
+.carga-metrica { text-decoration: none; color: inherit; transition: background 140ms ease; }
+.carga-metrica:hover { background: var(--neutro-tenue); }
+.carga-lista { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.carga-lista li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--tinta-suave);
+}
+.carga-lista li b { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--tinta); }
+.carga-lista li.mal b { color: var(--critico); }
+.carga-lista li.ojo b { color: var(--aviso); }
+
+.banda-operativa { margin-bottom: 4px; }
+
+@media (max-width: 860px) {
+  .resumen-hero-cuerpo { grid-template-columns: 1fr 1fr; }
+  .carga-metrica { grid-column: 1 / -1; border-left: none; border-top: 1px solid var(--linea); }
+}
+@media (max-width: 560px) {
+  .resumen-hero-cuerpo { grid-template-columns: 1fr; }
+  .tiempo-metrica + .tiempo-metrica { border-left: none; border-top: 1px solid var(--linea); }
+  .tiempo-cifra { font-size: 36px; }
+  .tiempo-metrica > .tiempo-track { margin-top: 14px; }
+}
+
+/* ---------- Toolbar de tickets (filtros + alternador de vista) ---------- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.toolbar .filtros { margin-bottom: 0; flex: 1; }
+.vista-toggle {
+  display: inline-flex;
+  background: var(--neutro-tenue);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 8px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+.vista-toggle a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--tinta-suave);
+}
+.vista-toggle a svg { width: 15px; height: 15px; }
+.vista-toggle a.activo { background: var(--superficie); color: var(--petroleo); box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+
+/* ---------- Tablero de tickets (kanban por estado) ---------- */
+.tablero {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+/* Mientras la server action del arrastre/triaje persiste, el tablero baja un poco
+   de intensidad: confirma que el movimiento se está guardando. */
+.tablero[aria-busy="true"] { opacity: 0.78; }
+
+/* Píldora "Guardando…" flotante mientras se confirma un cambio de estado. */
+.tablero-guardando {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--petroleo);
+  background: var(--petroleo-tenue);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+.tablero-guardando .spinner { width: 12px; height: 12px; }
+.tablero-col {
+  background: var(--neutro-tenue);
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 130px;
+}
+.tablero-col-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 14px;
+  border-top: 3px solid var(--col-acento, var(--linea-fuerte));
+  border-radius: 12px 12px 0 0;
+}
+.tablero-col-titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tablero-col-titulo::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--col-acento, var(--linea-fuerte));
+}
+.tablero-col-num {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--tinta-suave);
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 99px;
+  padding: 1px 8px;
+}
+.tablero-col-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  max-height: 74vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* Resumen del tablero: lo accionable de un vistazo */
+.tablero-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  color: var(--tinta-suave);
+}
+.tablero-resumen b { color: var(--tinta); font-weight: 600; }
+.tablero-resumen .alerta { color: var(--critico); font-weight: 600; }
+.tablero-resumen .aviso-txt { color: var(--aviso); font-weight: 600; }
+.tablero-col-vacio {
+  padding: 18px 12px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--tinta-suave);
+}
+
+/* Tarjeta de ticket: carril de prioridad a la izquierda */
+.tk-card {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-left: 3px solid var(--prio, var(--linea-fuerte));
+  border-radius: 9px;
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.tk-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.07); }
+/* Ticket fuera de SLA: el resto del borde se tiñe (el carril izquierdo sigue
+   marcando prioridad), para que la columna delate de un vistazo lo urgente. */
+.tk-card.sla-fuera {
+  border-color: var(--critico);
+  background: var(--critico-tenue);
+}
+.tk-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.tk-card-titulo { font-size: 13.5px; font-weight: 500; line-height: 1.35; color: var(--tinta); }
+.tk-card-titulo:hover { color: var(--petroleo); }
+.tk-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 9px;
+  font-size: 11.5px;
+  color: var(--tinta-suave);
+}
+
+/* Etiquetas de la tarjeta: categoría + semáforo SLA */
+.tk-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.tk-tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinta-suave);
+  background: var(--neutro-tenue);
+  border-radius: 5px;
+  padding: 2px 7px;
+}
+
+.tk-card-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid var(--linea);
+  padding-top: 9px;
+}
+.sla-fuera .tk-card-pie { border-top-color: rgba(185, 28, 28, 0.22); }
+
+/* Responsable de la tarjeta (avatar de iniciales) */
+.tk-asignado {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--tinta);
+}
+.tk-asignado-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-avatar {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--petroleo-tenue);
+  color: var(--petroleo);
+}
+.tk-asignado.libre { color: var(--tinta-suave); }
+.tk-asignado.libre .tk-avatar {
+  background: transparent;
+  border: 1px dashed var(--linea-fuerte);
+  color: var(--tinta-suave);
+}
+.tk-mover { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
+
+/* ---------- Arrastrar y soltar tarjetas entre columnas ---------- */
+.tk-card[draggable="true"] { cursor: grab; }
+.tk-card.arrastrando { opacity: 0.4; cursor: grabbing; }
+.tablero.arrastrando-activo { user-select: none; }
+.tablero-col.soltar { box-shadow: inset 0 0 0 2px var(--pimsa-verde); }
+.tablero-col.soltar .tablero-col-cab { background: var(--ok-tenue); }
+.tablero-col.soltar .tablero-col-lista::after {
+  content: "Soltar aquí";
+  display: block;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ok);
+  border: 1.5px dashed var(--pimsa-verde);
+  border-radius: 8px;
+  padding: 10px;
+}
+.tablero[aria-busy="true"] { opacity: 0.75; transition: opacity 120ms ease; }
+.tk-mover select {
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 12px;
+  background: var(--superficie);
+  max-width: 128px;
+}
+.tk-mover .boton.mini { padding: 4px 8px; }
+.tk-mover-spinner { width: 12px; height: 12px; color: var(--petroleo); }
+
+/* ---------- Columna de resueltos: registro condensado ----------
+   El trabajo terminado se recoge en filas de una línea con check, atenuadas y
+   las más recientes arriba: deja de competir con el trabajo activo y escala
+   sin inflar el tablero cuando se acumulan muchos. */
+.tablero-col.es-hecho { background: transparent; }
+.tablero-col.es-hecho .tablero-col-titulo { color: var(--tinta-suave); }
+.lista-hecho { gap: 1px; padding: 7px; }
+.tk-done {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  text-decoration: none;
+  cursor: grab;
+  transition: background 120ms ease;
+}
+.tk-done:hover { background: var(--superficie); box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.tk-done.arrastrando { opacity: 0.4; cursor: grabbing; }
+.tk-done-check {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  border-radius: 99px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--ok-tenue);
+  color: var(--ok);
+}
+.tk-done-titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  color: var(--tinta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tk-done:hover .tk-done-titulo { color: var(--petroleo); }
+.tk-done-fin { flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px; }
+.tk-done-tiempo { font-family: var(--font-mono); font-size: 10.5px; color: var(--tinta-suave); }
+.tk-done-tag {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinta-suave);
+  border: 1px solid var(--linea);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+.tablero-col-mas { display: block; text-align: center; padding: 8px 0 4px; }
+
+@media (max-width: 1080px) {
+  .dash-cols { grid-template-columns: 1fr; }
+  .tablero { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+  .tablero { grid-template-columns: 1fr; }
+  .toolbar .filtros { flex-basis: 100%; }
+}
+
+/* Archivados del tablero: guardado en frío, recogido en un acordeón bajo las columnas */
+.tablero-archivados {
+  margin-top: 16px;
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+  background: var(--neutro-tenue);
+  overflow: hidden;
+}
+.tablero-archivados > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tinta);
+}
+.tablero-archivados > summary::-webkit-details-marker { display: none; }
+.tablero-archivados-titulo { display: inline-flex; align-items: center; }
+.tablero-archivados-lista { padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 4px; }
+

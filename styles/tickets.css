@@ -1,0 +1,624 @@
+/* ============================================================
+   Tickets · estados Jira-like, SLA, bitácora y edición inline
+   (añadido en mejora de tickets — reutiliza tokens de marca)
+   ============================================================ */
+
+/* ---------- Plegables (<details>) ---------- */
+.plegable {
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  background: var(--superficie);
+  margin-bottom: 28px;
+  overflow: hidden;
+}
+.plegable > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--pimsa-azul);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+  transition: background 120ms ease;
+}
+.plegable > summary:hover { background: var(--hover); }
+.plegable > summary::-webkit-details-marker { display: none; }
+.plegable > summary::before {
+  content: "+";
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--tinta-suave);
+  transition: transform 160ms ease;
+}
+.plegable > summary:hover::before { transform: scale(1.15); }
+.plegable[open] > summary::before { content: "−"; }
+.plegable[open] > summary { border-bottom: 1px solid var(--linea); }
+.plegable > .formulario,
+.plegable > form {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  padding: 20px;
+}
+.formulario.plano { border: none; border-radius: 0; padding: 0; margin: 0; }
+
+/* Plegable interno (aside del detalle, sin tarjeta propia) */
+.plegable.interno {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  margin-bottom: 0;
+  overflow: visible;
+}
+.plegable.interno > summary {
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--petroleo);
+}
+.plegable.interno + .plegable.interno { border-top: 1px solid var(--linea); }
+.plegable.interno.zona-peligro > summary { color: var(--critico); }
+
+/* ---------- Formularios apilados (aside / paneles) ---------- */
+.bloque-form { display: flex; flex-direction: column; gap: 9px; }
+.bloque-form input,
+.bloque-form select,
+.bloque-form textarea {
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio);
+  padding: 8px 10px;
+  font-size: 13.5px;
+  background: var(--superficie);
+  width: 100%;
+}
+.bloque-form textarea { resize: vertical; min-height: 60px; }
+.bloque-form .boton { justify-content: center; margin-top: 2px; }
+.mini-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--tinta-suave);
+  margin-bottom: -3px;
+}
+.dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.dos-col > div { display: flex; flex-direction: column; gap: 9px; }
+
+/* ---------- Edición inline en tablas (popover absoluto) ---------- */
+td .editar { position: relative; }
+.editar > summary { display: inline-flex; }
+.panel-editar {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  width: 300px;
+  max-width: 80vw;
+  white-space: normal;
+  background: var(--superficie);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.14);
+}
+
+/* ---------- Filtros (barra GET) ---------- */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.filtros input[type="search"],
+.filtros input[type="text"] {
+  flex: 1 1 220px;
+  min-width: 180px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio);
+  padding: 8px 12px;
+  font-size: 14px;
+  background: var(--superficie);
+}
+.filtros select {
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio);
+  padding: 8px 10px;
+  font-size: 13.5px;
+  background: var(--superficie);
+}
+
+/* ---------- Enlaces dentro de tablas ---------- */
+.enlace-folio {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--petroleo);
+  font-weight: 500;
+}
+.enlace-folio:hover { text-decoration: underline; text-underline-offset: 2px; }
+.enlace-suave { color: var(--tinta); font-weight: 500; }
+.enlace-suave:hover { color: var(--petroleo); }
+.recorte {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 360px;
+  color: var(--tinta-suave);
+  font-size: 12.5px;
+  margin-top: 3px;
+}
+
+/* ---------- Métricas SLA (cabecera del detalle) ---------- */
+/* ---------- Detalle: tarjeta de encabezado (toda la info de un vistazo) ---------- */
+.ticket-encabezado {
+  border: 1px solid var(--linea);
+  border-top: 3px solid var(--petroleo);
+  border-radius: 12px;
+  background: var(--superficie);
+  padding: 15px 22px 20px;
+  margin-bottom: 22px;
+}
+.ticket-enc-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.ticket-enc-folio { font-size: 12.5px; color: var(--tinta-suave); }
+.ticket-enc-titulo { font-size: 22px; font-weight: 600; line-height: 1.25; margin-top: 2px; }
+.ticket-enc-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px 22px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--linea);
+}
+.enc-dato dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tinta-suave);
+  margin-bottom: 6px;
+}
+.enc-dato dd { font-size: 14px; color: var(--tinta); display: flex; flex-direction: column; gap: 3px; }
+.enc-sub { font-size: 11.5px; color: var(--tinta-suave); font-weight: 400; }
+.enc-sla { align-items: flex-start; }
+.enc-asignado { display: inline-flex; align-items: center; gap: 7px; }
+.enc-avatar {
+  width: 22px; height: 22px; border-radius: 99px;
+  display: grid; place-items: center;
+  font-size: 10px; font-weight: 700;
+  background: var(--petroleo-tenue); color: var(--petroleo);
+}
+
+/* ---------- Detalle: conversación (nota interna vs respuesta al cliente) ---------- */
+.conv-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.conv-conteo { font-size: 12px; color: var(--tinta-suave); white-space: nowrap; }
+.responder {
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 10px;
+  background: var(--neutro-tenue);
+  padding: 10px 12px;
+  margin-bottom: 20px;
+  transition: border-color 120ms ease;
+}
+.responder:focus-within { border-color: var(--petroleo); }
+.responder textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 62px;
+  color: var(--tinta);
+}
+.responder textarea:focus { outline: none; }
+.responder-pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--linea);
+  margin-top: 8px;
+  padding-top: 10px;
+}
+.responder-hint { font-size: 11.5px; color: var(--tinta-suave); max-width: 330px; line-height: 1.45; }
+.responder-hint strong { color: var(--tinta); font-weight: 600; }
+.responder-acciones { display: flex; gap: 8px; flex-shrink: 0; }
+.responder-acciones .boton { padding: 7px 15px; }
+.correo-aviso { color: var(--aviso); font-size: 12px; }
+.correo-aviso a { color: var(--petroleo); text-decoration: underline; }
+
+/* Casilla "enviar por correo" en el composer y en el cambio de estado */
+.responder-info { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.responder-correo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--tinta);
+  cursor: pointer;
+}
+.responder-correo input { width: 15px; height: 15px; accent-color: var(--pimsa-verde, var(--ok)); flex-shrink: 0; }
+.bloque-form .responder-correo { margin: 2px 0; }
+
+/* ---------- Panel de configuración de correo (/ti/correo) ---------- */
+.banner-config {
+  border-radius: 10px;
+  padding: 11px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+.banner-config.ok { background: var(--ok-tenue); color: var(--ok); }
+.banner-config.aviso { background: var(--aviso-tenue); color: var(--aviso); }
+.banner-config.critico { background: var(--critico-tenue); color: var(--critico); }
+.banner-config-pista {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid currentColor;
+  font-weight: 400;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+.banner-config-detalle { margin-top: 8px; font-weight: 400; }
+.banner-config-detalle summary { cursor: pointer; font-size: 12.5px; opacity: 0.85; }
+.banner-config-detalle code {
+  display: block;
+  margin-top: 6px;
+  padding: 9px 11px;
+  background: var(--superficie);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--tinta);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.estado-servicio {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+  background: var(--superficie);
+  padding: 14px 18px;
+  margin-bottom: 22px;
+}
+.estado-punto { width: 11px; height: 11px; border-radius: 99px; flex-shrink: 0; background: var(--linea-fuerte); }
+.estado-servicio.ok .estado-punto { background: var(--ok); box-shadow: 0 0 0 4px var(--ok-tenue); }
+.estado-servicio.aviso .estado-punto { background: var(--aviso); box-shadow: 0 0 0 4px var(--aviso-tenue); }
+.estado-servicio.critico .estado-punto { background: var(--critico); box-shadow: 0 0 0 4px var(--critico-tenue); }
+.estado-titulo { font-weight: 600; font-size: 14px; }
+.estado-desc { font-size: 12.5px; color: var(--tinta-suave); margin-top: 2px; }
+
+.config-form, .config-prueba { max-width: 760px; }
+
+/* Secciones plegables: la página de correo cabe en pantalla y lo importante queda a la vista. */
+.config-fold {
+  max-width: 760px;
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+  background: var(--superficie);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.config-fold > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 18px;
+  cursor: pointer;
+  font-size: 14.5px;
+  font-weight: 600;
+  list-style: none;
+}
+.config-fold > summary::-webkit-details-marker { display: none; }
+.config-fold > summary::after {
+  content: "+";
+  margin-left: auto;
+  font-size: 19px;
+  font-weight: 400;
+  color: var(--tinta-suave);
+  line-height: 1;
+}
+.config-fold[open] > summary::after { content: "−"; }
+.config-fold[open] > summary { border-bottom: 1px solid var(--linea); }
+.config-fold > summary:focus-visible { outline: 2px solid var(--pimsa-azul); outline-offset: -2px; }
+.config-fold-cuerpo { padding: 14px 18px 20px; }
+.fold-chip {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 99px;
+  background: var(--neutro-tenue);
+  color: var(--tinta-suave);
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fold-chip.ok { background: var(--ok-tenue); color: var(--ok); }
+.fold-chip.aviso { background: var(--aviso-tenue); color: var(--aviso); }
+
+/* Prueba rápida destacada (arriba del formulario). */
+.config-prueba.destacada {
+  margin: 16px 0 22px;
+  padding: 16px 18px;
+  border: 1px solid var(--linea);
+  border-radius: 12px;
+  background: var(--superficie);
+}
+.config-prueba.destacada h2 { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+.campo-pista { font-size: 11.5px; color: var(--tinta-suave); }
+
+.config-seccion { padding: 20px 0; border-top: 1px solid var(--linea); }
+.config-seccion:first-of-type { border-top: none; padding-top: 4px; }
+.config-seccion h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.config-sub { font-size: 13px; font-weight: 600; color: var(--tinta-suave); margin: 18px 0 6px; }
+.config-ayuda { font-size: 12.5px; color: var(--tinta-suave); line-height: 1.55; margin-bottom: 14px; }
+.config-ayuda code {
+  background: var(--neutro-tenue);
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-size: 12px;
+  margin: 0 1px;
+}
+.config-switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  color: var(--tinta);
+  line-height: 1.5;
+  padding: 8px 0;
+  cursor: pointer;
+}
+.config-switch input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--pimsa-verde, var(--ok)); flex-shrink: 0; }
+.config-prueba { margin-top: 22px; }
+.config-prueba-fila { display: flex; gap: 10px; flex-wrap: wrap; }
+.config-prueba-fila input {
+  flex: 1;
+  min-width: 220px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio);
+  padding: 9px 11px;
+  font-size: 14px;
+  background: var(--superficie);
+  color: var(--tinta);
+}
+
+/* ---------- Método de envío de correo (SMTP / OAuth) ---------- */
+.metodo-opciones { display: grid; gap: 10px; }
+.metodo-opcion { position: relative; cursor: pointer; display: block; }
+.metodo-opcion input { position: absolute; top: 15px; left: 14px; accent-color: var(--pimsa-verde); }
+.metodo-cuerpo {
+  display: block;
+  border: 1.5px solid var(--linea-fuerte);
+  border-radius: 12px;
+  padding: 13px 15px 13px 38px;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.metodo-opcion:hover .metodo-cuerpo { border-color: var(--pimsa-verde-claro); }
+.metodo-opcion input:checked + .metodo-cuerpo {
+  border-color: var(--pimsa-verde);
+  background: var(--ok-tenue);
+}
+.metodo-opcion input:focus-visible + .metodo-cuerpo { outline: 2px solid var(--pimsa-azul); outline-offset: 2px; }
+.metodo-titulo { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.metodo-detalle { display: block; font-size: 12.5px; color: var(--tinta-suave); line-height: 1.45; margin-top: 3px; }
+.metodo-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: var(--pimsa-verde);
+  color: #fff;
+}
+.metodo-tag.legado { background: var(--neutro-tenue); color: var(--tinta-suave); }
+
+/* Solo se muestran los campos del método elegido (toggle puro con CSS :has). */
+.metodo-bloque { display: none; }
+.correo-wrap:has(#m-smtp:checked) .bloque-smtp,
+.correo-wrap:has(#m-graph:checked) .bloque-azure,
+.correo-wrap:has(#m-oauth:checked) .bloque-azure,
+.correo-wrap:has(#m-oauth:checked) .bloque-oauth { display: block; }
+
+.config-pasos {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  font-size: 12.5px;
+  color: var(--tinta-suave);
+  line-height: 1.55;
+}
+.config-pasos li { margin-bottom: 6px; }
+.config-redirect {
+  display: block;
+  margin-bottom: 16px;
+  padding: 9px 12px;
+  background: var(--neutro-tenue);
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  font-size: 12.5px;
+  word-break: break-all;
+  color: var(--tinta);
+}
+
+/* Tabla de configuración de SLA en /ti/correo */
+.sla-tabla { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.sla-cabecera {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr 1fr;
+  gap: 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: 0 4px;
+}
+.sla-fila {
+  display: grid;
+  grid-template-columns: 90px 1fr 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.sla-fila input[type="number"] {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--linea);
+  border-radius: 7px;
+  background: var(--superficie);
+  color: var(--tinta);
+  font-size: 14px;
+}
+.sla-ref { font-size: 12px; color: var(--tinta-suave); }
+@media (max-width: 540px) {
+  .sla-cabecera,
+  .sla-fila { grid-template-columns: 80px 1fr 1fr; }
+  .sla-ref { display: none; }
+}
+
+/* Estado y acciones de la conexión interactiva con Microsoft */
+.oauth-estado { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+.oauth-estado strong { display: block; font-size: 14px; }
+.oauth-cuenta { font-size: 12.5px; color: var(--tinta-suave); }
+.oauth-punto { width: 9px; height: 9px; border-radius: 99px; background: var(--ok); flex-shrink: 0; }
+.oauth-acciones { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Etiqueta de cada evento de la bitácora + acento de las respuestas al cliente */
+.bitacora-tag {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 5px;
+  padding: 1px 6px;
+}
+.bitacora-tag.enviado { background: var(--ok-tenue); color: var(--ok); }
+.bitacora-tag.cliente { background: var(--petroleo-tenue); color: var(--petroleo); }
+.bitacora-tag.interno { background: var(--neutro-tenue); color: var(--tinta-suave); }
+.tipo-respuesta .bitacora-texto {
+  background: var(--ok-tenue);
+  border-left: 2px solid var(--pimsa-verde);
+  border-radius: 0 7px 7px 0;
+  padding: 9px 12px;
+}
+.tipo-mensaje_cliente .bitacora-texto {
+  background: var(--petroleo-tenue);
+  border-left: 2px solid var(--pimsa-azul);
+  border-radius: 0 7px 7px 0;
+  padding: 9px 12px;
+}
+
+/* ---------- Cabecera del detalle ---------- */
+.detalle-head { align-items: flex-start; }
+.detalle-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+/* ---------- Rejilla del detalle (principal + aside) ---------- */
+.detalle-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 22px;
+  align-items: start;
+}
+.detalle-principal { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.detalle-aside { display: flex; flex-direction: column; gap: 0; }
+.tarjeta-detalle {
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  background: var(--superficie);
+  padding: 20px;
+}
+.detalle-aside .tarjeta-detalle { margin-bottom: 16px; }
+.aside-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tinta-suave);
+  margin-bottom: 12px;
+}
+
+/* ---------- Actividad: comentario + bitácora ---------- */
+.comentario-form { display: flex; flex-direction: column; gap: 9px; margin-bottom: 18px; }
+.comentario-form textarea {
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio);
+  padding: 9px 11px;
+  font-size: 14px;
+  background: var(--superficie);
+  resize: vertical;
+  min-height: 64px;
+}
+.comentario-form .boton { align-self: flex-start; }
+
+.bitacora { list-style: none; display: flex; flex-direction: column; }
+.bitacora-item {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--linea);
+}
+.bitacora-item:last-child { border-bottom: none; }
+.bitacora-icono {
+  width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  background: var(--neutro-tenue);
+  color: var(--tinta-suave);
+}
+.tipo-respuesta   .bitacora-icono { background: var(--ok-tenue);       color: var(--ok); }
+.tipo-mensaje_cliente .bitacora-icono { background: var(--petroleo-tenue); color: var(--petroleo); }
+.tipo-comentario  .bitacora-icono { background: var(--petroleo-tenue); color: var(--petroleo); }
+.tipo-estado      .bitacora-icono { background: var(--petroleo-tenue); color: var(--petroleo); }
+.tipo-asignacion  .bitacora-icono { background: var(--aviso-tenue);    color: var(--aviso); }
+.tipo-sistema     .bitacora-icono { background: var(--neutro-tenue);   color: var(--tinta-suave); }
+.bitacora-cuerpo { min-width: 0; }
+.bitacora-meta { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font-size: 13px; }
+.bitacora-meta strong { font-weight: 600; }
+.bitacora-texto { font-size: 13.5px; color: var(--tinta); margin-top: 3px; line-height: 1.5; }
+
+/* ---------- Lista de datos (dl) ---------- */
+.datos-lista { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; font-size: 13.5px; }
+.datos-lista dt { color: var(--tinta-suave); }
+.datos-lista dd { text-align: right; word-break: break-word; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  .detalle-grid { grid-template-columns: 1fr; }
+  .panel-editar { width: 260px; }
+}
+
+/* `.tabla` gana scroll horizontal en este punto (ver arriba) y se vuelve
+   contenedor de recorte: un popover absoluto dentro quedaría invisible.
+   Aquí se ancla a la ventana como una hoja centrada. */
+@media (max-width: 760px) {
+  .panel-editar {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    top: 50%;
+    width: auto;
+    max-width: none;
+    max-height: 80vh;
+    overflow-y: auto;
+    transform: translateY(-50%);
+  }
+}
+

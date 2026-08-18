@@ -1,0 +1,167 @@
+/* ============================================================
+   Inventario · alta de equipos (tarjeta) y refinamientos de página
+   ============================================================ */
+
+/* Acciones del encabezado: alta + responsivas, alineadas a la derecha. */
+.pagina-head-acciones { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* Glifo de categoría en las pestañas (hereda el color de la pestaña, a
+   diferencia de .inv-tipo-icono que fija su propio color). */
+.tab-glifo { flex-shrink: 0; opacity: 0.85; }
+.tab.activo .tab-glifo { opacity: 1; }
+
+/* Tarjeta de alta: reusa el chrome de .modal-gestionar; solo ajusta el ancho
+   (sobreescribe a .modal-crear, definida antes en el archivo). */
+.modal-nuevo-equipo { width: min(720px, 94vw); }
+
+/* Control segmentado de categoría: la firma de la tarjeta. Cada segmento apila
+   glifo de dispositivo + etiqueta; el activo se marca con el verde PIMSA. */
+.seg-categoria {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.seg-cat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 13px 8px;
+  border: 1px solid var(--linea-fuerte);
+  border-radius: 10px;
+  background: var(--superficie);
+  color: var(--tinta-suave);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 120ms ease, color 120ms ease, background 120ms ease;
+}
+.seg-cat:hover { border-color: var(--pimsa-verde-claro); color: var(--tinta); }
+.seg-cat:focus-visible { outline: 2px solid var(--pimsa-azul); outline-offset: 2px; }
+.seg-cat.activo {
+  border-color: var(--pimsa-verde);
+  background: var(--ok-tenue);
+  color: var(--ok);
+}
+.seg-cat-glifo { display: inline-flex; }
+.seg-cat-label { font-size: 12px; font-weight: 500; line-height: 1.25; }
+
+@media (prefers-reduced-motion: reduce) {
+  .seg-cat { transition: none; }
+}
+@media (max-width: 560px) {
+  .seg-categoria { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- Campos personalizados: captura (alta/edición) ---------- */
+.campos-extra { margin-top: 4px; }
+.campos-extra-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tinta-suave);
+  margin-bottom: 10px;
+}
+/* Casilla en línea (checkbox + etiqueta) dentro de una cuadrícula .campos */
+.campo-check { flex-direction: row; align-items: center; gap: 8px; }
+.campo-check input[type="checkbox"] { width: auto; padding: 0; border-radius: 3px; }
+.campo-check span { font-size: 13.5px; font-weight: 400; color: var(--tinta); }
+
+/* ---------- Panel: configuración de campos del inventario ---------- */
+.config-inv { display: flex; flex-direction: column; gap: 28px; max-width: 880px; }
+.config-inv-cat-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--linea);
+}
+.config-inv-vacio { font-size: 13px; margin: 2px 2px 12px; }
+.config-inv-agregar { margin-top: 10px; }
+
+/* ---------- Caja chica (/ti/caja) ----------
+   El hero es la caja misma: el saldo grande y una barra que muestra el fondo
+   vaciándose con las compras y rellenándose con los reembolsos. */
+.caja-hero {
+  background: var(--superficie);
+  border-radius: var(--radio-tarjeta);
+  box-shadow: var(--sombra-tarjeta);
+  padding: 22px 24px;
+  margin-bottom: 22px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px 34px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.caja-fondo { flex: 1 1 340px; min-width: 0; }
+.caja-saldo {
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.caja-saldo .de-limite {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--tinta-suave);
+  margin-left: 8px;
+  letter-spacing: 0;
+}
+.caja-barra {
+  height: 14px;
+  border-radius: 99px;
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  overflow: hidden;
+  margin-top: 14px;
+}
+.caja-barra-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: var(--pimsa-verde);
+  transition: width 0.4s ease;
+}
+.caja-barra-fill.aviso { background: var(--aviso); }
+.caja-barra-fill.critico { background: var(--critico); }
+.caja-extremos {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--tinta-suave);
+  margin-top: 6px;
+}
+.caja-pie { font-size: 12.5px; color: var(--tinta-suave); margin-top: 12px; }
+.caja-pie b { color: var(--tinta); font-weight: 600; }
+.caja-acciones { display: flex; flex-direction: column; gap: 10px; flex: 0 1 280px; min-width: 240px; }
+.caja-acciones .plegable { margin: 0; }
+@media (max-width: 640px) {
+  .caja-acciones { flex-basis: 100%; }
+  .caja-saldo { font-size: 30px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .caja-barra-fill { transition: none; }
+}
+
+/* ---------- Micro-interacciones: apagado por accesibilidad ----------
+   Quien pide "reducir movimiento" en su sistema recibe los mismos botones
+   sin levantamientos ni escalados; el cambio de color se mantiene. */
+@media (prefers-reduced-motion: reduce) {
+  .boton, .press, .rail-link, .rail-link svg, .tema-toggle,
+  .plegable > summary::before, .resguardo-chip,
+  .portal-boton svg, .portal-hero-cta svg, .seg-enviar svg {
+    transition: none;
+  }
+  .boton:hover, .boton:active, .press:active, .rail-link:hover svg, .rail-link:active,
+  .tema-toggle:hover, .tema-toggle:active, .resguardo-chip:hover, .resguardo-chip:active,
+  .plegable > summary:hover::before,
+  .portal-boton:hover svg, .portal-hero-cta:hover svg, .seg-enviar:hover svg {
+    transform: none;
+  }
+}
+

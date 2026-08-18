@@ -1,0 +1,360 @@
+/* ============================================================
+   Documento imprimible de la responsiva · marca PIMSA
+   TODO scopeado bajo .responsiva-doc: la responsiva trae sus propios
+   .seccion/.firmas/table.datos que NO deben chocar con el panel.
+   El documento es papel: fondo blanco y tinta oscura fijos (no sigue
+   el tema oscuro). Porteado de Responsiva_Equipos/assets/responsiva.css.
+   ============================================================ */
+.responsiva-doc {
+  --doc-acento: var(--pimsa-azul);
+  --doc-acento-2: var(--pimsa-azul-profundo);
+  --doc-texto: #1c2733;
+  --doc-tenue: #5a6b7b;
+  --doc-borde: #d7dde3;
+  --doc-linea: #e9edf1;
+  --doc-seccion: #eef2f7;
+  --doc-aviso: #f6f3e7;
+  color: var(--doc-texto);
+  font-size: 12px;
+  line-height: 1.45;
+  /* Conserva los fondos (casillas marcadas, avisos, encabezado) al imprimir /
+     guardar como PDF: los navegadores los eliminan por defecto. */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.responsiva-doc .barra-print {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.responsiva-doc .hoja {
+  background: #fff;
+  color: var(--doc-texto);
+  width: 21.59cm;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 1.2cm 1.3cm;
+  border: 1px solid var(--doc-borde);
+  border-radius: 6px;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.08);
+}
+.responsiva-doc .encabezado {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--doc-acento);
+  margin-bottom: 14px;
+}
+.responsiva-doc .encabezado .logo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.responsiva-doc .encabezado .logo img { max-width: 120px; height: auto; display: block; }
+.responsiva-doc .encabezado .logo .sub { font-size: 9px; color: var(--doc-tenue); }
+.responsiva-doc .encabezado .titulo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.responsiva-doc .encabezado .titulo h1 {
+  font-size: 15px;
+  margin: 0;
+  color: var(--doc-acento);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+.responsiva-doc .encabezado .titulo .tipo { font-size: 12px; font-weight: 500; margin-top: 3px; color: var(--doc-tenue); }
+.responsiva-doc .encabezado .control {
+  flex-shrink: 0;
+  font-size: 9px;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1px 10px;
+  align-content: center;
+}
+.responsiva-doc .encabezado .control span {
+  padding: 1px 0;
+  display: flex;
+  align-items: center;
+}
+.responsiva-doc .encabezado .control .et { font-weight: 600; color: var(--doc-tenue); text-transform: uppercase; letter-spacing: 0.3px; }
+
+.responsiva-doc .folio {
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--doc-acento-2);
+  margin: 0 0 10px;
+}
+.responsiva-doc .folio span { font-family: var(--font-mono); }
+
+.responsiva-doc .seccion { margin-bottom: 13px; }
+.responsiva-doc .seccion > h2 {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--doc-acento);
+  background: transparent;
+  padding: 0 0 3px;
+  margin: 0 0 6px;
+  border-bottom: 1.5px solid var(--doc-acento);
+  font-weight: 700;
+}
+.responsiva-doc table.datos { width: 100%; border-collapse: collapse; }
+.responsiva-doc table.datos th,
+.responsiva-doc table.datos td {
+  border: none;
+  border-bottom: 1px solid var(--doc-linea);
+  padding: 4px 6px;
+  text-align: left;
+  vertical-align: middle;
+}
+.responsiva-doc table.datos th {
+  background: transparent;
+  font-weight: 600;
+  color: var(--doc-tenue);
+  width: 20%;
+  white-space: nowrap;
+}
+.responsiva-doc .casillas { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 4px 2px; }
+.responsiva-doc .casilla { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; }
+.responsiva-doc .box {
+  position: relative;
+  width: 12px; height: 12px;
+  border: 1.4px solid var(--doc-tenue);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.responsiva-doc .box.marcado { background: var(--doc-acento); border-color: var(--doc-acento); }
+.responsiva-doc .box.marcado::after {
+  content: "";
+  position: absolute;
+  left: 3px; top: 0.5px;
+  width: 3px; height: 7px;
+  border: solid #fff;
+  border-width: 0 1.6px 1.6px 0;
+  transform: rotate(45deg);
+}
+.responsiva-doc .clausulas { font-size: 11px; }
+.responsiva-doc .clausulas ol { margin: 0; padding-left: 20px; }
+.responsiva-doc .clausulas li { margin-bottom: 4px; text-align: justify; }
+.responsiva-doc .clausulas b { color: var(--doc-acento-2); }
+.responsiva-doc .aviso {
+  background: var(--doc-aviso);
+  border: 1px solid #e6d9a8;
+  border-left: 4px solid var(--pimsa-verde);
+  padding: 7px 10px;
+  font-size: 10.5px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+.responsiva-doc .firmas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 26px;
+  margin-top: 34px;
+  text-align: center;
+}
+.responsiva-doc .firmas.dos { grid-template-columns: repeat(2, 1fr); }
+/* Firmas de personas adicionales: tantas como haya, ajustándose al ancho. */
+.responsiva-doc .firmas-personas {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 20px;
+}
+.responsiva-doc .firma .linea { border-top: 1px solid var(--doc-texto); margin: 38px 8px 5px; }
+.responsiva-doc .firma .nombre { font-weight: 600; font-size: 11px; }
+.responsiva-doc .firma .rol { font-size: 10px; color: var(--doc-tenue); }
+/* Nombre impreso encima de la línea (la persona firma sobre la línea). */
+.responsiva-doc .firma .firma-nombre-print { font-weight: 600; font-size: 11px; }
+.responsiva-doc .firmas-personas .firma .linea { margin-top: 18px; }
+.responsiva-doc .pie {
+  margin-top: 18px;
+  border-top: 1px solid var(--doc-borde);
+  padding-top: 6px;
+  font-size: 8.5px;
+  color: var(--doc-tenue);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.responsiva-doc .pie .iso { max-width: 70%; }
+.responsiva-doc .pie b { color: var(--doc-tenue); }
+
+/* Impresión: solo la hoja, sin panel ni controles */
+@page {
+  size: letter;
+  margin: 14mm 14mm;
+}
+/* Elementos que solo existen en el papel/PDF (encabezado y pie de documento). */
+.solo-print { display: none; }
+
+@media print {
+  /* Papel siempre claro: aunque la pantalla esté en modo noche, el documento
+     sale con la paleta clara. Sin esto, el modo oscuro imprime tinta casi
+     blanca sobre el fondo blanco forzado — ilegible. */
+  :root, :root[data-theme="dark"] {
+    --papel: #ffffff;
+    --superficie: #ffffff;
+    --tinta: #15273a;
+    --tinta-suave: #687280;
+    --linea: #e5e8f0;
+    --linea-fuerte: #d6dbe8;
+    --hover: transparent;
+    --petroleo: #294466;
+    --petroleo-fuerte: #34568a;
+    --petroleo-tenue: #eaeef5;
+    --ok: #5f7d33;
+    --ok-tenue: #eef3e2;
+    --aviso: #b06a08;
+    --aviso-tenue: #fbf2e2;
+    --critico: #d22d2d;
+    --critico-tenue: #fbeaea;
+    --neutro-tenue: #eef1f6;
+    --sombra-tarjeta: none;
+    --sombra-pop: none;
+    color-scheme: light;
+  }
+  /* Los tonos (insignias, semáforos, leyendas y barras de las gráficas) son
+     parte del dato: forzar que el navegador no los descarte al imprimir. */
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { size: letter; margin: 14mm 12mm; }
+
+  .rail, .no-print { display: none !important; }
+  .solo-print { display: block; }
+  /* Página blanca: evita cualquier tinte del fondo mist del panel al imprimir. */
+  html, body { background: #fff !important; }
+  /* Aplana el contenedor del panel: sin fondo, sombra ni esquinas redondeadas,
+     para que el documento no se imprima montado en una "tarjeta" flotante. */
+  .shell {
+    display: block;
+    padding: 0 !important;
+    background: none !important;
+    min-height: 0 !important;
+  }
+  .contenido {
+    padding: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    background: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  .responsiva-doc { font-size: 11.5px; }
+  .responsiva-doc .hoja {
+    width: auto;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+  }
+  /* Cortes de página limpios: nada de partir una sección, tabla, bloque de
+     casillas o la fila de firmas a la mitad; el título se queda con su tabla. */
+  .responsiva-doc .seccion,
+  .responsiva-doc .casillas,
+  .responsiva-doc table,
+  .responsiva-doc table tr,
+  .responsiva-doc .firmas,
+  .responsiva-doc .firmas-personas { break-inside: avoid; }
+  .responsiva-doc .seccion > h2,
+  .responsiva-doc .encabezado { break-after: avoid; }
+  .responsiva-doc .firma { break-inside: avoid; }
+
+  /* ----- Reporte mensual y páginas del panel en general ----- */
+  /* Encabezado del documento: logo + título + fecha de generación. */
+  .reporte-impreso-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 14px;
+    margin-bottom: 22px;
+    border-bottom: 2px solid var(--pimsa-azul);
+  }
+  .reporte-impreso-head img { height: 40px; display: block; }
+  .reporte-impreso-titulos { display: flex; flex-direction: column; gap: 2px; }
+  .reporte-impreso-titulos strong { font-size: 17px; letter-spacing: -0.01em; }
+  .reporte-impreso-titulos span { font-size: 12.5px; color: var(--tinta-suave); }
+  .reporte-impreso-meta {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: right;
+    font-size: 10.5px;
+    color: var(--tinta-suave);
+  }
+  .reporte-impreso-pie {
+    margin-top: 26px;
+    padding-top: 10px;
+    border-top: 1px solid var(--linea);
+    font-size: 10px;
+    color: var(--tinta-suave);
+  }
+
+  /* Cortes de página limpios: no partir métricas, tarjetas ni filas; los
+     títulos se quedan con su contenido. */
+  .metricas, .metrica, .tarjeta, .vacio, .grafica-vacia, .tabla tr { break-inside: avoid; }
+  .seccion-titulo, .tarjeta-titulo { break-after: avoid; }
+  /* Secciones que se entregan como hoja aparte (p. ej. tiempo operativo por
+     servicio para KPIs): página propia — lo que sigue también brinca de hoja
+     para que la sección pueda separarse del legajo. */
+  .hoja-aparte { break-before: page; break-after: page; }
+
+  /* Documento más compacto que la pantalla: menos aire, cifras más chicas. */
+  .seccion { margin-bottom: 24px; }
+  .metricas { margin-bottom: 16px; }
+  .metrica { padding: 12px 14px; }
+  .metrica-valor { font-size: 22px; }
+  .tarjeta { padding: 14px; }
+  .tarjetas { gap: 12px; margin-bottom: 16px; }
+  .tabla td { padding: 8px 10px; font-size: 12px; }
+  .tabla tr:hover td { background: none; }
+  .dona-svg { width: 112px; height: 112px; }
+}
+
+@media (max-width: 760px) {
+  .responsiva-doc .hoja { padding: 16px; }
+  .responsiva-doc .encabezado { flex-direction: column; }
+  .responsiva-doc .encabezado .logo,
+  .responsiva-doc .encabezado .control { width: 100%; }
+  .responsiva-doc .firmas,
+  .responsiva-doc .firmas-personas { grid-template-columns: 1fr; gap: 16px; }
+}
+
+/* ---------- Editor: personas adicionales de una responsiva (panel) ---------- */
+.personas-resp { margin-top: 4px; }
+.personas-resp-titulo {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tinta-suave);
+  margin-bottom: 4px;
+}
+.personas-resp-nota { font-size: 12.5px; margin: 0 0 12px; }
+.personas-vacio { font-size: 13px; margin: 2px 0 12px; }
+.personas-lista { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.persona-fila {
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--superficie-2, transparent);
+}
+.persona-fila-cuerpo { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+.persona-fila-cuerpo > .combo,
+.persona-fila-cuerpo > .combo-chip,
+.persona-fila-cuerpo > .persona-manual { flex: 2 1 220px; min-width: 0; }
+.persona-rol { flex: 1 1 160px; min-width: 0; }
+.persona-quitar { flex: 0 0 auto; align-self: center; }
+
