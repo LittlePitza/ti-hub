@@ -1,7 +1,7 @@
 import "server-only";
 import nodemailer, { type Transporter } from "nodemailer";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { folio } from "./format";
+import { folio } from "../utils/format";
 import { type SlaTabla, SLA_DEFAULTS, SLA_POR_VENCER_PCT_DEFAULT } from "./tickets";
 
 // Configuración de correo administrada desde el panel (/ti/correo), no por env.

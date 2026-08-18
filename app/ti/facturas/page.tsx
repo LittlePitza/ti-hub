@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, folioFactura, moneda } from "@/lib/format";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta, folioFactura, moneda } from "@/lib/utils/format";
 import {
   MONEDAS,
   hoyISO,
@@ -10,10 +10,10 @@ import {
   pendienteDelMes,
   montos,
   type Moneda,
-} from "@/lib/facturas";
-import type { Adjunto } from "@/lib/adjuntos";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
+} from "@/lib/domain/facturas";
+import type { Adjunto } from "@/lib/utils/adjuntos";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import {
   crearFactura,
   editarFactura,

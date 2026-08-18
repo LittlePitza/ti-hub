@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import TemaToggle from "@/components/TemaToggle";
+import TemaToggle from "@/components/ui/TemaToggle";
 
 export const metadata: Metadata = {
   title: "Soporte TI · Plásticos PIMSA",

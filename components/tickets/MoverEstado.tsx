@@ -2,7 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 import { cambiarEstadoTicket } from "@/app/ti/tickets/actions";
-import { ESTADOS_TICKET, ESTADOS_SELECCIONABLES } from "@/lib/tickets";
+import { ESTADOS_TICKET, ESTADOS_SELECCIONABLES } from "@/lib/domain/tickets";
 
 // Control de triaje del tablero: al cambiar el estado en el select, el formulario
 // se envía solo (server action + revalidate), sin un botón "Mover" en cada tarjeta.

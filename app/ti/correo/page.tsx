@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
-import { getSupabase } from "@/lib/supabase";
-import { getConfigCorreo, correoOperativo, tieneCredenciales } from "@/lib/correo";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
+import { getSupabase } from "@/lib/supabase/client";
+import { getConfigCorreo, correoOperativo, tieneCredenciales } from "@/lib/domain/correo";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import {
   guardarConfigCorreo,
   enviarPruebaCorreo,

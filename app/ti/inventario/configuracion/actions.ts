@@ -1,14 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabaseAutenticado } from "@/lib/supabase";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
 import {
   CATEGORIAS_INV,
   TIPOS_CAMPO,
   slugCampo,
   type CategoriaInv,
   type TipoCampo,
-} from "@/lib/inventario";
+} from "@/lib/domain/inventario";
 
 // Convierte un textarea (una opción por línea) en arreglo limpio.
 function lineas(v: FormDataEntryValue | null): string[] {

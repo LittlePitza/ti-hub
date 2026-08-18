@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase/client";
 
 export async function iniciarSesion(formData: FormData) {
   const sb = await getSupabase();

@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import { getSupabase } from "@/lib/supabase";
-import { getConfigCorreo } from "@/lib/correo";
-import { EMPRESA_DEFAULT, type DatosFirma } from "@/lib/firma";
-import GeneradorFirma from "@/components/GeneradorFirma";
-import BotonEnviar from "@/components/BotonEnviar";
-import SinConexion from "@/components/SinConexion";
+import { getSupabase } from "@/lib/supabase/client";
+import { getConfigCorreo } from "@/lib/domain/correo";
+import { EMPRESA_DEFAULT, type DatosFirma } from "@/lib/domain/firma";
+import GeneradorFirma from "@/components/custody/GeneradorFirma";
+import BotonEnviar from "@/components/ui/BotonEnviar";
+import SinConexion from "@/components/ui/SinConexion";
 import { guardarAjustesFirma } from "../../actions";
 
 export const dynamic = "force-dynamic";

@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase/client";
 import {
   PLANTILLAS_LISTA,
   fusionarPlantilla,
   CAMPOS_EQUIPO_RESP,
   CAMPOS_EQUIPO_TODOS,
   type Plantilla,
-} from "@/lib/responsivas";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
+} from "@/lib/domain/responsivas";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import { guardarPlantilla, restablecerPlantilla } from "./actions";
 
 export const dynamic = "force-dynamic";

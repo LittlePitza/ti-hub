@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSupabase } from "@/lib/supabase";
-import { fechaHora, folio, duracion } from "@/lib/format";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaHora, folio, duracion } from "@/lib/utils/format";
 import {
   ESTADOS_TICKET,
   ESTADOS_SELECCIONABLES,
@@ -10,15 +10,15 @@ import {
   metaEstado,
   evaluarRespuesta,
   evaluarResolucion,
-} from "@/lib/tickets";
-import { correoValido } from "@/lib/portal";
-import type { Adjunto } from "@/lib/adjuntos";
-import { getConfigCorreo, correoOperativo, resolverSla } from "@/lib/correo";
-import Insignia from "@/components/Insignia";
-import PildoraSla from "@/components/PildoraSla";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
-import { jsonbList } from "@/lib/jsonb";
+} from "@/lib/domain/tickets";
+import { correoValido } from "@/lib/domain/portal";
+import type { Adjunto } from "@/lib/utils/adjuntos";
+import { getConfigCorreo, correoOperativo, resolverSla } from "@/lib/domain/correo";
+import Insignia from "@/components/ui/Insignia";
+import PildoraSla from "@/components/ui/PildoraSla";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
+import { jsonbList } from "@/lib/utils/jsonb";
 import {
   editarTicket,
   cambiarEstadoTicket,

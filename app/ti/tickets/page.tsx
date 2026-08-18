@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, folio, duracion } from "@/lib/format";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta, folio, duracion } from "@/lib/utils/format";
 import {
   ESTADOS_TICKET,
   ESTADOS_SELECCIONABLES,
@@ -10,14 +10,14 @@ import {
   esEstadoActivo,
   esEstadoCerrado,
   esEstadoArchivado,
-} from "@/lib/tickets";
-import { getConfigCorreo, resolverSla } from "@/lib/correo";
-import Insignia from "@/components/Insignia";
-import PildoraSla from "@/components/PildoraSla";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
-import TableroTickets from "@/components/TableroTickets";
-import ModalCrearTicket from "@/components/ModalCrearTicket";
+} from "@/lib/domain/tickets";
+import { getConfigCorreo, resolverSla } from "@/lib/domain/correo";
+import Insignia from "@/components/ui/Insignia";
+import PildoraSla from "@/components/ui/PildoraSla";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
+import TableroTickets from "@/components/tickets/TableroTickets";
+import ModalCrearTicket from "@/components/tickets/ModalCrearTicket";
 import { cambiarEstadoTicket } from "./actions";
 
 export const dynamic = "force-dynamic";

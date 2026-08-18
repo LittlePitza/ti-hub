@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MAX_ADJUNTOS, MAX_BYTES_ORIGEN, esImagen } from "@/lib/adjuntos";
+import { MAX_ADJUNTOS, MAX_BYTES_ORIGEN, esImagen } from "@/lib/utils/adjuntos";
 
 // Comprime la foto en el navegador antes de subir: la reescala a un máximo
 // razonable y la reencoda a WebP (mucho más ligero que JPEG/PNG/HEIC). Así el

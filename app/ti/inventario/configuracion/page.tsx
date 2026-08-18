@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
-import { CATEGORIAS_INV, TIPOS_CAMPO, campoDeFila, type CampoInv } from "@/lib/inventario";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
+import { getSupabase } from "@/lib/supabase/client";
+import { CATEGORIAS_INV, TIPOS_CAMPO, campoDeFila, type CampoInv } from "@/lib/domain/inventario";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import { crearCampo, editarCampo, eliminarCampo } from "./actions";
 
 export const dynamic = "force-dynamic";

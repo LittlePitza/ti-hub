@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSupabaseAutenticado } from "@/lib/supabase";
-import { lector } from "@/lib/form";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
+import { lector } from "@/lib/utils/form";
 
 function refrescar() {
   revalidatePath("/ti/empleados");

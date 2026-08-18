@@ -10,7 +10,7 @@
 // Toda la aritmética de fechas trabaja sobre strings YYYY-MM-DD en UTC para no
 // depender de la zona horaria del servidor.
 
-import { moneda } from "./format";
+import { moneda } from "../utils/format";
 
 export type EstadoFactura = "pendiente" | "pagada" | "cancelada";
 export type Periodicidad = "mensual" | "bimestral" | "trimestral" | "semestral" | "anual" | "unico";

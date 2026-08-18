@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
-import { getConfigCorreo, resolverSla } from "@/lib/correo";
-import { duracion, duracionPartes, fechaHora, folioIncidente } from "@/lib/format";
-import { CATEGORIAS_TK, PRIORIDADES } from "@/lib/tickets";
-import { etiquetaCriticidad, metaTipoIncidente, TIPOS_INCIDENTE } from "@/lib/servicios";
+import { getSupabase } from "@/lib/supabase/client";
+import { getConfigCorreo, resolverSla } from "@/lib/domain/correo";
+import { duracion, duracionPartes, fechaHora, folioIncidente } from "@/lib/utils/format";
+import { CATEGORIAS_TK, PRIORIDADES } from "@/lib/domain/tickets";
+import { etiquetaCriticidad, metaTipoIncidente, TIPOS_INCIDENTE } from "@/lib/domain/servicios";
 import {
   claveMes,
   esClaveMes,
@@ -22,16 +22,16 @@ import {
   type TicketReporte,
   type IncidenteDetalle,
   type MantenimientoReporte,
-} from "@/lib/reportes";
-import SinConexion from "@/components/SinConexion";
-import BotonImprimir from "@/components/BotonImprimir";
+} from "@/lib/domain/reportes";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonImprimir from "@/components/ui/BotonImprimir";
 import {
   Dona,
   Barras,
   Columnas,
   type DatoGrafica,
   type PuntoColumnas,
-} from "@/components/Graficas";
+} from "@/components/charts/Graficas";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Reportes" };

@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabaseAutenticado } from "@/lib/supabase";
-import { lector, lectorOpc } from "@/lib/form";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
+import { lector, lectorOpc } from "@/lib/utils/form";
 
 export async function crearMantenimiento(formData: FormData) {
   const sb = await getSupabaseAutenticado();

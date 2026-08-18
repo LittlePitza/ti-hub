@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { firmaCorreoHtml, documentoFirma, firmaTextoPlano, type DatosFirma } from "@/lib/firma";
+import {
+  firmaCorreoHtml,
+  documentoFirma,
+  firmaTextoPlano,
+  type DatosFirma,
+} from "@/lib/domain/firma";
 
 type Copia = "" | "firma" | "html";
 

@@ -1,13 +1,18 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getSupabasePortal } from "@/lib/supabase";
-import { getCorreoPortal, nombreDeCorreo, CATEGORIAS_PORTAL, ESTADO_PORTAL } from "@/lib/portal";
-import type { Adjunto } from "@/lib/adjuntos";
-import { fechaCorta, folio } from "@/lib/format";
-import Ruta from "@/components/Ruta";
-import BotonEnviar from "@/components/BotonEnviar";
+import { getSupabasePortal } from "@/lib/supabase/client";
+import {
+  getCorreoPortal,
+  nombreDeCorreo,
+  CATEGORIAS_PORTAL,
+  ESTADO_PORTAL,
+} from "@/lib/domain/portal";
+import type { Adjunto } from "@/lib/utils/adjuntos";
+import { fechaCorta, folio } from "@/lib/utils/format";
+import Ruta from "@/components/ui/Ruta";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import { responderTicketPortal } from "./actions";
-import { jsonbList } from "@/lib/jsonb";
+import { jsonbList } from "@/lib/utils/jsonb";
 
 export const dynamic = "force-dynamic";
 

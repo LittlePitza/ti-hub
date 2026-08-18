@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo, useRef, useState } from "react";
-import { ROLES_RESP, type PersonaResp } from "@/lib/responsivas";
+import { ROLES_RESP, type PersonaResp } from "@/lib/domain/responsivas";
 
 // Editor de las personas ADICIONALES de una responsiva (el resguardatario
 // principal vive en columnas escalares y no se toca aquí). Lista dinámica que se

@@ -1,15 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabaseAutenticado } from "@/lib/supabase";
-import { lector } from "@/lib/form";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
+import { lector } from "@/lib/utils/form";
 import {
   MONEDAS,
   PERIODICIDADES,
   sumarMeses,
   type Moneda,
   type Periodicidad,
-} from "@/lib/facturas";
+} from "@/lib/domain/facturas";
 
 function refrescar() {
   revalidatePath("/ti/facturas/proveedores");

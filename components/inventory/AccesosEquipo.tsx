@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { AccesosInv } from "@/lib/inventario";
+import type { AccesosInv } from "@/lib/domain/inventario";
 
 // Sección "Credenciales y accesos" del equipo (solo panel de TI). Todo el bloque
 // es interactivo (mostrar/ocultar/copiar contraseñas y lista de accesos que se

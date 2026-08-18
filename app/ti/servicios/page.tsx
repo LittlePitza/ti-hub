@@ -1,5 +1,5 @@
-import { getSupabase } from "@/lib/supabase";
-import { fechaHora, duracion, folioIncidente } from "@/lib/format";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaHora, duracion, folioIncidente } from "@/lib/utils/format";
 import {
   serviciosConEstado,
   resumenServicios,
@@ -13,9 +13,9 @@ import {
   type Servicio,
   type Incidente,
   type ServicioConEstado,
-} from "@/lib/servicios";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
+} from "@/lib/domain/servicios";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import {
   crearServicio,
   editarServicio,

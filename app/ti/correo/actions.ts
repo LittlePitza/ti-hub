@@ -3,8 +3,8 @@
 import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSupabaseAutenticado } from "@/lib/supabase";
-import { lector } from "@/lib/form";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
+import { lector } from "@/lib/utils/form";
 import type { TablesUpdate } from "@/types/database";
 import {
   getConfigCorreo,
@@ -12,7 +12,7 @@ import {
   tieneCredenciales,
   urlAutorizacion,
   type MetodoCorreo,
-} from "@/lib/correo";
+} from "@/lib/domain/correo";
 
 const METODOS: MetodoCorreo[] = ["smtp_basico", "graph_app", "oauth_interactivo"];
 

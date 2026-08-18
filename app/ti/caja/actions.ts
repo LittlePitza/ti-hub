@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabaseAutenticado } from "@/lib/supabase";
-import { lector } from "@/lib/form";
-import { hoyISO } from "@/lib/facturas";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
+import { lector } from "@/lib/utils/form";
+import { hoyISO } from "@/lib/domain/facturas";
 
 function refrescar() {
   revalidatePath("/ti/caja");

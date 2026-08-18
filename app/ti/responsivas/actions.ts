@@ -2,16 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSupabaseAutenticado } from "@/lib/supabase";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
 import {
   plantillaDeEquipo,
   snapshotEquipo,
   sanitizarPersonas,
   type DatosResponsiva,
-} from "@/lib/responsivas";
+} from "@/lib/domain/responsivas";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TablesUpdate } from "@/types/database";
-import { jsonbObject, toJsonb } from "@/lib/jsonb";
+import { jsonbObject, toJsonb } from "@/lib/utils/jsonb";
 
 function refrescar(id?: string) {
   revalidatePath("/ti/responsivas");

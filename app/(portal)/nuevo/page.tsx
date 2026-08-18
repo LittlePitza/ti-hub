@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getSupabasePortal } from "@/lib/supabase";
-import { getCorreoPortal, CATEGORIAS_PORTAL } from "@/lib/portal";
-import SelectorImagenes from "@/components/SelectorImagenes";
-import BotonEnviar from "@/components/BotonEnviar";
-import AvisoServicios from "@/components/AvisoServicios";
+import { getSupabasePortal } from "@/lib/supabase/client";
+import { getCorreoPortal, CATEGORIAS_PORTAL } from "@/lib/domain/portal";
+import SelectorImagenes from "@/components/shared/SelectorImagenes";
+import BotonEnviar from "@/components/ui/BotonEnviar";
+import AvisoServicios from "@/components/shared/AvisoServicios";
 import { crearTicketPortal } from "../actions";
 
 export const dynamic = "force-dynamic";

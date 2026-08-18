@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getSupabaseAutenticado } from "@/lib/supabase";
-import { lector } from "@/lib/form";
-import { hoyISO, MONEDAS, type Moneda } from "@/lib/facturas";
-import type { Adjunto } from "@/lib/adjuntos";
-import { jsonbList } from "@/lib/jsonb";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
+import { lector } from "@/lib/utils/form";
+import { hoyISO, MONEDAS, type Moneda } from "@/lib/domain/facturas";
+import type { Adjunto } from "@/lib/utils/adjuntos";
+import { jsonbList } from "@/lib/utils/jsonb";
 
 function refrescar() {
   revalidatePath("/ti/facturas");

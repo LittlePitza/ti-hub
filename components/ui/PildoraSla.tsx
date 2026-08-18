@@ -1,4 +1,4 @@
-import { SEMAFORO_TEXTO, type SemaforoSla } from "@/lib/tickets";
+import { SEMAFORO_TEXTO, type SemaforoSla } from "@/lib/domain/tickets";
 
 // Píldora del semáforo de SLA (En tiempo / Por vencer / Fuera de SLA / En pausa).
 export default function PildoraSla({ semaforo, texto }: { semaforo: SemaforoSla; texto?: string }) {

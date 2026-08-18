@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getSupabaseAutenticado } from "@/lib/supabase";
-import { getConfigCorreo, intercambiarCodigo } from "@/lib/correo";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
+import { getConfigCorreo, intercambiarCodigo } from "@/lib/domain/correo";
 
 // Vuelta del "Iniciar sesión con Microsoft": Microsoft redirige aquí con un código.
 // Verificamos el state, canjeamos el código por un refresh token y lo guardamos.

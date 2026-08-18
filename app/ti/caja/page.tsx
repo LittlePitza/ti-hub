@@ -1,9 +1,9 @@
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, moneda } from "@/lib/format";
-import { hoyISO } from "@/lib/facturas";
-import { resumenCaja, nivelCaja, type MovimientoCaja } from "@/lib/caja";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta, moneda } from "@/lib/utils/format";
+import { hoyISO } from "@/lib/domain/facturas";
+import { resumenCaja, nivelCaja, type MovimientoCaja } from "@/lib/domain/caja";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import {
   registrarCompra,
   registrarReembolso,

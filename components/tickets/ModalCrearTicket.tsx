@@ -1,10 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { CATEGORIAS_TK, PRIORIDADES } from "@/lib/tickets";
+import { CATEGORIAS_TK, PRIORIDADES } from "@/lib/domain/tickets";
 import { crearTicket, type EstadoCrear } from "@/app/ti/tickets/actions";
-import BotonEnviar from "@/components/BotonEnviar";
-import SelectorSolicitante, { type EmpleadoOpcion } from "@/components/SelectorSolicitante";
+import BotonEnviar from "@/components/ui/BotonEnviar";
+import SelectorSolicitante, { type EmpleadoOpcion } from "@/components/shared/SelectorSolicitante";
 
 // "Nuevo ticket" abre un modal (mismo <dialog> nativo y estilo que ModalGestionar) con
 // el formulario de alta. El solicitante se elige con un combobox de empleados o se

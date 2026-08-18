@@ -4,24 +4,24 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getSupabaseAutenticado } from "@/lib/supabase";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
 import {
   type EstadoTicket,
   esEstadoSinAtender,
   esEstadoResuelto,
   esCategoriaTicket,
   esPrioridad,
-} from "@/lib/tickets";
-import { ESTADO_PORTAL, correoValido, nombreDeCorreo } from "@/lib/portal";
+} from "@/lib/domain/tickets";
+import { ESTADO_PORTAL, correoValido, nombreDeCorreo } from "@/lib/domain/portal";
 import {
   getConfigCorreo,
   correoOperativo,
   enviarRespuesta,
   enviarEstado,
   enviarTicketCreado,
-} from "@/lib/correo";
-import { recomprimirArchivado } from "@/lib/imagen";
-import type { Adjunto } from "@/lib/adjuntos";
+} from "@/lib/domain/correo";
+import { recomprimirArchivado } from "@/lib/utils/imagen";
+import type { Adjunto } from "@/lib/utils/adjuntos";
 import type { TablesUpdate } from "@/types/database";
 
 function refrescar(id?: string) {

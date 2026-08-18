@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
-import { getSupabase } from "@/lib/supabase";
+import Sidebar from "@/components/layout/Sidebar";
+import { getSupabase } from "@/lib/supabase/client";
 
 // Cada página del panel aporta su título; la plantilla agrega el sufijo común.
 export const metadata: Metadata = {

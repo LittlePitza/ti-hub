@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, moneda } from "@/lib/format";
-import { MONEDAS, PERIODICIDADES, etiquetaPeriodicidad, hoyISO } from "@/lib/facturas";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta, moneda } from "@/lib/utils/format";
+import { MONEDAS, PERIODICIDADES, etiquetaPeriodicidad, hoyISO } from "@/lib/domain/facturas";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import {
   crearProveedor,
   editarProveedor,

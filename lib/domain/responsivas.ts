@@ -1,4 +1,4 @@
-import { jsonbList } from "@/lib/jsonb";
+import { jsonbList } from "@/lib/utils/jsonb";
 import type { Tables } from "@/types/database";
 // Responsivas (cartas de resguardo de activos) · fuente de verdad del módulo.
 // Cada equipo asignado a un empleado genera una responsiva con la plantilla

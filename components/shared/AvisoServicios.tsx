@@ -1,5 +1,5 @@
-import { getSupabasePortal } from "@/lib/supabase";
-import { serviciosConEstado, type Servicio, type Incidente } from "@/lib/servicios";
+import { getSupabasePortal } from "@/lib/supabase/client";
+import { serviciosConEstado, type Servicio, type Incidente } from "@/lib/domain/servicios";
 
 // Franja para el portal del empleado: avisa cuando un servicio marcado como
 // `visible_portal` tiene una caída/falla abierta, para que el trabajador sepa que

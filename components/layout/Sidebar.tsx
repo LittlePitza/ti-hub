@@ -3,9 +3,9 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import TemaToggle from "./TemaToggle";
+import TemaToggle from "../ui/TemaToggle";
 import { cerrarSesion } from "@/app/login/actions";
-import BotonEnviar from "@/components/BotonEnviar";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 
 // Navegación agrupada por función, como una consola de operaciones: primero la
 // vista general, luego el trabajo del día (tickets, mantenimientos) y al final

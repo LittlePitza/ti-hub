@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { CampoInv, ExtrasInv } from "@/lib/inventario";
+import type { CampoInv, ExtrasInv } from "@/lib/domain/inventario";
 
 // Captura de los campos personalizados de una categoría (definidos por TI en
 // /ti/inventario/configuracion). Estado local por clave; serializa a un

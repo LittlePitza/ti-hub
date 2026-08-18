@@ -1,6 +1,6 @@
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta } from "@/lib/format";
-import { hoyISO } from "@/lib/facturas";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta } from "@/lib/utils/format";
+import { hoyISO } from "@/lib/domain/facturas";
 import {
   agruparPendientes,
   progresoProyecto,
@@ -10,9 +10,9 @@ import {
   ESTADOS_PROYECTO,
   type Tarea,
   type Proyecto,
-} from "@/lib/tareas";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
+} from "@/lib/domain/tareas";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import {
   crearTarea,
   alternarTarea,

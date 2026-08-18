@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, folioResponsiva } from "@/lib/format";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta, folioResponsiva } from "@/lib/utils/format";
 import {
   ESTADOS_FISICOS,
   ESTADOS_RESP,
@@ -12,17 +12,17 @@ import {
   type DatosResponsiva,
   type EstadoResponsiva,
   type PersonaResp,
-} from "@/lib/responsivas";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
-import PersonasResponsiva from "@/components/PersonasResponsiva";
+} from "@/lib/domain/responsivas";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
+import PersonasResponsiva from "@/components/custody/PersonasResponsiva";
 import {
   editarResponsiva,
   subirFirmada,
   cambiarEstadoResponsiva,
   actualizarDesdeInventario,
 } from "../actions";
-import { jsonbObject } from "@/lib/jsonb";
+import { jsonbObject } from "@/lib/utils/jsonb";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Responsiva" };

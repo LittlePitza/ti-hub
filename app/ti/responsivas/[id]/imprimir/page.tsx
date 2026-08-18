@@ -2,17 +2,17 @@ import { Fragment } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Poppins } from "next/font/google";
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, folioResponsiva } from "@/lib/format";
-import { categoriaInv } from "@/lib/inventario";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta, folioResponsiva } from "@/lib/utils/format";
+import { categoriaInv } from "@/lib/domain/inventario";
 import {
   fusionarPlantilla,
   CAMPOS_EQUIPO_TODOS,
   type DatosResponsiva,
   type PersonaResp,
-} from "@/lib/responsivas";
-import BotonImprimir from "@/components/BotonImprimir";
-import { jsonbObject } from "@/lib/jsonb";
+} from "@/lib/domain/responsivas";
+import BotonImprimir from "@/components/ui/BotonImprimir";
+import { jsonbObject } from "@/lib/utils/jsonb";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Imprimir responsiva" };

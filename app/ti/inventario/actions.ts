@@ -2,18 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getSupabaseAutenticado } from "@/lib/supabase";
-import { lector } from "@/lib/form";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
+import { lector } from "@/lib/utils/form";
 import {
   categoriaInv,
   sanitizarAccesos,
   sanitizarExtras,
   campoDeFila,
   type CampoInv,
-} from "@/lib/inventario";
+} from "@/lib/domain/inventario";
 import { generarResponsiva, sincronizarResponsivasEquipo } from "@/app/ti/responsivas/actions";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { toJsonb } from "@/lib/jsonb";
+import { toJsonb } from "@/lib/utils/jsonb";
 
 function refrescar(cat: string) {
   revalidatePath(`/ti/inventario`);

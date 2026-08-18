@@ -1,5 +1,5 @@
 import { iniciarSesion } from "./actions";
-import BotonEnviar from "@/components/BotonEnviar";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 
 export const dynamic = "force-dynamic";
 

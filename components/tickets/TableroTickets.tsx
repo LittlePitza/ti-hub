@@ -8,7 +8,7 @@ import {
   type MouseEvent,
 } from "react";
 import Link from "next/link";
-import { folio, duracion } from "@/lib/format";
+import { folio, duracion } from "@/lib/utils/format";
 import {
   ORDEN_PRIORIDAD,
   evaluarRespuesta,
@@ -16,9 +16,9 @@ import {
   type SlaTabla,
   esEstadoActivo,
   esEstadoArchivado,
-} from "@/lib/tickets";
-import Insignia from "./Insignia";
-import PildoraSla from "./PildoraSla";
+} from "@/lib/domain/tickets";
+import Insignia from "../ui/Insignia";
+import PildoraSla from "../ui/PildoraSla";
 import MoverEstado from "./MoverEstado";
 import { cambiarEstadoTicket } from "@/app/ti/tickets/actions";
 

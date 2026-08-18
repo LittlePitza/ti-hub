@@ -4,17 +4,17 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { getSupabasePortal } from "@/lib/supabase";
-import { lector } from "@/lib/form";
+import { getSupabasePortal } from "@/lib/supabase/client";
+import { lector } from "@/lib/utils/form";
 import {
   COOKIE_PORTAL,
   CATEGORIAS_PORTAL,
   correoValido,
   normalizarCorreo,
   getCorreoPortal,
-} from "@/lib/portal";
-import { getConfigCorreo, avisaNuevo, enviarNuevoTicket } from "@/lib/correo";
-import { MAX_ADJUNTOS, esImagenValida, type Adjunto } from "@/lib/adjuntos";
+} from "@/lib/domain/portal";
+import { getConfigCorreo, avisaNuevo, enviarNuevoTicket } from "@/lib/domain/correo";
+import { MAX_ADJUNTOS, esImagenValida, type Adjunto } from "@/lib/utils/adjuntos";
 
 const OPCIONES_COOKIE = {
   httpOnly: true,

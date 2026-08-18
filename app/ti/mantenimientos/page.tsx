@@ -1,8 +1,8 @@
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta } from "@/lib/format";
-import Insignia from "@/components/Insignia";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta } from "@/lib/utils/format";
+import Insignia from "@/components/ui/Insignia";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import {
   crearMantenimiento,
   cambiarEstadoMantenimiento,

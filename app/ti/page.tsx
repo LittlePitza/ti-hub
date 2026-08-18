@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, folio, duracionPartes, moneda } from "@/lib/format";
-import { evaluarRespuesta, evaluarResolucion, esEstadoActivo } from "@/lib/tickets";
-import { calendarioPagos, pendienteDelMes, montos, hoyISO } from "@/lib/facturas";
-import { serviciosConEstado, type Servicio, type Incidente } from "@/lib/servicios";
-import { getConfigCorreo, resolverSla } from "@/lib/correo";
-import Insignia from "@/components/Insignia";
-import SinConexion from "@/components/SinConexion";
-import { Dona, Barras, type DatoGrafica } from "@/components/Graficas";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta, folio, duracionPartes, moneda } from "@/lib/utils/format";
+import { evaluarRespuesta, evaluarResolucion, esEstadoActivo } from "@/lib/domain/tickets";
+import { calendarioPagos, pendienteDelMes, montos, hoyISO } from "@/lib/domain/facturas";
+import { serviciosConEstado, type Servicio, type Incidente } from "@/lib/domain/servicios";
+import { getConfigCorreo, resolverSla } from "@/lib/domain/correo";
+import Insignia from "@/components/ui/Insignia";
+import SinConexion from "@/components/ui/SinConexion";
+import { Dona, Barras, type DatoGrafica } from "@/components/charts/Graficas";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Resumen" };

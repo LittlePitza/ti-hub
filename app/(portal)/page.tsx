@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { getSupabasePortal } from "@/lib/supabase";
-import { fechaCorta, folio } from "@/lib/format";
+import { getSupabasePortal } from "@/lib/supabase/client";
+import { fechaCorta, folio } from "@/lib/utils/format";
 import {
   getCorreoPortal,
   nombreDeCorreo,
   CATEGORIAS_PORTAL,
   ESTADO_PORTAL,
   DOMINIO_CORREO,
-} from "@/lib/portal";
-import Ruta from "@/components/Ruta";
-import BotonEnviar from "@/components/BotonEnviar";
-import AvisoServicios from "@/components/AvisoServicios";
+} from "@/lib/domain/portal";
+import Ruta from "@/components/ui/Ruta";
+import BotonEnviar from "@/components/ui/BotonEnviar";
+import AvisoServicios from "@/components/shared/AvisoServicios";
 import {
   entrarPortal,
   salirPortal,

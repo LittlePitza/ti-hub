@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabaseAutenticado } from "@/lib/supabase";
-import { plantillaDefault, CAMPOS_EQUIPO_TODOS } from "@/lib/responsivas";
+import { getSupabaseAutenticado } from "@/lib/supabase/client";
+import { plantillaDefault, CAMPOS_EQUIPO_TODOS } from "@/lib/domain/responsivas";
 
 // Convierte un textarea (una opción por línea) en arreglo limpio.
 function lineas(v: FormDataEntryValue | null): string[] {

@@ -1,11 +1,16 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, type ReactNode } from "react";
-import { CATEGORIAS_INV, categoriaInv, type CategoriaInv, type CampoInv } from "@/lib/inventario";
+import {
+  CATEGORIAS_INV,
+  categoriaInv,
+  type CategoriaInv,
+  type CampoInv,
+} from "@/lib/domain/inventario";
 import { crearEquipo, type EstadoCrearEquipo } from "@/app/ti/inventario/actions";
-import BotonEnviar from "@/components/BotonEnviar";
-import AccesosEquipo from "@/components/AccesosEquipo";
-import CamposExtra from "@/components/CamposExtra";
+import BotonEnviar from "@/components/ui/BotonEnviar";
+import AccesosEquipo from "@/components/inventory/AccesosEquipo";
+import CamposExtra from "@/components/inventory/CamposExtra";
 
 // "Registrar equipo" abre una tarjeta modal (mismo <dialog> nativo y estilo que
 // ModalCrearTicket) con el alta del inventario. Arriba, un control segmentado por

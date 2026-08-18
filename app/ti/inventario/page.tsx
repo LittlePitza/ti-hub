@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, folioResponsiva } from "@/lib/format";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta, folioResponsiva } from "@/lib/utils/format";
 import {
   CATEGORIAS_INV,
   categoriaInv,
@@ -8,18 +8,18 @@ import {
   type CampoInv,
   type ExtrasInv,
   ACCESOS_VACIO,
-} from "@/lib/inventario";
-import { ESTADOS_RESP, plantillaDefault, type EstadoResponsiva } from "@/lib/responsivas";
-import Insignia from "@/components/Insignia";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
-import AccesosEquipo from "@/components/AccesosEquipo";
-import CamposExtra from "@/components/CamposExtra";
-import ModalGestionar from "@/components/ModalGestionar";
-import NuevoEquipo from "@/components/NuevoEquipo";
+} from "@/lib/domain/inventario";
+import { ESTADOS_RESP, plantillaDefault, type EstadoResponsiva } from "@/lib/domain/responsivas";
+import Insignia from "@/components/ui/Insignia";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
+import AccesosEquipo from "@/components/inventory/AccesosEquipo";
+import CamposExtra from "@/components/inventory/CamposExtra";
+import ModalGestionar from "@/components/tickets/ModalGestionar";
+import NuevoEquipo from "@/components/inventory/NuevoEquipo";
 import { asignarEquipo, editarEquipo, eliminarEquipo } from "./actions";
 import { generarResponsivaEquipo } from "../responsivas/actions";
-import { jsonbObject } from "@/lib/jsonb";
+import { jsonbObject } from "@/lib/utils/jsonb";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Inventario" };

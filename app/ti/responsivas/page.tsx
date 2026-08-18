@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
-import { fechaCorta, folioResponsiva } from "@/lib/format";
+import { getSupabase } from "@/lib/supabase/client";
+import { fechaCorta, folioResponsiva } from "@/lib/utils/format";
 import {
   ESTADOS_RESP,
   ESTADOS_RESP_LISTA,
@@ -8,9 +8,9 @@ import {
   hitosCumplidos,
   plantillaDefault,
   type EstadoResponsiva,
-} from "@/lib/responsivas";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
+} from "@/lib/domain/responsivas";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
 import { eliminarResponsiva } from "./actions";
 
 export const dynamic = "force-dynamic";

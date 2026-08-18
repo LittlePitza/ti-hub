@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { getSupabase } from "@/lib/supabase";
-import { CATEGORIAS_INV } from "@/lib/inventario";
-import Insignia from "@/components/Insignia";
-import SinConexion from "@/components/SinConexion";
-import BotonEnviar from "@/components/BotonEnviar";
-import ModalGestionar from "@/components/ModalGestionar";
+import { getSupabase } from "@/lib/supabase/client";
+import { CATEGORIAS_INV } from "@/lib/domain/inventario";
+import Insignia from "@/components/ui/Insignia";
+import SinConexion from "@/components/ui/SinConexion";
+import BotonEnviar from "@/components/ui/BotonEnviar";
+import ModalGestionar from "@/components/tickets/ModalGestionar";
 import { crearEmpleado, cambiarEstadoEmpleado, editarEmpleado, eliminarEmpleado } from "./actions";
 
 export const dynamic = "force-dynamic";
