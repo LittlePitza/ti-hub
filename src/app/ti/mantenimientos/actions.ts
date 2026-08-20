@@ -1,0 +1,90 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { getAuthenticatedSupabase } from "@/lib/supabase/client";
+import { reader, optionalReader } from "@/lib/utils/form";
+
+export async function createMaintenance(formData: FormData) {
+  const sb = await getAuthenticatedSupabase();
+  if (!sb) return;
+  const v = reader(formData);
+  const o = optionalReader(formData);
+  // titulo and fecha_programada are NOT NULL without a default: an empty field
+  // used to send null, which Postgres rejected and the catch below swallowed --
+  // the form simply appeared to do nothing. The edit path already guarded.
+  const titulo = v("titulo");
+  const fechaProgramada = v("fecha_programada");
+  if (!titulo || !fechaProgramada) return;
+  const { error } = await sb.from("mantenimientos").insert({
+    titulo,
+    tipo: o("tipo"),
+    fecha_programada: fechaProgramada,
+    responsable: v("responsable"),
+    equipo_id: v("equipo_id"),
+    notas: v("notas"),
+  });
+  if (error) {
+    console.error("[mantenimientos] crear:", error.message);
+    return;
+  }
+  revalidatePath("/ti/mantenimientos");
+  revalidatePath("/ti");
+}
+
+export async function changeMaintenanceStatus(formData: FormData) {
+  const sb = await getAuthenticatedSupabase();
+  if (!sb) return;
+  const { error } = await sb
+    .from("mantenimientos")
+    .update({ estado: formData.get("estado") as string })
+    .eq("id", formData.get("id") as string);
+  if (error) {
+    console.error("[mantenimientos] cambiar estado:", error.message);
+    return;
+  }
+  revalidatePath("/ti/mantenimientos");
+  revalidatePath("/ti");
+}
+
+export async function editMaintenance(formData: FormData) {
+  const sb = await getAuthenticatedSupabase();
+  if (!sb) return;
+  const v = reader(formData);
+  const o = optionalReader(formData);
+  const id = formData.get("id") as string;
+  const titulo = v("titulo");
+  const fechaProgramada = v("fecha_programada");
+  if (!id || !titulo || !fechaProgramada) return;
+  const { error } = await sb
+    .from("mantenimientos")
+    .update({
+      titulo,
+      tipo: o("tipo"),
+      fecha_programada: fechaProgramada,
+      responsable: v("responsable"),
+      equipo_id: v("equipo_id"),
+      notas: v("notas"),
+    })
+    .eq("id", id);
+  if (error) {
+    console.error("[mantenimientos] editar:", error.message);
+    return;
+  }
+  revalidatePath("/ti/mantenimientos");
+  revalidatePath("/ti");
+}
+
+export async function deleteMaintenance(formData: FormData) {
+  const sb = await getAuthenticatedSupabase();
+  if (!sb) return;
+  const { error } = await sb
+    .from("mantenimientos")
+    .delete()
+    .eq("id", formData.get("id") as string);
+  if (error) {
+    console.error("[mantenimientos] eliminar:", error.message);
+    return;
+  }
+  revalidatePath("/ti/mantenimientos");
+  revalidatePath("/ti");
+}

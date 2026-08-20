@@ -11,7 +11,7 @@ const config = [
       "out/**",
       "node_modules/**",
       "next-env.d.ts",
-      "types/database.ts", // generated from the Supabase schema
+      "src/types/database.ts", // generated from the Supabase schema
     ],
   },
 
@@ -40,7 +40,7 @@ const config = [
   {
     // Server actions and domain modules run on the server, where console output
     // goes to the platform log and is the intended way to report a failure.
-    files: ["**/actions.ts", "lib/**/*.ts", "middleware.ts"],
+    files: ["**/actions.ts", "src/lib/**/*.ts", "src/middleware.ts"],
     rules: { "no-console": "off" },
   },
 ];
