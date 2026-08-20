@@ -2,9 +2,9 @@ node_modules
 .next
 out
 package-lock.json
-types/database.ts
+src/types/database.ts
 
 # The design system is one ordered cascade; a reformat would bury real diffs
 # and the ordering is load-bearing. Edit it by hand.
-styles
-app/globals.css
+src/styles
+src/app/globals.css

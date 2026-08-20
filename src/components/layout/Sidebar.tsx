@@ -1,0 +1,360 @@
+"use client";
+
+import { useState, type ReactNode } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import ThemeToggle from "../ui/ThemeToggle";
+import { signOut } from "@/app/login/actions";
+import SubmitButton from "@/components/ui/SubmitButton";
+
+// Navigation grouped by function, like an operations console: the overview
+// first, then the day's work (tickets, maintenance), and finally the assets being
+// managed. The employee portal sits apart, in the footer.
+const GRUPOS: { titulo: string; items: { href: string; label: string; icono: ReactNode }[] }[] = [
+  {
+    titulo: "Panel",
+    items: [
+      { href: "/ti", label: "Resumen", icono: <IcoResumen /> },
+      { href: "/ti/reportes", label: "Reportes", icono: <IcoReportes /> },
+      { href: "/ti/tareas", label: "Tareas y proyectos", icono: <IcoTareas /> },
+    ],
+  },
+  {
+    titulo: "Soporte",
+    items: [
+      { href: "/ti/tickets", label: "Tickets", icono: <IcoTickets /> },
+      { href: "/ti/servicios", label: "Estado de sistemas", icono: <IcoServicios /> },
+      { href: "/ti/mantenimientos", label: "Mantenimientos", icono: <IcoManto /> },
+    ],
+  },
+  {
+    titulo: "Activos",
+    items: [
+      { href: "/ti/inventario", label: "Inventario", icono: <IcoInventario /> },
+      { href: "/ti/responsivas", label: "Responsivas", icono: <IcoResponsivas /> },
+      { href: "/ti/empleados", label: "Empleados", icono: <IcoEmpleados /> },
+    ],
+  },
+  {
+    titulo: "Finanzas",
+    items: [
+      { href: "/ti/facturas", label: "Facturas", icono: <IcoFacturas /> },
+      { href: "/ti/caja", label: "Caja chica", icono: <IcoCaja /> },
+    ],
+  },
+  {
+    titulo: "Sistema",
+    items: [{ href: "/ti/correo", label: "Correo", icono: <IcoCorreo /> }],
+  },
+];
+
+export default function Sidebar() {
+  const ruta = usePathname();
+  const [abierto, setAbierto] = useState(false);
+
+  return (
+    <aside className={`rail ${abierto ? "abierto" : ""}`}>
+      <div className="rail-cabecera">
+        <Link href="/ti" className="brand" onClick={() => setAbierto(false)}>
+          <span className="logo-claro">
+            <img className="brand-iso" src="/pimsa-isotipo.svg" alt="" />
+          </span>
+          <div>
+            <div className="brand-name">TI Hub</div>
+            <div className="brand-sub">Consola · PIMSA</div>
+          </div>
+        </Link>
+        <button
+          type="button"
+          className="hamburguesa"
+          aria-label={abierto ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={abierto}
+          onClick={() => setAbierto(!abierto)}
+        >
+          {abierto ? (
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          ) : (
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden
+            >
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      <nav className="rail-nav" aria-label="Secciones del panel">
+        {GRUPOS.map((g) => (
+          <div className="rail-grupo" key={g.titulo}>
+            <span className="rail-grupo-titulo">{g.titulo}</span>
+            {g.items.map((e) => (
+              <Link
+                key={e.href}
+                href={e.href}
+                className={`rail-link ${ruta === e.href ? "activo" : ""}`}
+                onClick={() => setAbierto(false)}
+              >
+                {e.icono}
+                <span>{e.label}</span>
+              </Link>
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      <div className="rail-pie">
+        <Link href="/" className="rail-portal" onClick={() => setAbierto(false)}>
+          <IcoPortal />
+          <span>Portal del empleado</span>
+        </Link>
+        <div className="rail-pie-fila">
+          <form action={signOut} style={{ flex: 1 }}>
+            <SubmitButton className="rail-salir" ocupado="Saliendo…">
+              Cerrar sesión
+            </SubmitButton>
+          </form>
+          <ThemeToggle />
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/* Line icons (1.7px), inheriting currentColor from the rail. */
+function IcoResumen() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="3" width="7" height="9" rx="1.5" />
+      <rect x="14" y="3" width="7" height="5" rx="1.5" />
+      <rect x="14" y="12" width="7" height="9" rx="1.5" />
+      <rect x="3" y="16" width="7" height="5" rx="1.5" />
+    </svg>
+  );
+}
+function IcoReportes() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 20h18" />
+      <path d="M6 20v-7" />
+      <path d="M11 20V5" />
+      <path d="M16 20v-10" />
+      <path d="M21 20V8" />
+    </svg>
+  );
+}
+function IcoTickets() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" />
+      <path d="M14 6v12" strokeDasharray="2 2.5" />
+    </svg>
+  );
+}
+function IcoServicios() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 12h3l2.5 7 5-16L18 12h3" />
+    </svg>
+  );
+}
+function IcoTareas() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M9 5h11M9 12h11M9 19h11" />
+      <path d="m3.5 5 1.2 1.2L7 4" />
+      <path d="m3.5 12 1.2 1.2L7 11" />
+      <circle cx="4.5" cy="19" r="1.2" />
+    </svg>
+  );
+}
+function IcoManto() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M14.7 6.3a4 4 0 0 0-5.4 5.3L4 17l3 3 5.4-5.3a4 4 0 0 0 5.3-5.4l-2.6 2.6-2.3-2.3z" />
+    </svg>
+  );
+}
+function IcoInventario() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="m21 8-9-5-9 5 9 5 9-5z" />
+      <path d="M3 8v8l9 5 9-5V8" />
+      <path d="m12 13 0 8" />
+    </svg>
+  );
+}
+function IcoResponsivas() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 13h6M9 17h4" />
+    </svg>
+  );
+}
+function IcoEmpleados() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
+      <path d="M16 5.5a3 3 0 0 1 0 5.6" />
+      <path d="M17.5 20a5.5 5.5 0 0 0-2.3-4.5" />
+    </svg>
+  );
+}
+function IcoFacturas() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M6 3h12a1 1 0 0 1 1 1v17l-3-2-3 2-3-2-3 2V4a1 1 0 0 1 1-1z" />
+      <path d="M12 6.5v1M12 14.5v1M14 8.5a2 2 0 0 0-2-1c-1.1 0-2 .7-2 1.75S10.9 11 12 11s2 .7 2 1.75-0.9 1.75-2 1.75a2 2 0 0 1-2-1" />
+    </svg>
+  );
+}
+function IcoCaja() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 9h16a1 1 0 0 1 1 1v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8a1 1 0 0 1 1-1z" />
+      <path d="M6 9V6.5A1.5 1.5 0 0 1 7.5 5h9A1.5 1.5 0 0 1 18 6.5V9" />
+      <path d="M14 14.5a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+    </svg>
+  );
+}
+function IcoCorreo() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  );
+}
+function IcoPortal() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 12 12 4l9 8" />
+      <path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9" />
+      <path d="M10 20v-5h4v5" />
+    </svg>
+  );
+}
