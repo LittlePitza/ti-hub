@@ -2,7 +2,25 @@
   "name": "ti-hub",
   "version": "1.0.0",
   "private": true,
-  "description": "Internal IT department site: device inventory, maintenance scheduling, help-desk tickets and an employee self-service portal",
+  "description": "Internal IT department site for Plásticos PIMSA: device inventory, maintenance scheduling, help-desk tickets and an employee self-service portal",
+  "keywords": [
+    "nextjs",
+    "supabase",
+    "typescript",
+    "help-desk",
+    "it-inventory",
+    "internal-tool"
+  ],
+  "license": "UNLICENSED",
+  "author": "Luis Hernández <sistemas@plasticospimsa.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LittlePitza/ti-hub.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LittlePitza/ti-hub/issues"
+  },
+  "homepage": "https://github.com/LittlePitza/ti-hub#readme",
   "engines": {
     "node": ">=20"
   },
@@ -13,8 +31,12 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
@@ -34,6 +56,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.23",
     "prettier": "^3.9.6",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.11"
   }
 }
