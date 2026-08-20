@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "editorconfig.editorconfig",
+    "vitest.explorer"
+  ],
+  // There is no Tailwind here: the design system is hand-written CSS in
+  // src/styles. The IntelliSense extension only adds noise.
+  "unwantedRecommendations": ["bradlc.vscode-tailwindcss"]
+}

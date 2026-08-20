@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a problem as a PIMSA employee
+    url: https://github.com/LittlePitza/ti-hub#readme
+    about: If you work at PIMSA and something is broken with your equipment, file a report in the portal instead — do not open an issue here.
+  - name: Security vulnerability
+    url: https://github.com/LittlePitza/ti-hub/security/policy
+    about: Never report a vulnerability in a public issue. See the security policy.

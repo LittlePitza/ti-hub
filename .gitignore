@@ -41,5 +41,13 @@ npm-debug.log*
 
 # Editors and OS
 .idea/
-.vscode/
 .DS_Store
+
+# Editor settings: the two files that describe the project are shared, the rest
+# is personal.
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Knowledge-graph output (generated locally, not part of the app)
+graphify-out/

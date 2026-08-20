@@ -1,0 +1,56 @@
+name: Feature request
+description: Propose something the IT department or an employee needs
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What is the need?
+      description: Describe the situation today, not the solution. What is being done by hand, or in a spreadsheet, or not at all?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would solve it?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Which module does it belong to?
+      options:
+        - Inventory
+        - Employees
+        - Maintenance
+        - Tickets
+        - Custody letters
+        - Systems status
+        - Tasks and projects
+        - Invoices and vendors
+        - Petty cash
+        - Reports
+        - Employee portal
+        - New module
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How urgent is it?
+      options:
+        - 🔴 Critical — something is blocked today
+        - 🟡 Important — a real cost, but there is a workaround
+        - 🟢 Nice to have
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: schema
+    attributes:
+      label: Does it need new data?
+      options:
+        - label: This probably needs a change to `supabase/schema.sql`

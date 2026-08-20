@@ -1,0 +1,68 @@
+name: Bug report
+description: Something in the panel or the portal does not work as expected
+labels: [bug]
+body:
+  - type: dropdown
+    id: face
+    attributes:
+      label: Where does it happen?
+      options:
+        - IT panel (/ti)
+        - Employee portal (/)
+        - Both
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: route
+    attributes:
+      label: Route
+      description: The URL path, without the domain.
+      placeholder: /ti/tickets/1234
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happens instead
+      description: If a form seems to do nothing, say so — that is usually a rejected write, and the platform log will have the reason.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open /ti/tickets
+        2. …
+    validations:
+      required: true
+
+  - type: dropdown
+    id: theme
+    attributes:
+      label: Theme
+      description: Styling bugs frequently affect only one of the two.
+      options:
+        - Light
+        - Dark
+        - Both
+        - Not related to styling
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: Windows 11 / Edge · Android / Chrome
