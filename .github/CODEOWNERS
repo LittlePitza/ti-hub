@@ -1,0 +1,9 @@
+# Every change is reviewed by the IT lead.
+*                       @LittlePitza
+
+# The three files where a mistake is expensive: the schema is the source of
+# truth for production data, the middleware is the panel's front door, and the
+# Supabase clients decide which one of them bypasses RLS.
+/supabase/schema.sql    @LittlePitza
+/src/middleware.ts      @LittlePitza
+/src/lib/supabase/      @LittlePitza

@@ -12,9 +12,9 @@
 
 **TI Hub** is the operational tool for the PIMSA IT department. It has two faces:
 
-1. **Employee portal** (`app/(portal)/`, **the home page**: routes `/` and `/nuevo`) — a simple
+1. **Employee portal** (`src/app/(portal)/`, **the home page**: routes `/` and `/nuevo`) — a simple
    interface for any worker to file a ticket without friction.
-2. **IT panel** (`app/ti/`, the discreet `/ti` route behind a login) — internal use by the systems
+2. **IT panel** (`src/app/ti/`, the discreet `/ti` route behind a login) — internal use by the systems
    team: inventory by category, employees, maintenance, tickets, vendors.
 
 What does **not** live in this app (it stays as documentation/administration in
@@ -44,7 +44,7 @@ infrastructure. This app is the **day-to-day operational** layer.
 - [ ] 🔴 Replace the sample seed (QRO offices / video) with **real PIMSA data** in `schema.sql`:
       real devices (from the inventory in folder 01) and real locations (Santa Catarina, plant/office).
 - [x] 🟡 Integrate the **official PIMSA logo** (SVG) in the sidebar and login (`public/pimsa-logo.svg`
-      full, `public/pimsa-isotipo.svg` for compact headers, favicon `app/icon.svg`).
+      full, `public/pimsa-isotipo.svg` for compact headers, favicon `src/app/icon.svg`).
 - [ ] 🟡 Align inventory locations with the real site (plant, offices, server room/rack).
 
 **Decision made:** Signika (the official brand face) was adopted **for the employee portal only**;
@@ -68,7 +68,7 @@ _Superseded:_ both faces now use **Poppins**, matching the PIMSA Portal de Mante
 - [x] 🟡 PIMSA branding visible (official logo, blue `#294466` + green `#7F9D41`, green edge on the
       header).
 - [x] 🟡 Define a basic SLA (response times per priority) and surface it. **Done:** per-priority
-      targets (response/resolution) in `lib/domain/tickets.ts`, an indicator (on time / due soon /
+      targets (response/resolution) in `src/lib/domain/tickets.ts`, an indicator (on time / due soon /
       breached / paused), an SLA column in the list, SLA metrics in the ticket detail and an aggregate
       summary on the dashboard. `en_espera` pauses the clock.
 - [ ] 🟢 Notify IT when a new ticket arrives (email or Teams via webhook / Power Automate).
@@ -124,7 +124,7 @@ phone-directory CSVs.)
       payment. **Done:** catalogue at `/ti/facturas/proveedores` plus an **invoices** module
       (`/ti/facturas`, table `facturas` with PDF/XML attachments in Storage) with a 90-day payment
       agenda combining captured invoices and recurring due dates projected from `proximo_pago`
-      (`lib/domain/invoices.ts`).
+      (`src/lib/domain/invoices.ts`).
 - [x] 🟡 ~~Preload Microsoft (M365 licences) and the ISP (internet)~~ → decided against seeding: IT
       captures them from the panel.
 - [x] 🟢 **Dashboard alerts**: upcoming/overdue payments and the month outstanding in the summary;
@@ -162,7 +162,7 @@ phone-directory CSVs.)
       their duration.
 - [x] 🟡 **Notice in the employee portal**: a banner announcing outages of services flagged
       `visible_portal`, so a worker knows IT is already aware and does not file a duplicate report
-      (`components/shared/ServicesNotice.tsx`, on `/` and `/nuevo`). It shows only the incident title,
+      (`src/components/shared/ServicesNotice.tsx`, on `/` and `/nuevo`). It shows only the incident title,
       never the internal note.
 - [x] 🟢 **"Systems with problems" panel** in the summary (`/ti`), shown only when there are open
       incidents.
@@ -184,7 +184,7 @@ for tickets, SLA, systems and maintenance.
 - [x] 🟡 **`/ti/reportes` page** with a month picker (`?mes=YYYY-MM`, ‹ › arrows, capped at the
       current month) and a print button to take the PDF to the meeting. "Reportes" entry in the sidebar
       (Panel group).
-- [x] 🟡 **`lib/domain/reports.ts`**: everything is **derived** from existing tables (no new tables,
+- [x] 🟡 **`src/lib/domain/reports.ts`**: everything is **derived** from existing tables (no new tables,
       no snapshots); a closed month can always be reconstructed because the timestamps are immutable.
       Standard help-desk cohorts: _created_ (`created_at` in the month), _responded_
       (`primera_respuesta_at` in the month, giving the response SLA), _resolved_ (`resuelto_at` in the
@@ -212,12 +212,22 @@ for tickets, SLA, systems and maintenance.
       database identifiers (see [`../CONTRIBUTING.md`](../CONTRIBUTING.md) for the rule and glossary).
 - [x] 🟡 Tooling: ESLint, Prettier, `.editorconfig`, `.nvmrc`, and `lint` / `typecheck` / `format`
       scripts.
-- [x] 🟡 Generated Supabase types (`types/database.ts`); all three clients typed as
+- [x] 🟡 Generated Supabase types (`src/types/database.ts`); all three clients typed as
       `SupabaseClient<Database>`.
 - [x] 🟡 `tsconfig` `strict: true`.
-- [x] 🟡 Structure: `components/` and `lib/` grouped by domain; `globals.css` split into `styles/`.
-- [ ] 🟢 CI on GitHub Actions running lint + typecheck + build on every push and PR.
-- [ ] 🟢 A test suite. There is none today; `npm run build` is the only gate.
+- [x] 🟡 Structure: `src/components/` and `src/lib/` grouped by domain; `globals.css` split into `src/styles/`.
+- [x] 🟢 CI on GitHub Actions: formatting, lint, typecheck, tests and a production build run on
+      every push and pull request (`.github/workflows/ci.yml`), plus grouped Dependabot updates.
+- [x] 🟢 A test suite. 160 Vitest cases over the pure domain modules in `src/lib`, co-located as
+      `*.test.ts`: the SLA clock, the payment projection, the petty-cash ledger, the derived service
+      status, month arithmetic and the jsonb sanitisers. `npm run verify` is the full gate.
+- [x] 🟡 All application code moved under `src/`; the root keeps only configuration and docs. The
+      `@/*` alias re-points to `./src/*`, so no import changed.
+- [x] 🟡 The English naming rule is now actually applied to files, exports, server actions and every
+      comment — it had been declared but never finished. UI copy, CSS classes, routes and database
+      identifiers (including **jsonb keys**) stay Spanish; see [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
+- [x] 🟡 Repository furniture: `LICENSE` (proprietary), `SECURITY.md`, `CHANGELOG.md`, `CODEOWNERS`,
+      issue forms, a pull-request template and shared `.vscode/` settings.
 
 ---
 
@@ -244,4 +254,4 @@ for tickets, SLA, systems and maintenance.
 
 ---
 
-_Last updated: 2026-08-18_
+_Last updated: 2026-08-20_

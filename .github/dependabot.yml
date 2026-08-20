@@ -1,0 +1,35 @@
+version: 2
+
+updates:
+  # Application dependencies. Grouped so a routine week is one pull request
+  # instead of a dozen: this is a one-maintainer repository and CI has to pass
+  # on each of them.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      next:
+        patterns: ["next", "eslint-config-next", "@next/*"]
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      supabase:
+        patterns: ["@supabase/*"]
+      dev-tooling:
+        patterns: ["eslint", "@eslint/*", "prettier", "typescript", "vitest", "@types/*"]
+    ignore:
+      # Major bumps of the framework and the runtime types are migrations, not
+      # updates: they get raised deliberately, not by a bot.
+      - dependency-name: next
+        update-types: [version-update:semver-major]
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+
+  # Keep the CI actions themselves current — this is where supply-chain fixes land.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

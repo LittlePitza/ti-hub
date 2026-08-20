@@ -1,0 +1,29 @@
+{
+  // Prettier owns formatting; ESLint owns correctness. Keep them from fighting.
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // src/styles and src/app/globals.css are a single ordered cascade whose import
+  // order is load-bearing; .prettierignore excludes them, and this keeps the
+  // editor from reformatting them anyway.
+  "[css]": {
+    "editor.formatOnSave": false
+  },
+
+  // Use the workspace TypeScript, so the editor and `npm run typecheck` agree.
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+
+  "files.eol": "\n",
+  "search.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/graphify-out": true,
+    "package-lock.json": true,
+    "src/types/database.ts": true
+  }
+}
