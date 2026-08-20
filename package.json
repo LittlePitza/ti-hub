@@ -49,14 +49,14 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
-    "@types/node": "^22.15.0",
+    "@types/node": "^26.2.0",
     "@types/nodemailer": "^8.0.1",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
-    "eslint": "^9.39.5",
+    "eslint": "^10.8.1",
     "eslint-config-next": "^15.5.23",
     "prettier": "^3.9.6",
-    "typescript": "^5.8.3",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.11"
   }
 }
